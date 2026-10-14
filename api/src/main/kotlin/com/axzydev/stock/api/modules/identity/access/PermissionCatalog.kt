@@ -98,8 +98,15 @@ object PermissionCatalog {
 			grants = mapOf(SeedRoles.ADMIN to Scope.ALL, SeedRoles.OFFICE to Scope.ALL, SeedRoles.WAREHOUSE_MANAGER to Scope.ALL),
 		),
 		adminOnly("customers.manage"),
-		// F4: stock. Who else reads it is not decided (access-control.md section 4): until then, ADMIN, and the matrix.
-		PermissionDef("stock.view", listOf(Scope.AREA, Scope.ALL), grants = mapOf(SeedRoles.ADMIN to Scope.ALL)),
+		// F4: stock. F5-18 decided who reads it (stock.md section 4): the office everywhere, the warehouse roles in
+		// their warehouses, so the pick screen can show the balance of the material in each location.
+		PermissionDef(
+			"stock.view", listOf(Scope.AREA, Scope.ALL),
+			grants = mapOf(
+				SeedRoles.ADMIN to Scope.ALL, SeedRoles.OFFICE to Scope.ALL,
+				SeedRoles.WAREHOUSE_MANAGER to Scope.AREA, SeedRoles.WAREHOUSE_OPERATOR to Scope.AREA,
+			),
+		),
 		// Loads the legacy file's stock into a warehouse, once (products.md section 5).
 		adminOnly("stock.opening"),
 		// F4: material entry and receiving (access-control.md section 4, roles.md section 3).

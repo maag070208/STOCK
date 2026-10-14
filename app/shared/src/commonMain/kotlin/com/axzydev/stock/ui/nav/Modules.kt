@@ -84,9 +84,8 @@ val MODULES: List<Module> = listOf(
 			ModulePage("warehouses", Text.PAGE_WAREHOUSES, Text.PAGE_WAREHOUSES_HINT, AppIcon.WAREHOUSE),
 		),
 	),
-	// F5 has not been built: orders live in the API's roadmap, not in it yet (docs/phases/F5-orders.md). What the API
-	// does hold is the customers an order is for, so that page reads real data today and the orders page says when it
-	// will arrive.
+	// F5: orders. The operator fulfills them from the app (F5-18); the customers an order is for and the states it goes
+	// through are the pages that read the API today.
 	Module(
 		id = "orders",
 		title = Text.MODULE_ORDERS,
@@ -95,7 +94,7 @@ val MODULES: List<Module> = listOf(
 		pages = listOf(
 			ModulePage("customers", Text.PAGE_CUSTOMERS, Text.PAGE_CUSTOMERS_HINT, AppIcon.USER, anyOf = listOf("customers.view")),
 			ModulePage("order-status", Text.PAGE_ORDER_STATUS, Text.PAGE_ORDER_STATUS_HINT, AppIcon.CLIPBOARD, anyOf = listOf("catalogs.view")),
-			ModulePage("my-orders", Text.PAGE_ORDERS, Text.PAGE_ORDERS_HINT, AppIcon.CLIPBOARD, comingSoon = true),
+			ModulePage("my-orders", Text.PAGE_ORDERS, Text.PAGE_ORDERS_HINT, AppIcon.CLIPBOARD, anyOf = listOf("orders.fulfill")),
 		),
 	),
 )

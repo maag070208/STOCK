@@ -14,24 +14,28 @@ class ModulesTest {
 
 	@Test
 	fun theHomeShowsOnlyTheModulesThePermissionsOpen() {
-		// Customers is open to whoever may read customers; the orders notice needs no permission, so it is always listed.
+		// Products opens the lookup; the rest of the modules need their own permission.
 		assertEquals(
-			listOf("materials", "orders"),
+			listOf("materials"),
 			visibleModulesWithPages(permissions("products.view" to "ALL")).map { it.module.id },
+		)
+		assertEquals(
+			listOf("materials", "stock"),
+			visibleModulesWithPages(permissions("products.view" to "ALL", "stock.view" to "AREA")).map { it.module.id },
 		)
 	}
 
 	@Test
 	fun aScopeOfNoneDoesNotOpenTheModule() {
 		assertEquals(
-			listOf("orders"),
+			emptyList(),
 			visibleModulesWithPages(permissions("stock.view" to "NONE", "locations.view" to "NONE")).map { it.module.id },
 		)
 	}
 
 	@Test
-	fun theOrdersNoticeAndNothingElseShowWithoutAnyPermission() {
-		assertEquals(listOf("orders"), visibleModulesWithPages(emptyMap()).map { it.module.id })
+	fun aPersonWithoutAnyPermissionSeesNoModule() {
+		assertEquals(emptyList(), visibleModulesWithPages(emptyMap()).map { it.module.id })
 	}
 
 	@Test
@@ -67,29 +71,28 @@ class ModulesTest {
 	}
 
 	@Test
-	fun ordersHoldsTheCustomersAndTheStatesTodayAndTheOrdersPageWaitsForF5() {
+	fun ordersHoldsTheCustomersAndTheStatesTodayAndThePickPageOfAnOperator() {
 		val orders = moduleById("orders")!!
 		val pages = orders.pages.associateBy { it.id }
 		assertFalse(pages.getValue("customers").comingSoon)
 		assertEquals(listOf("customers.view"), pages.getValue("customers").anyOf)
 		assertFalse(pages.getValue("order-status").comingSoon)
 		assertEquals(listOf("catalogs.view"), pages.getValue("order-status").anyOf)
-		assertTrue(pages.getValue("my-orders").comingSoon)
+		assertFalse(pages.getValue("my-orders").comingSoon)
+		assertEquals(listOf("orders.fulfill"), pages.getValue("my-orders").anyOf)
 	}
 
 	@Test
-	fun ordersIsStillComingSoonForSomeoneWhoCannotReadItsRealPages() {
-		// An operator holding neither customers.view nor catalogs.view only sees the planned page, so the module is
-		// still a notice to them.
-		val entry = visibleModulesWithPages(permissions("stock.view" to "ALL")).single { it.module.id == "orders" }
+	fun anOperatorWhoFulfillsOpensThePickPage() {
+		val entry = visibleModulesWithPages(permissions("orders.fulfill" to "AREA")).single { it.module.id == "orders" }
 		assertEquals(listOf("my-orders"), entry.pages.map { it.id })
-		assertTrue(entry.comingSoon)
+		assertFalse(entry.comingSoon)
 	}
 
 	@Test
 	fun ordersIsNotComingSoonOnceOneOfItsPagesOpens() {
 		val entry = visibleModulesWithPages(permissions("catalogs.view" to "ALL")).single { it.module.id == "orders" }
-		assertEquals(listOf("order-status", "my-orders"), entry.pages.map { it.id })
+		assertEquals(listOf("order-status"), entry.pages.map { it.id })
 		assertFalse(entry.comingSoon)
 	}
 }

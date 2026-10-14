@@ -79,6 +79,8 @@ class StockQueriesEndpointTest : ApiTest() {
 		assertEquals(setOf(mine), seen)
 		val totals = rows("/stock/products/query", mapOf("productId" to product), manager.token)
 		assertEquals(1, totals.get("total").asInt())
-		assertEquals("INSUFFICIENT_PERMISSIONS", api.post("/stock/balances/query", api.newUser("OFFICE").token, mapOf<String, Any>()).code)
+		// Someone who reads stock in no warehouse at all: an app user, on the app channel.
+		val appUser = api.newUser("APP_USER", channel = "app")
+		assertEquals("INSUFFICIENT_PERMISSIONS", api.call("POST", "/stock/balances/query", appUser.token, mapOf<String, Any>(), channel = "app").code)
 	}
 }

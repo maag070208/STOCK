@@ -130,6 +130,39 @@ class OrdersEndpointTest : ApiTest() {
 		assertEquals("IDEMPOTENCY_KEY_REUSED", reused.code)
 	}
 
+	@Test
+	fun `the query filters by one status or by several, and by the assigned operator`() {
+		val f = OrdersFixture(api)
+		val product = f.product()
+		addStock(f.locations[0], product, 100)
+		val created = f.create(f.body(f.line(product, 10))).json
+		val fulfilling = f.create(f.body(f.line(product, 10))).json
+		val fulfillingLine = fulfilling.get("lines").get(0)
+		api.put("/orders/${fulfilling.get("id").asString()}/assignment", f.admin, mapOf("operatorId" to f.operators[0].id))
+		api.call(
+			"POST", "/orders/${fulfilling.get("id").asString()}/picks", f.operators[0].token,
+			mapOf("lineId" to fulfillingLine.get("id").asString(), "locationId" to f.locations[0], "quantity" to 4), channel = "app",
+		)
+		val cancelled = f.create(f.body(f.line(product, 10))).json
+		assertEquals(200, api.post("/orders/${cancelled.get("id").asString()}/cancellation", f.admin).status)
+
+		val numbers = { status: Any -> query(f, mapOf("status" to status)).map { it.get("number").asString() }.toSet() }
+		assertEquals(setOf(fulfilling.get("number").asString()), numbers("FULFILLING"))
+		assertEquals(
+			setOf(created.get("number").asString(), fulfilling.get("number").asString()),
+			numbers(listOf("CREATED", "FULFILLING")),
+		)
+		assertEquals(emptySet<String>(), numbers("NOPE"))
+		assertEquals(emptySet<String>(), numbers(listOf("CREATED", "NOPE")))
+		val mine = query(f, mapOf("operatorId" to f.operators[0].id)).map { it.get("number").asString() }.toSet()
+		assertEquals(setOf(fulfilling.get("number").asString()), mine)
+	}
+
+	// The rows of one warehouse, with these filters on top.
+	private fun query(f: OrdersFixture, filters: Map<String, Any>): List<tools.jackson.databind.JsonNode> =
+		api.post("/orders/query", f.admin, mapOf("filters" to (filters + mapOf("warehouseId" to f.warehouse)), "limit" to 200))
+			.also { assertEquals(200, it.status, it.body) }.json.get("data").let { rows -> rows.values().toList() }
+
 	// Runs the same work in several threads, released together.
 	private fun <T> parallel(threads: Int, work: () -> T): List<T> {
 		val pool = Executors.newFixedThreadPool(threads)

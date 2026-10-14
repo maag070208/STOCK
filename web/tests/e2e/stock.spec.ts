@@ -61,10 +61,14 @@ test("a reader with AREA sees only the stock of their warehouses, and without st
 	await expect(byLocation.getByRole("row").filter({ hasText: products[0].code })).toHaveCount(1);
 	await expect(page.getByRole("button", { name: "Inventario inicial" })).toHaveCount(0);
 
-	// Another person, in a page of their own: a session is set when a page first loads.
-	const office = await newUser(["OFFICE"]);
+	// Another person, in a page of their own: a session is set when a page first loads. The office reads stock
+	// everywhere since F5-18, so the refusal is shown to a role that has web access and nothing else.
+	const role = uniqueName("T").toUpperCase();
+	await call("POST", "/roles", { token, body: { key: role, name: "Rol de prueba" } });
+	await call("PUT", "/roles/matrix", { token, body: { changes: [{ roleKey: role, permissionKey: "web.access", scope: "ALL" }] } });
+	const nobody = await newUser([role]);
 	const other = await browser.newPage();
-	await signInAs(other, office);
+	await signInAs(other, nobody);
 	await other.goto("/#/stock");
 	await expect(other.getByTestId("forbidden")).toBeVisible();
 	await other.close();

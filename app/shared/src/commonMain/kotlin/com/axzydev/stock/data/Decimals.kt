@@ -46,6 +46,14 @@ object Decimals {
 		return left == right
 	}
 
+	// Whether a is above b, whatever digits each carries. Something that is not a quantity is above nothing.
+	fun above(a: String, b: String): Boolean {
+		val scale = maxOf(scaleOf(a), scaleOf(b))
+		val left = units(a, scale) ?: return false
+		val right = units(b, scale) ?: return false
+		return left > right
+	}
+
 	private val DECIMAL = Regex("^[0-9]+(\\.[0-9]+)?$")
 
 	private fun scaleOf(value: String): Int = value.substringAfter('.', "").length

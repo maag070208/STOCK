@@ -29,6 +29,10 @@ const app = "com.axzydev.stock";
 // `fresh` clears the app's data first, so no saved session opens it.
 export async function launch({ fresh = false } = {}) {
   adb("reverse", "tcp:8080", "tcp:8080");
+  // A phone that locked while the tests ran is woken and its keyguard dismissed, so the app is the screen that is read.
+  // The tests drive a device without a secure lock; an emulator does the same without harm.
+  adb("shell", "input", "keyevent", "KEYCODE_WAKEUP");
+  adb("shell", "wm", "dismiss-keyguard");
   adb("install", "-r", apk);
   adb("shell", "am", "force-stop", app);
   if (fresh) adb("shell", "pm", "clear", app);
@@ -56,13 +60,42 @@ export function type(text) {
   adb("shell", "input", "text", text);
 }
 
-// Fills a field: taps it, then types.
+// Fills a field: brings it into view, taps it, then types.
 export async function fill(tag, text) {
-  const xml = await waitUntil((screen) => screen.includes(`resource-id="${tag}"`), 15000);
+  const xml = await scrollTo(tag);
   if (!xml) throw new Error(`no field tagged "${tag}" appeared`);
   tap(xml, tag);
-  await sleep(300);
+  // The page pans when a field takes the focus and the keyboard opens; a value typed during that pan is lost.
+  await sleep(700);
   type(text);
+}
+
+// The height of the screen in pixels, whatever size the device overrides.
+function screenHeight() {
+  const match = /(?:Override|Physical) size: \d+x(\d+)/.exec(adb("shell", "wm", "size"));
+  return match ? Number(match[1]) : 1920;
+}
+
+// Scrolls a long page until the element with this test tag sits in its upper part, where a tap reaches it and the
+// keyboard does not cover it. Answers the tree that has it there, or the last one seen after the time limit.
+export async function scrollTo(tag, limitMs = 15000) {
+  const deadline = Date.now() + limitMs;
+  let last = null;
+  while (Date.now() < deadline) {
+    const xml = dump();
+    const match = new RegExp(`resource-id="${tag}"[^>]*bounds="\\[(\\d+),(\\d+)\\]\\[(\\d+),(\\d+)\\]"`).exec(xml);
+    if (match) {
+      last = xml;
+      const [left, top, right, bottom] = match.slice(1).map(Number);
+      const height = screenHeight();
+      if (top >= 0 && bottom > 0 && bottom <= height * 0.95) return xml;
+      const down = bottom > height * 0.95;
+      const x = String(Math.round((left + right) / 2));
+      adb("shell", "input", "swipe", x, String(Math.round(height * (down ? 0.7 : 0.3))), x, String(Math.round(height * (down ? 0.3 : 0.7))), "250");
+    }
+    await sleep(250);
+  }
+  return last;
 }
 
 // The keyboard's action key: Next moves to the following field, Done sends the form.

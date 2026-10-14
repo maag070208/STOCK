@@ -81,10 +81,10 @@ class OrderService(
 	private val clock: Clock,
 ) {
 	private val statusFilter: TableFilter<Order> = { root, builder, value ->
-		when (val id = catalogs.itemId(STATUS_CATALOG, value.toString())) {
-			null -> builder.disjunction()
-			else -> builder.equal(root.get<UUID>("statusId"), id)
-		}
+		// One status code, or several: the app asks for the open orders of a warehouse in one query.
+		val codes = (value as? List<*>)?.map { it.toString() } ?: listOf(value.toString())
+		val ids = codes.mapNotNull { catalogs.itemId(STATUS_CATALOG, it) }
+		if (ids.isEmpty() || ids.size != codes.size) builder.disjunction() else root.get<UUID>("statusId").`in`(ids)
 	}
 
 	private val table = TableSpec<Order>(

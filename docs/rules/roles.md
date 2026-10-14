@@ -35,6 +35,7 @@ Scopes: **ALL** every record · **AREA** the user's assigned warehouses · **OWN
 | Suppliers and contacts: read / manage | ALL / ALL | ALL / — | ALL / — | — | — |
 | Locations: read / manage | ALL / ALL | — | AREA / — | AREA / — | — |
 | Invoices: read / create / manage | ALL / ALL / ALL | ALL / ALL / — | AREA / — / — | — | — |
+| Stock: read | ALL | ALL | AREA | AREA | — |
 | Material entries (receipts): read | ALL | ALL | AREA | OWN | — |
 | Material entries: assign | ALL | ALL | AREA | — | — |
 | Receipts: count / place | ALL / ALL | — | — | OWN / OWN | — |

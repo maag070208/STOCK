@@ -27,10 +27,12 @@ import com.axzydev.stock.data.products.ProductApi
 import com.axzydev.stock.data.receipts.ReceivingApi
 import com.axzydev.stock.data.session.AuthApi
 import com.axzydev.stock.data.session.secureTokenStorage
+import com.axzydev.stock.data.orders.OrdersApi
 import com.axzydev.stock.data.stock.StockApi
 import com.axzydev.stock.data.warehouses.WarehouseApi
 import com.axzydev.stock.feature.customers.CustomersViewModel
 import com.axzydev.stock.feature.lookup.LookupViewModel
+import com.axzydev.stock.feature.orders.OrderPickViewModel
 import com.axzydev.stock.feature.orders.OrderStatusesViewModel
 import com.axzydev.stock.feature.receipts.CountViewModel
 import com.axzydev.stock.feature.receipts.DiscrepanciesViewModel
@@ -52,6 +54,7 @@ import com.axzydev.stock.ui.lookup.LookupScreen
 import com.axzydev.stock.ui.module.ModuleMenuScreen
 import com.axzydev.stock.ui.nav.AppBackHandler
 import com.axzydev.stock.ui.nav.visibleModulesWithPages
+import com.axzydev.stock.ui.orders.MyOrdersScreen
 import com.axzydev.stock.ui.orders.OrderStatusesScreen
 import com.axzydev.stock.ui.receipts.CountScreen
 import com.axzydev.stock.ui.receipts.DiscrepanciesScreen
@@ -129,6 +132,25 @@ fun App(
 	val locations = viewModel { WarehousesViewModel(warehouses, session, noConnection) }
 	val customers = viewModel { CustomersViewModel(customersApi, session, noConnection) }
 	val orderStatuses = viewModel { OrderStatusesViewModel(catalogsApi, session, noConnection) }
+	val ordersApi = remember { OrdersApi(platformEngine(), apiBaseUrl) { currentLanguage } }
+	val pick = viewModel {
+		OrderPickViewModel(
+			ordersApi,
+			products,
+			stock,
+			locationsApi,
+			session,
+			{ (session.state.value as? SessionState.SignedIn)?.user?.id.orEmpty() },
+			{ textFor(Text.FIELD_REQUIRED, currentLanguage) },
+			{ textFor(Text.QUANTITY_INVALID, currentLanguage) },
+			{ textFor(Text.PRODUCT_NOT_IN_ORDER, currentLanguage) },
+			{ textFor(Text.LOCATION_NOT_IN_WAREHOUSE, currentLanguage) },
+			{ textFor(Text.LOCATION_EMPTY, currentLanguage) },
+			{ textFor(Text.PICK_ABOVE_BALANCE, currentLanguage) },
+			{ textFor(Text.PICK_ABOVE_LINE, currentLanguage) },
+			noConnection,
+		)
+	}
 
 	CompositionLocalProvider(LocalLanguage provides language) {
 		StockFlowTheme {
@@ -159,12 +181,14 @@ fun App(
 							val entry = modules.firstOrNull { it.module.id == moduleId }
 							val page = entry?.pages?.firstOrNull { it.id == pageId }
 							// The system's back closes the deepest thing that is open: the page, then the module. Only
-							// at the hub does it leave the app. The placement form is a drill-in: its back returns to
-							// the list, not to the module's menu.
+							// at the hub does it leave the app. A form that drills into its page (the placement, and the
+							// pick of an order) returns to the list of that page, not to the module's menu.
 							AppBackHandler(enabled = entry != null) {
 								val onPlacementForm = entry?.module?.id == "receipts" && page?.id == PLACEMENT && placement.state.value.target != null
+								val onPickForm = entry?.module?.id == "orders" && page?.id == MY_ORDERS && pick.state.value.order != null
 								when {
 									onPlacementForm -> placement.back()
+									onPickForm -> pick.back()
 									page != null -> pageId = null
 									else -> moduleId = null
 								}
@@ -207,7 +231,10 @@ fun App(
 									"orders" -> when (page.id) {
 										CUSTOMERS -> CustomersScreen(customers) { pageId = null }
 										ORDER_STATUS -> OrderStatusesScreen(orderStatuses) { pageId = null }
-										// The orders page waits for F5, so there is nothing to open yet.
+										MY_ORDERS -> MyOrdersScreen(pick) {
+											pick.clear()
+											pageId = null
+										}
 										else -> ModuleMenuScreen(entry, onBack = { moduleId = null }, onOpenPage = { pageId = it.id })
 									}
 
@@ -227,3 +254,4 @@ private const val COUNT = "count"
 private const val PLACEMENT = "placement"
 private const val CUSTOMERS = "customers"
 private const val ORDER_STATUS = "order-status"
+private const val MY_ORDERS = "my-orders"

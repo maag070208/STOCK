@@ -74,6 +74,21 @@ enum class Text {
 	ORDER_STATUS_TERMINAL,
 	PAGE_ORDERS,
 	PAGE_ORDERS_HINT,
+	// F5-18: picking the material of an order assigned to the operator.
+	PICK_SCAN,
+	PICK_LOCATION_SCAN,
+	PICK_LOCATIONS,
+	PICK_QUANTITY,
+	PICK_MAX,
+	PICK_REMAINING,
+	PICK_DUE,
+	PICK_SAVE,
+	PICK_SAVED,
+	PICK_ANOTHER,
+	PICK_ABOVE_BALANCE,
+	PICK_ABOVE_LINE,
+	PRODUCT_NOT_IN_ORDER,
+	LOCATION_EMPTY,
 	COMING_SOON,
 	COMING_SOON_HINT,
 	BACK_HOME,
@@ -192,6 +207,20 @@ fun textFor(key: Text, language: Language): String =
 			Text.ORDER_STATUS_TERMINAL -> "Final"
 			Text.PAGE_ORDERS -> "Mis órdenes"
 			Text.PAGE_ORDERS_HINT -> "Los pedidos que te asignen."
+			Text.PICK_SCAN -> "Escanea el material"
+			Text.PICK_LOCATION_SCAN -> "Escanea la ubicación"
+			Text.PICK_LOCATIONS -> "Ubicaciones con existencia"
+			Text.PICK_QUANTITY -> "Cantidad surtida"
+			Text.PICK_MAX -> "El máximo es {quantity}."
+			Text.PICK_REMAINING -> "Falta {quantity}"
+			Text.PICK_DUE -> "Entrega {date}"
+			Text.PICK_SAVE -> "Surtir"
+			Text.PICK_SAVED -> "Surtido registrado."
+			Text.PICK_ANOTHER -> "Surtir otro material"
+			Text.PICK_ABOVE_BALANCE -> "La ubicación no tiene esa cantidad."
+			Text.PICK_ABOVE_LINE -> "Es más de lo que falta de la línea."
+			Text.PRODUCT_NOT_IN_ORDER -> "Este material no está en la orden."
+			Text.LOCATION_EMPTY -> "La ubicación no tiene este material."
 			Text.COMING_SOON -> "Próximamente"
 			Text.COMING_SOON_HINT -> "Esta sección todavía no está lista."
 			Text.BACK_HOME -> "Inicio"
@@ -305,6 +334,20 @@ fun textFor(key: Text, language: Language): String =
 			Text.ORDER_STATUS_TERMINAL -> "Terminal"
 			Text.PAGE_ORDERS -> "My orders"
 			Text.PAGE_ORDERS_HINT -> "The orders assigned to you."
+			Text.PICK_SCAN -> "Scan the material"
+			Text.PICK_LOCATION_SCAN -> "Scan the location"
+			Text.PICK_LOCATIONS -> "Locations that hold it"
+			Text.PICK_QUANTITY -> "Picked quantity"
+			Text.PICK_MAX -> "The most is {quantity}."
+			Text.PICK_REMAINING -> "{quantity} to go"
+			Text.PICK_DUE -> "Due {date}"
+			Text.PICK_SAVE -> "Pick"
+			Text.PICK_SAVED -> "Pick recorded."
+			Text.PICK_ANOTHER -> "Pick another material"
+			Text.PICK_ABOVE_BALANCE -> "The location does not hold that much."
+			Text.PICK_ABOVE_LINE -> "That is more than the line still needs."
+			Text.PRODUCT_NOT_IN_ORDER -> "This material is not in the order."
+			Text.LOCATION_EMPTY -> "The location does not hold this material."
 			Text.COMING_SOON -> "Coming soon"
 			Text.COMING_SOON_HINT -> "This section is not ready yet."
 			Text.BACK_HOME -> "Home"

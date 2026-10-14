@@ -65,7 +65,7 @@ class PermissionCatalogTest {
 			"suppliers.manage" to listOf(all, none, none, none, none),
 			"customers.view" to listOf(all, all, all, none, none),
 			"customers.manage" to listOf(all, none, none, none, none),
-			"stock.view" to listOf(all, none, none, none, none),
+			"stock.view" to listOf(all, all, area, area, none),
 			"stock.opening" to listOf(all, none, none, none, none),
 			"invoices.view" to listOf(all, all, area, none, none),
 			"invoices.create" to listOf(all, all, none, none, none),

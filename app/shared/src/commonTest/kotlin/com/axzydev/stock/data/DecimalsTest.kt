@@ -40,4 +40,14 @@ class DecimalsTest {
 		assertFalse(Decimals.isValid("diez"))
 		assertFalse(Decimals.isValid(""))
 	}
+
+	@Test
+	fun theComparisonIgnoresTheDigitsEachOneCarries() {
+		assertTrue(Decimals.above("80.000001", "80"))
+		assertFalse(Decimals.above("80", "80.000000"))
+		assertFalse(Decimals.above("50", "80"))
+		// Something that is not a quantity is above nothing.
+		assertFalse(Decimals.above("diez", "80"))
+		assertFalse(Decimals.above("80", ""))
+	}
 }

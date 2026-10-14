@@ -39,12 +39,14 @@ The legacy file's stock goes into the warehouse's `TEMPORARY` location as `OPENI
 
 | Permission | Scopes | Seed grants | Guards |
 |---|---|---|---|
-| `stock.view` | `AREA`, `ALL` | `ADMIN` | Reading stock and movements |
+| `stock.view` | `AREA`, `ALL` | `ADMIN` ALL, `OFFICE` ALL, `WAREHOUSE_MANAGER` and `WAREHOUSE_OPERATOR` AREA | Reading stock and movements |
 | `stock.opening` | `ALL` | `ADMIN` | Loading the opening inventory |
 
-Who else reads stock is not decided ([access-control.md](../rules/access-control.md) section 4 leaves stock to its module). Until the owner says, only `ADMIN` reads it, and an administrator can grant it in the matrix. See question 1.
+**Who reads stock (decided 2026-10-14, F5-18).** The office reads it everywhere, and the warehouse roles read it in their
+warehouses, so the pick screen can show the balance of the material in each location ([order-fulfillment.md](order-fulfillment.md)
+section 7, [barcode-scanning.md](barcode-scanning.md) section 4). An administrator can still change the matrix.
 
 ## 5. Open questions
 
-1. **Who reads stock.** Should `OFFICE`, `WAREHOUSE_MANAGER` and `WAREHOUSE_OPERATOR` see stock, and with which scope? *Proposed:* `OFFICE` with `ALL`, the warehouse roles with `AREA`.
+1. ~~**Who reads stock.**~~ Decided 2026-10-14: `OFFICE` with `ALL`, `WAREHOUSE_MANAGER` and `WAREHOUSE_OPERATOR` with `AREA`.
 2. **Moving the opening inventory to real locations.** The opening inventory waits in `TEMPORARY` until each material is moved to its location ([products.md](products.md) section 5). That move is not a placement of an invoice, and it has no movement type yet. *Proposed:* a transfer (out of `TEMPORARY`, into the location) as its own operation, specified with the flows.
