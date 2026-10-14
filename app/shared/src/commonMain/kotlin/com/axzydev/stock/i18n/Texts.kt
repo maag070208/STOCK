@@ -84,6 +84,8 @@ enum class Text {
 	COUNTED,
 	PLACED,
 	LOCATIONS_COUNT,
+	LOCATION_ONE,
+	OUT_OF_STOCK,
 	ACTIVE,
 	INACTIVE,
 }
@@ -172,6 +174,8 @@ fun textFor(key: Text, language: Language): String =
 			Text.COUNTED -> "Contado"
 			Text.PLACED -> "Ubicado"
 			Text.LOCATIONS_COUNT -> "{count} ubicaciones"
+			Text.LOCATION_ONE -> "1 ubicación"
+			Text.OUT_OF_STOCK -> "Sin existencias"
 			Text.ACTIVE -> "Activo"
 			Text.INACTIVE -> "Inactivo"
 		}
@@ -257,6 +261,8 @@ fun textFor(key: Text, language: Language): String =
 			Text.COUNTED -> "Counted"
 			Text.PLACED -> "Placed"
 			Text.LOCATIONS_COUNT -> "{count} locations"
+			Text.LOCATION_ONE -> "1 location"
+			Text.OUT_OF_STOCK -> "Out of stock"
 			Text.ACTIVE -> "Active"
 			Text.INACTIVE -> "Inactive"
 		}

@@ -21,11 +21,18 @@ import com.axzydev.stock.brand.BrandTheme
 import com.axzydev.stock.brand.reducedMotionEnabled
 import com.axzydev.stock.data.health.HealthClient
 import com.axzydev.stock.data.products.ProductApi
+import com.axzydev.stock.data.receipts.ReceivingApi
 import com.axzydev.stock.data.session.AuthApi
 import com.axzydev.stock.data.session.secureTokenStorage
+import com.axzydev.stock.data.stock.StockApi
+import com.axzydev.stock.data.warehouses.WarehouseApi
 import com.axzydev.stock.feature.lookup.LookupViewModel
+import com.axzydev.stock.feature.receipts.DiscrepanciesViewModel
+import com.axzydev.stock.feature.receipts.ReceiptsViewModel
 import com.axzydev.stock.feature.session.SessionState
 import com.axzydev.stock.feature.session.SessionViewModel
+import com.axzydev.stock.feature.stock.StockViewModel
+import com.axzydev.stock.feature.warehouses.WarehousesViewModel
 import com.axzydev.stock.i18n.DefaultLanguage
 import com.axzydev.stock.i18n.Language
 import com.axzydev.stock.i18n.LocalLanguage
@@ -34,18 +41,24 @@ import com.axzydev.stock.i18n.textFor
 import com.axzydev.stock.ui.components.ShellStatusBar
 import com.axzydev.stock.ui.home.HomeScreen
 import com.axzydev.stock.ui.lookup.LookupScreen
+import com.axzydev.stock.ui.module.ModuleMenuScreen
+import com.axzydev.stock.ui.nav.AppBackHandler
+import com.axzydev.stock.ui.nav.moduleById
+import com.axzydev.stock.ui.nav.visibleModulesWithPages
+import com.axzydev.stock.ui.nav.visiblePages
+import com.axzydev.stock.ui.receipts.DiscrepanciesScreen
+import com.axzydev.stock.ui.receipts.MyReceiptsScreen
 import com.axzydev.stock.ui.signin.ChangePasswordScreen
 import com.axzydev.stock.ui.signin.SignInScreen
+import com.axzydev.stock.ui.stock.StockScreen
 import com.axzydev.stock.ui.theme.StockFlow
 import com.axzydev.stock.ui.theme.StockFlowTheme
+import com.axzydev.stock.ui.warehouses.WarehousesScreen
 
 // The intro plays once per launch of the app.
 private object IntroOnce {
 	var played = false
 }
-
-// The screens after signing in. The home is the start; each flow returns to it.
-private enum class Screen { HOME, LOOKUP }
 
 @Composable
 fun App(
@@ -62,11 +75,23 @@ fun App(
 	// Once signed in, the app speaks the person's language. Before that, Spanish.
 	val language = (state as? SessionState.SignedIn)?.user?.language?.let { tag -> Language.entries.firstOrNull { it.tag == tag } } ?: DefaultLanguage
 	val currentLanguage by rememberUpdatedState(language)
+	// One client per part of the API, so the pages of the modules do not each build their own.
+	val products = remember { ProductApi(platformEngine(), apiBaseUrl) { currentLanguage } }
+	val receiving = remember { ReceivingApi(platformEngine(), apiBaseUrl) { currentLanguage } }
+	val stock = remember { StockApi(platformEngine(), apiBaseUrl) { currentLanguage } }
+	val warehouses = remember { WarehouseApi(platformEngine(), apiBaseUrl) { currentLanguage } }
 	val lookup = viewModel {
-		LookupViewModel(ProductApi(platformEngine(), apiBaseUrl) { currentLanguage }, session, { textFor(Text.FIELD_REQUIRED, currentLanguage) }) {
+		LookupViewModel(products, session, { textFor(Text.FIELD_REQUIRED, currentLanguage) }) {
 			textFor(Text.HEALTH_UNREACHABLE, currentLanguage)
 		}
 	}
+	// The pages of the modules, each reading its own part of the API. They live with the app, not with a page: their
+	// answer is still there when the person comes back to them.
+	val noConnection = { textFor(Text.HEALTH_UNREACHABLE, currentLanguage) }
+	val receipts = viewModel { ReceiptsViewModel(receiving, session, noConnection) }
+	val discrepancies = viewModel { DiscrepanciesViewModel(receiving, session, noConnection) }
+	val balances = viewModel { StockViewModel(stock, session, noConnection) }
+	val locations = viewModel { WarehousesViewModel(warehouses, session, noConnection) }
 
 	CompositionLocalProvider(LocalLanguage provides language) {
 		StockFlowTheme {
@@ -88,21 +113,50 @@ fun App(
 						is SessionState.SignedOut -> SignInScreen(current, session::signIn)
 						is SessionState.PasswordChange -> ChangePasswordScreen(current, session::changePassword)
 						is SessionState.SignedIn -> {
-							// Kept when the phone turns and Android rebuilds the screen.
-							var screen by rememberSaveable(current.user.id) { mutableStateOf(Screen.HOME) }
-							when (screen) {
-								Screen.HOME -> HomeScreen(
+							val permissions = current.user.permissions
+							val modules = remember(permissions) { visibleModulesWithPages(permissions) }
+							// The home is the hub (no module), a module opens its menu (no page), a page is the deepest
+							// screen. Both are kept when the phone turns and Android rebuilds the screen.
+							var moduleId by rememberSaveable(current.user.id) { mutableStateOf<String?>(null) }
+							var pageId by rememberSaveable(current.user.id) { mutableStateOf<String?>(null) }
+							val module = moduleId?.let(::moduleById)
+							val pages = module?.let { visiblePages(it, permissions) } ?: emptyList()
+							val page = pages.firstOrNull { it.id == pageId }
+							// The system's back closes the deepest thing that is open: the page, then the module. Only
+							// at the hub does it leave the app.
+							AppBackHandler(enabled = module != null) {
+								if (page != null) pageId = null else moduleId = null
+							}
+							when {
+								module == null -> HomeScreen(
 									client = client,
 									user = current.user,
+									modules = modules,
+									onOpenModule = {
+										moduleId = it.id
+										pageId = null
+									},
 									onSignOut = session::signOut,
-									// Looking up a product needs products.view (barcode-scanning.md section 5).
-									onLookup = if (current.user.permissions["products.view"].let { it != null && it != "NONE" }) {
-										{ screen = Screen.LOOKUP }
-									} else null,
 								)
-								Screen.LOOKUP -> LookupScreen(lookup) {
-									lookup.clear()
-									screen = Screen.HOME
+
+								page == null -> ModuleMenuScreen(module, pages, onBack = { moduleId = null }, onOpenPage = { pageId = it.id })
+
+								else -> when (module.id) {
+									"receipts" -> if (page.id == DISCREPANCIES) {
+										DiscrepanciesScreen(discrepancies) { pageId = null }
+									} else {
+										MyReceiptsScreen(receipts) { pageId = null }
+									}
+
+									"materials" -> LookupScreen(lookup) {
+										lookup.clear()
+										pageId = null
+									}
+
+									"stock" -> StockScreen(balances) { pageId = null }
+									"locations" -> WarehousesScreen(locations) { pageId = null }
+									// A module the API does not serve yet keeps its menu and never opens a page.
+									else -> ModuleMenuScreen(module, pages, onBack = { moduleId = null }, onOpenPage = { pageId = it.id })
 								}
 							}
 						}
@@ -112,3 +166,5 @@ fun App(
 		}
 	}
 }
+
+private const val DISCREPANCIES = "discrepancies"

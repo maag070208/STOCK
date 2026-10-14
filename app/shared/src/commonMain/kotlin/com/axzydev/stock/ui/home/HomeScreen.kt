@@ -1,6 +1,11 @@
 package com.axzydev.stock.ui.home
 
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -8,6 +13,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.axzydev.stock.data.health.HealthClient
 import com.axzydev.stock.data.health.HealthState
@@ -21,17 +27,18 @@ import com.axzydev.stock.ui.components.HeroBar
 import com.axzydev.stock.ui.components.HeroHeadline
 import com.axzydev.stock.ui.components.HeroIconButton
 import com.axzydev.stock.ui.components.HeroScreen
-import com.axzydev.stock.ui.components.PrimaryButton
+import com.axzydev.stock.ui.components.ModuleButton
 import com.axzydev.stock.ui.components.StatusBadge
 import com.axzydev.stock.ui.components.StatusTone
+import com.axzydev.stock.ui.nav.Module
 import com.axzydev.stock.ui.theme.DesignTokens
 import com.axzydev.stock.ui.theme.StockFlow
 import com.axzydev.stock.ui.theme.StockFlowType
 
-// The first screen after signing in: the hero greets the person and holds the sign-out; the sheet has the flows the
-// person can open and the state of the API.
+// The first screen after signing in: the hero greets the person and holds the sign-out; the sheet is the hub, a
+// button per module the person may use, and the state of the API. Each module opens its own menu of pages.
 @Composable
-fun HomeScreen(client: HealthClient, user: SessionUser, onSignOut: () -> Unit, onLookup: (() -> Unit)? = null) {
+fun HomeScreen(client: HealthClient, user: SessionUser, modules: List<Module>, onOpenModule: (Module) -> Unit, onSignOut: () -> Unit) {
 	var state by remember { mutableStateOf<HealthState?>(null) }
 	LaunchedEffect(client) { state = client.check() }
 	HeroScreen(
@@ -41,7 +48,26 @@ fun HomeScreen(client: HealthClient, user: SessionUser, onSignOut: () -> Unit, o
 			AppText(text(Text.HOME_PROMPT), StockFlowType.bodyLg, StockFlow.colors.onPrimary)
 		},
 	) {
-		if (onLookup != null) PrimaryButton(text(Text.LOOKUP_OPEN), onLookup, tag = "open-lookup", icon = AppIcon.SCAN)
+		AppText(text(Text.MODULES_LABEL).uppercase(), StockFlowType.labelSm, StockFlow.colors.onSurfaceMuted, Modifier.testTag("modules-label"))
+		AppText(text(Text.MODULES_HINT), StockFlowType.bodyMd, StockFlow.colors.onSurfaceMuted)
+		// Two modules to a row, so the hub is a small grid of buttons.
+		modules.chunked(2).forEach { pair ->
+			Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.md.dp)) {
+				pair.forEach { module ->
+					ModuleButton(
+						icon = module.icon,
+						title = text(module.title),
+						hint = text(module.hint),
+						onClick = { onOpenModule(module) },
+						tag = "module-${module.id}",
+						comingSoon = module.comingSoon,
+						modifier = Modifier.weight(1f),
+					)
+				}
+				// Keeps the last button of an odd row the same width as the others.
+				if (pair.size == 1) Spacer(Modifier.weight(1f))
+			}
+		}
 		Card {
 			// Operational labels are small, uppercase and widely tracked.
 			AppText(

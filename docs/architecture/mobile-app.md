@@ -66,7 +66,9 @@ The scanner never creates a line. If the value does not belong to the open assig
 
 ## 5. Local API from the emulator
 
-Debug builds reach the local API at `http://localhost:8080/api/v1`. The emulator, or a phone connected by USB, forwards that port with `adb reverse tcp:8080 tcp:8080`. The tests run this command themselves.
+Debug builds reach the local API at `http://localhost:8080/api/v1` unless the build says otherwise. A real phone cannot use `localhost`: point the app at the machine that runs the API with `apiBaseUrl=http://<ip>:8080/api/v1` in `app/local.properties` (never committed), or once with `./gradlew :androidApp:assembleDebug -Pstockflow.apiBaseUrl=...`. The build reads either and writes `API_BASE_URL` into the generated `ApiEnvironment.kt`, so no machine's address is in the source. `app/README.md` has the same steps.
+
+The emulator, or a phone connected by USB, can also forwards the port with `adb reverse tcp:8080 tcp:8080`. The tests run this command themselves.
 
 The Android emulator's host alias `10.0.2.2` timed out from the app on the Android 17 image used in F0, while the same address answered from the shell. Until that is understood, the forward is the path. iOS simulators use `localhost` directly.
 
@@ -85,6 +87,9 @@ The interface takes its colors and type from [design-system.md](design-system.md
 - **No values by hand.** A color, a text size or a corner radius is never typed in a screen. `tests/ops/app-design.test.mjs` fails on a color literal outside the generated tokens.
 - **Status bar.** The strip behind it is the hero's orange on every screen, so its icons are always light.
 - **Rotation.** The screen a person is on survives Android rebuilding the activity when the phone turns.
+- **The home is a hub.** After sign-in the app opens a button per module the person's permissions open, and each module opens its own menu of the pages it holds; the pages themselves belong to the module. The modules and their pages are listed once, in `ui/nav/Modules.kt`, with the permission each needs, and `App.kt` sends each page to its screen: **Entradas** (mis recepciones, discrepancias), **Materiales** (buscar material), **Existencias** (por material), **Ubicaciones** (almacenes) and **Órdenes**, which the API does not serve yet (F5) and so is listed with its page greyed out and a "Próximamente" badge. A module or a page whose permission the person does not hold is not shown. Adding a module is a line in that file and a screen in the navigation of `App.kt`.
+- **Back.** The deepest thing open closes first: a page, then a module's menu, then the home, where the system leaves the app. Every screen's hero carries its own back button, and Android's back gesture and back button do the same (`AppBackHandler`, `expect`/`actual`: Android uses `activity.compose.BackHandler`; iOS has no back and keeps the hero's button).
+- **The pages read, they do not write.** Mis recepciones, discrepancias, existencias and almacenes are lists the API answers (`POST /{resource}/query` and `GET /receipts/mine`); the app shows them and their empty, loading and refused states, and never changes stock from them.
 - **A new component** goes to `ui/components` when a screen needs it, and reads its specification from `DesignTokens.Components` when the design has one.
 
 ## 8. Session

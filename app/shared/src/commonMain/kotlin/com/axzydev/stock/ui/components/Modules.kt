@@ -38,10 +38,10 @@ private val panelShape = RoundedCornerShape(DesignTokens.Components.cardPanel.ro
 // A module on the home: its icon, its name and one line about what it holds. `comingSoon` marks a module the API
 // does not serve yet.
 @Composable
-fun ModuleButton(icon: AppIcon, title: String, hint: String, onClick: () -> Unit, tag: String, comingSoon: Boolean = false) {
+fun ModuleButton(icon: AppIcon, title: String, hint: String, onClick: () -> Unit, tag: String, modifier: Modifier = Modifier, comingSoon: Boolean = false) {
 	val shape = panelShape
 	Column(
-		Modifier
+		modifier
 			.fillMaxWidth()
 			.height(MODULE_HEIGHT)
 			.background(Color(DesignTokens.Components.cardPanel.backgroundColor), shape)
@@ -61,25 +61,30 @@ fun ModuleButton(icon: AppIcon, title: String, hint: String, onClick: () -> Unit
 	}
 }
 
-// A page of a module: a line with its icon, its name, a line under it, and a chevron saying it opens.
+// A page of a module: a line with its icon, its name, a line under it, and a chevron saying it opens. A page that is
+// not built yet (`enabled = false`) keeps its place in the menu, but says so and does not open.
 @Composable
-fun PageRow(icon: AppIcon, title: String, hint: String, onClick: () -> Unit, tag: String) {
+fun PageRow(icon: AppIcon, title: String, hint: String, onClick: () -> Unit, tag: String, enabled: Boolean = true) {
 	Row(
 		Modifier
 			.fillMaxWidth()
 			.background(StockFlow.colors.surface, panelShape)
-			.clickable(role = Role.Button, onClick = onClick)
+			.then(if (enabled) Modifier.clickable(role = Role.Button, onClick = onClick) else Modifier)
 			.padding(horizontal = DesignTokens.Spacing.lg.dp, vertical = DesignTokens.Spacing.md.dp)
 			.testTag(tag),
 		verticalAlignment = Alignment.CenterVertically,
 	) {
-		Icon(icon, StockFlow.colors.primary)
+		Icon(icon, if (enabled) StockFlow.colors.primary else StockFlow.colors.onSurfaceMuted)
 		Spacer(Modifier.width(DesignTokens.Spacing.md.dp))
 		Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.xs.dp)) {
 			AppText(title, StockFlowType.titleMd, StockFlow.colors.onSurface, maxLines = 1)
 			AppText(hint, StockFlowType.bodyMd, StockFlow.colors.onSurfaceMuted, maxLines = 2)
 		}
-		Icon(AppIcon.CHEVRON, StockFlow.colors.onSurfaceMuted)
+		if (enabled) {
+			Icon(AppIcon.CHEVRON, StockFlow.colors.onSurfaceMuted)
+		} else {
+			StatusBadge(text(Text.COMING_SOON), StatusTone.PLANNED)
+		}
 	}
 }
 
