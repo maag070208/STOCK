@@ -81,6 +81,14 @@ class PermissionCatalogTest {
 			"labels.print" to listOf(all, all, area, area, none),
 			"printers.view" to listOf(all, none, none, none, none),
 			"printers.manage" to listOf(all, none, none, none, none),
+			"orders.create" to listOf(all, all, none, none, none),
+			"orders.view" to listOf(all, all, area, area, none),
+			"orders.assign" to listOf(all, all, area, none, none),
+			"orders.fulfill" to listOf(all, none, none, area, none),
+			"orders.validate" to listOf(all, all, area, none, none),
+			"orders.cancel" to listOf(all, all, area, none, none),
+			"orders.reassign" to listOf(all, all, area, none, none),
+			"orders.accept_difference" to listOf(all, none, area, none, none),
 		)
 		val roles = listOf(SeedRoles.ADMIN, SeedRoles.OFFICE, SeedRoles.WAREHOUSE_MANAGER, SeedRoles.WAREHOUSE_OPERATOR, SeedRoles.APP_USER)
 		assertEquals(expected.keys, PermissionCatalog.keys)
@@ -95,7 +103,7 @@ class PermissionCatalogTest {
 		assertEquals(
 			setOf(
 				"users.permissions", "roles.manage", "invoices.manage", "discrepancies.resolve",
-				"labels.view", "labels.manage", "printers.view", "printers.manage",
+				"labels.view", "labels.manage", "printers.view", "printers.manage", "orders.accept_difference",
 			),
 			PermissionCatalog.all.filter { it.sensitive }.map { it.key }.toSet(),
 		)

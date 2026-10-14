@@ -133,6 +133,16 @@
     "printers": {
       "view": "View printers",
       "manage": "Manage printers"
+    },
+    "orders": {
+      "create": "Create orders",
+      "view": "View orders",
+      "assign": "Assign orders",
+      "fulfill": "Fulfill orders",
+      "validate": "Validate orders",
+      "cancel": "Cancel orders",
+      "reassign": "Reassign orders",
+      "accept_difference": "Accept a difference"
     }
   },
   "validation": {

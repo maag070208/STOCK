@@ -2,6 +2,8 @@
 
 Phase: [F5-orders.md](../F5-orders.md).
 
+**Progress, 2026-10-14:** F5-01, F5-02, F5-03 and F5-15 are done in the API: an order is created with `Idempotency-Key`, its lines reserve their quantity under an advisory lock on the material and warehouse (`available = balance − reserved by open orders`, `STOCK_INSUFFICIENT` says how much is available), the number is unique per warehouse, and the customer must be active. `OrdersEndpointTest` covers creation, the reservation, the duplicate number, the inactive customer, idempotency and the concurrent case for the last unit. The `orders.*` permissions are seeded. Next: assignment (F5-04), picks (F5-05), statuses (F5-06), then validation, cancellation, reassignment, alerts and the PDF.
+
 | ID | Task | Area | After | Owner |
 |---|---|---|---|---|
 | F5-01 | Order header | API | F4-02, F2-10 | |

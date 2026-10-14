@@ -153,6 +153,23 @@ class CustomerService(
 
 	private fun find(id: UUID): Customer = customers.findById(id).orElseThrow { ApiException(ErrorCode.NOT_FOUND) }
 
+	// For other modules: an order names an active customer, and optionally one of its active contacts.
+	fun requireForNewRecord(check: com.axzydev.stock.api.core.validation.Validator, customerId: UUID?, contactId: UUID?) {
+		val customer = customerId?.let { customers.findById(it).orElse(null) }
+		when {
+			customerId == null -> check.reject("customerId", ErrorCode.FIELD_REQUIRED)
+			customer == null || !customer.active -> check.reject("customerId", ErrorCode.CATALOG_VALUE_INVALID)
+		}
+		if (contactId != null && (customerId == null || contacts.findByIdAndCustomerId(contactId, customerId)?.active != true)) {
+			check.reject("contactId", ErrorCode.CATALOG_VALUE_INVALID)
+		}
+	}
+
+	// For other modules: the code and name of each customer, and the name of each contact, for display.
+	fun names(customerIds: Collection<UUID>, contactIds: Collection<UUID>): Pair<Map<UUID, Pair<String, String>>, Map<UUID, String>> =
+		customers.findAllById(customerIds.toSet()).associate { it.id!! to (it.code to it.name) } to
+			contacts.findAllById(contactIds.toSet()).associate { it.id!! to it.name }
+
 	private fun findContact(id: UUID, contactId: UUID): CustomerContact {
 		find(id)
 		return contacts.findByIdAndCustomerId(contactId, id) ?: throw ApiException(ErrorCode.NOT_FOUND)

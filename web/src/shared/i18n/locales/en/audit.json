@@ -80,7 +80,8 @@
     "LABEL_TEMPLATE_UPDATED": "Label template changed",
     "PRINTER_CREATED": "Printer created",
     "PRINTER_UPDATED": "Printer changed",
-    "LABEL_PRINTED": "Label printed"
+    "LABEL_PRINTED": "Label printed",
+    "ORDER_CREATED": "Order created"
   },
   "targets": {
     "user": "User",
@@ -100,6 +101,7 @@
     "invoice": "Invoice",
     "receipt_assignment": "Assignment",
     "label_template": "Label template",
-    "printer": "Printer"
+    "printer": "Printer",
+    "order": "Order"
   }
 }

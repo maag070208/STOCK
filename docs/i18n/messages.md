@@ -12,6 +12,7 @@ Messages with `{{name}}` take values from the error's details.
 | `UNKNOWN_FIELD` | La solicitud contiene un campo que no existe. | The request contains a field that does not exist. |
 | `DUPLICATE_VALUE` | Ya existe un registro con este valor. | A record with this value already exists. |
 | `DATE_IN_FUTURE` | La fecha no puede ser futura. | The date cannot be in the future. |
+| `DATE_IN_PAST` | La fecha no puede ser anterior a hoy. | The date cannot be before today. |
 | `QUANTITY_INVALID` | La cantidad no es válida. | The quantity is not valid. |
 | `CATALOG_VALUE_INVALID` | El valor del catálogo no existe o está inactivo. | The catalog value does not exist or is inactive. |
 | `EMAIL_INVALID` | El correo electrónico no es válido. | The email address is not valid. |

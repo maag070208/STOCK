@@ -8,6 +8,7 @@ enum class ErrorCode(val httpStatus: Int) {
     UNKNOWN_FIELD(400),
     DUPLICATE_VALUE(409),
     DATE_IN_FUTURE(400),
+    DATE_IN_PAST(400),
     QUANTITY_INVALID(400),
     CATALOG_VALUE_INVALID(400),
     EMAIL_INVALID(400),

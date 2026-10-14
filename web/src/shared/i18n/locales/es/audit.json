@@ -80,7 +80,8 @@
     "LABEL_TEMPLATE_UPDATED": "Plantilla de etiqueta modificada",
     "PRINTER_CREATED": "Impresora creada",
     "PRINTER_UPDATED": "Impresora modificada",
-    "LABEL_PRINTED": "Etiqueta impresa"
+    "LABEL_PRINTED": "Etiqueta impresa",
+    "ORDER_CREATED": "Orden creada"
   },
   "targets": {
     "user": "Usuario",
@@ -100,6 +101,7 @@
     "invoice": "Factura",
     "receipt_assignment": "Asignación",
     "label_template": "Plantilla de etiqueta",
-    "printer": "Impresora"
+    "printer": "Impresora",
+    "order": "Orden"
   }
 }

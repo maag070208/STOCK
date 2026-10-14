@@ -149,6 +149,44 @@ object PermissionCatalog {
 		),
 		adminOnly("printers.view", sensitive = true),
 		adminOnly("printers.manage", sensitive = true),
+		// F5: orders (order-fulfillment.md section 2). OFFICE creates and assigns; the operator fulfills; the manager
+		// assigns and validates in its warehouses. Accepting a difference is the one judgement that only the manager and
+		// the administrator hold, so it is guarded like an adjustment.
+		PermissionDef(
+			"orders.create", ALL,
+			grants = mapOf(SeedRoles.ADMIN to Scope.ALL, SeedRoles.OFFICE to Scope.ALL),
+		),
+		PermissionDef(
+			"orders.view", listOf(Scope.AREA, Scope.ALL),
+			grants = mapOf(
+				SeedRoles.ADMIN to Scope.ALL, SeedRoles.OFFICE to Scope.ALL,
+				SeedRoles.WAREHOUSE_MANAGER to Scope.AREA, SeedRoles.WAREHOUSE_OPERATOR to Scope.AREA,
+			),
+		),
+		PermissionDef(
+			"orders.assign", listOf(Scope.AREA, Scope.ALL),
+			grants = mapOf(SeedRoles.ADMIN to Scope.ALL, SeedRoles.OFFICE to Scope.ALL, SeedRoles.WAREHOUSE_MANAGER to Scope.AREA),
+		),
+		PermissionDef(
+			"orders.fulfill", listOf(Scope.AREA, Scope.ALL),
+			grants = mapOf(SeedRoles.ADMIN to Scope.ALL, SeedRoles.WAREHOUSE_OPERATOR to Scope.AREA),
+		),
+		PermissionDef(
+			"orders.validate", listOf(Scope.AREA, Scope.ALL),
+			grants = mapOf(SeedRoles.ADMIN to Scope.ALL, SeedRoles.OFFICE to Scope.ALL, SeedRoles.WAREHOUSE_MANAGER to Scope.AREA),
+		),
+		PermissionDef(
+			"orders.cancel", listOf(Scope.AREA, Scope.ALL),
+			grants = mapOf(SeedRoles.ADMIN to Scope.ALL, SeedRoles.OFFICE to Scope.ALL, SeedRoles.WAREHOUSE_MANAGER to Scope.AREA),
+		),
+		PermissionDef(
+			"orders.reassign", listOf(Scope.AREA, Scope.ALL),
+			grants = mapOf(SeedRoles.ADMIN to Scope.ALL, SeedRoles.OFFICE to Scope.ALL, SeedRoles.WAREHOUSE_MANAGER to Scope.AREA),
+		),
+		PermissionDef(
+			"orders.accept_difference", listOf(Scope.AREA, Scope.ALL), sensitive = true,
+			grants = mapOf(SeedRoles.ADMIN to Scope.ALL, SeedRoles.WAREHOUSE_MANAGER to Scope.AREA),
+		),
 	)
 
 	val keys: Set<String> = all.map { it.key }.toSet()

@@ -133,6 +133,16 @@
     "printers": {
       "view": "Ver impresoras",
       "manage": "Administrar impresoras"
+    },
+    "orders": {
+      "create": "Crear órdenes",
+      "view": "Ver órdenes",
+      "assign": "Asignar órdenes",
+      "fulfill": "Surtir órdenes",
+      "validate": "Validar órdenes",
+      "cancel": "Cancelar órdenes",
+      "reassign": "Reasignar órdenes",
+      "accept_difference": "Aceptar una diferencia"
     }
   },
   "validation": {
