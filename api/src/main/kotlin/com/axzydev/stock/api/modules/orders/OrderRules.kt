@@ -3,6 +3,7 @@ package com.axzydev.stock.api.modules.orders
 import com.axzydev.stock.api.core.errors.ErrorCode
 import java.math.BigDecimal
 import java.time.LocalDate
+import java.util.UUID
 
 // The rules of an order that need no database (order-fulfillment.md sections 3, 4 and 6).
 object OrderRules {
@@ -40,5 +41,30 @@ object OrderRules {
 			quantity > picked -> ErrorCode.REASSIGN_EXCEEDS_PICKED
 			needed != null && quantity > needed -> ErrorCode.REASSIGN_EXCEEDS_TARGET
 			else -> null
+		}
+}
+
+// The due date alerts of an open order (order-fulfillment.md section 7a): who is told, and when.
+object OrderAlertRules {
+
+	enum class Kind { BEFORE, DUE, OVERDUE }
+
+	// The alert of an order on this day, or null while its due date is still far: the day before, the due date, and every
+	// day after it while the order stays open.
+	fun due(dueDate: LocalDate, today: LocalDate): Kind? =
+		when {
+			dueDate.isAfter(today.plusDays(1)) -> null
+			dueDate.isAfter(today) -> Kind.BEFORE
+			dueDate == today -> Kind.DUE
+			else -> Kind.OVERDUE
+		}
+
+	// Who is told: the assigned operator and the people who validate orders in the warehouse from the day before, and the
+	// creator too from the due date on. Someone who is two of those is told once.
+	fun recipients(kind: Kind, operatorId: UUID?, validatorIds: Collection<UUID>, createdBy: UUID?): Set<UUID> =
+		buildSet {
+			operatorId?.let { add(it) }
+			addAll(validatorIds)
+			if (kind != Kind.BEFORE) createdBy?.let { add(it) }
 		}
 }

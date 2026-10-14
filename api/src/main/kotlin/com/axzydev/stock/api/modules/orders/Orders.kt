@@ -63,6 +63,10 @@ class OrderLine(
 interface OrderRepository : JpaRepository<Order, UUID>, JpaSpecificationExecutor<Order> {
 	fun existsByWarehouseIdAndNumber(warehouseId: UUID, number: String): Boolean
 
+	// The orders whose due date has come, or is tomorrow: the ones that raise an alert on this day (section 7a).
+	@Query("select o from Order o where o.dueDate <= :last and o.statusId not in :excluded order by o.dueDate")
+	fun findDueBy(last: LocalDate, excluded: Collection<UUID>): List<Order>
+
 	// Picks, validation and reassignment of one order run one at a time, so its status always reads what is stored.
 	@Lock(LockModeType.PESSIMISTIC_WRITE)
 	@Query("select o from Order o where o.id = :id")
@@ -91,4 +95,25 @@ class OrderPick(
 
 interface OrderPickRepository : JpaRepository<OrderPick, UUID> {
 	fun findByLineIdIn(lineIds: Collection<UUID>): List<OrderPick>
+}
+
+// One alert of one order to one person on one day (order-fulfillment.md section 7a). The unique key on the three is what
+// stops the same day from being raised twice.
+@Entity
+@Table(name = "order_alerts")
+class OrderAlert(
+	var orderId: UUID,
+	var userId: UUID,
+	var alertDate: LocalDate,
+	var dueDate: LocalDate,
+	var kind: String,
+	var createdAt: Instant,
+) {
+	@Id
+	@GeneratedValue(strategy = GenerationType.UUID)
+	var id: UUID? = null
+}
+
+interface OrderAlertRepository : JpaRepository<OrderAlert, UUID> {
+	fun findByUserIdOrderByAlertDateDescDueDateAsc(userId: UUID): List<OrderAlert>
 }

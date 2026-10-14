@@ -30,6 +30,7 @@ import java.util.UUID
 @RequestMapping("/api/v1/orders")
 class OrderController(
 	private val orders: OrderService,
+	private val alerts: OrderAlertService,
 	private val idempotency: IdempotencyService,
 	private val json: JsonMapper,
 ) {
@@ -37,6 +38,11 @@ class OrderController(
 	@RequiresPermission(OrderService.VIEW)
 	fun query(@RequestBody request: TableRequest, user: CurrentUser, locale: Locale): TablePage<OrderView> =
 		orders.query(user, request, locale.language)
+
+	// The due date alerts of the signed-in person (order-fulfillment.md section 7a). The literal path goes before `/{id}`.
+	@GetMapping("/alerts")
+	@RequiresPermission(OrderService.VIEW)
+	fun alerts(user: CurrentUser, locale: Locale): OrderAlertsResponse = this.alerts.mine(user, locale.language)
 
 	@GetMapping("/{id}")
 	@RequiresPermission(OrderService.VIEW)
