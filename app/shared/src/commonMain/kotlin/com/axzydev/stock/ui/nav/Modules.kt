@@ -49,6 +49,8 @@ val MODULES: List<Module> = listOf(
 		anyOf = listOf("receipts.view"),
 		pages = listOf(
 			ModulePage("my-receipts", Text.PAGE_MY_RECEIPTS, Text.PAGE_MY_RECEIPTS_HINT, AppIcon.INBOX),
+			ModulePage("count", Text.PAGE_COUNT, Text.PAGE_COUNT_HINT, AppIcon.SCAN, anyOf = listOf("receipts.receive")),
+			ModulePage("placement", Text.PAGE_PLACEMENT, Text.PAGE_PLACEMENT_HINT, AppIcon.WAREHOUSE, anyOf = listOf("receipts.place")),
 			ModulePage("discrepancies", Text.PAGE_DISCREPANCIES, Text.PAGE_DISCREPANCIES_HINT, AppIcon.ALERT, anyOf = listOf("discrepancies.resolve")),
 		),
 	),

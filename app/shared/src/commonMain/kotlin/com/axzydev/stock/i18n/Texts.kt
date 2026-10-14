@@ -93,6 +93,29 @@ enum class Text {
 	OUT_OF_STOCK,
 	ACTIVE,
 	INACTIVE,
+	// F4-22 and F4-23: counting what arrived, and placing it into locations.
+	PAGE_COUNT,
+	PAGE_COUNT_HINT,
+	PAGE_PLACEMENT,
+	PAGE_PLACEMENT_HINT,
+	COUNT_QUANTITY,
+	COUNT_NOTES,
+	COUNT_SAVE,
+	COUNT_MATCH,
+	COUNT_DISCREPANCY,
+	COUNT_CHOOSE_ASSIGNMENT,
+	COUNT_ANOTHER,
+	PLACEMENT_SCAN,
+	PLACEMENT_ADD,
+	PLACEMENT_REMAINING,
+	PLACEMENT_SAVE,
+	PLACEMENT_TOTAL_MISMATCH,
+	PLACEMENT_REMOVE,
+	PLACEMENT_ANOTHER,
+	// The messages the app itself writes: the codes of docs/i18n/messages.md it can answer without asking the API.
+	QUANTITY_INVALID,
+	PRODUCT_NOT_IN_ASSIGNMENT,
+	LOCATION_NOT_IN_WAREHOUSE,
 }
 
 fun textFor(key: Text, language: Language): String =
@@ -188,6 +211,27 @@ fun textFor(key: Text, language: Language): String =
 			Text.OUT_OF_STOCK -> "Sin existencias"
 			Text.ACTIVE -> "Activo"
 			Text.INACTIVE -> "Inactivo"
+			Text.PAGE_COUNT -> "Contar"
+			Text.PAGE_COUNT_HINT -> "Escanea el material y cuenta lo que llegó."
+			Text.PAGE_PLACEMENT -> "Ubicar"
+			Text.PAGE_PLACEMENT_HINT -> "Guarda lo contado en sus ubicaciones."
+			Text.COUNT_QUANTITY -> "Cantidad contada"
+			Text.COUNT_NOTES -> "Notas (opcional)"
+			Text.COUNT_SAVE -> "Guardar conteo"
+			Text.COUNT_MATCH -> "Coincide con lo esperado."
+			Text.COUNT_DISCREPANCY -> "Hay una diferencia: la oficina debe ajustarla."
+			Text.COUNT_CHOOSE_ASSIGNMENT -> "Este material está en varias asignaciones. Elige una."
+			Text.COUNT_ANOTHER -> "Contar otro material"
+			Text.PLACEMENT_SCAN -> "Escanea o escribe la ubicación"
+			Text.PLACEMENT_ADD -> "Agregar ubicación"
+			Text.PLACEMENT_REMAINING -> "Falta por ubicar: {quantity}"
+			Text.PLACEMENT_SAVE -> "Guardar ubicaciones"
+			Text.PLACEMENT_TOTAL_MISMATCH -> "Ubica todo lo contado."
+			Text.PLACEMENT_REMOVE -> "Quitar"
+			Text.PLACEMENT_ANOTHER -> "Ubicar otro"
+			Text.QUANTITY_INVALID -> "La cantidad no es válida."
+			Text.PRODUCT_NOT_IN_ASSIGNMENT -> "Este material no está en tus asignaciones abiertas."
+			Text.LOCATION_NOT_IN_WAREHOUSE -> "La ubicación no pertenece a este almacén."
 		}
 		Language.EN -> when (key) {
 			Text.SIGN_IN_TITLE -> "Sign in"
@@ -280,5 +324,26 @@ fun textFor(key: Text, language: Language): String =
 			Text.OUT_OF_STOCK -> "Out of stock"
 			Text.ACTIVE -> "Active"
 			Text.INACTIVE -> "Inactive"
+			Text.PAGE_COUNT -> "Count"
+			Text.PAGE_COUNT_HINT -> "Scan the material and count what arrived."
+			Text.PAGE_PLACEMENT -> "Place"
+			Text.PAGE_PLACEMENT_HINT -> "Put what you counted into its locations."
+			Text.COUNT_QUANTITY -> "Counted quantity"
+			Text.COUNT_NOTES -> "Notes (optional)"
+			Text.COUNT_SAVE -> "Save count"
+			Text.COUNT_MATCH -> "It matches what was expected."
+			Text.COUNT_DISCREPANCY -> "There is a difference: the office must adjust it."
+			Text.COUNT_CHOOSE_ASSIGNMENT -> "This material is in several assignments. Pick one."
+			Text.COUNT_ANOTHER -> "Count another material"
+			Text.PLACEMENT_SCAN -> "Scan or type the location"
+			Text.PLACEMENT_ADD -> "Add location"
+			Text.PLACEMENT_REMAINING -> "{quantity} left to place"
+			Text.PLACEMENT_SAVE -> "Save placements"
+			Text.PLACEMENT_TOTAL_MISMATCH -> "Place everything you counted."
+			Text.PLACEMENT_REMOVE -> "Remove"
+			Text.PLACEMENT_ANOTHER -> "Place another"
+			Text.QUANTITY_INVALID -> "The quantity is not valid."
+			Text.PRODUCT_NOT_IN_ASSIGNMENT -> "This material is not in your open assignments."
+			Text.LOCATION_NOT_IN_WAREHOUSE -> "The location is not in this warehouse."
 		}
 	}

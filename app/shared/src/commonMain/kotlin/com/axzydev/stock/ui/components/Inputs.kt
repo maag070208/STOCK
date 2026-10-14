@@ -61,6 +61,8 @@ fun TextInput(
 	modifier: Modifier = Modifier,
 	icon: AppIcon? = null,
 	password: Boolean = false,
+	/** A quantity or a code read as a number: the phone shows its numeric keyboard. */
+	numeric: Boolean = false,
 	contentType: ContentType? = null,
 	error: String? = null,
 	imeAction: ImeAction = ImeAction.Next,
@@ -85,7 +87,11 @@ fun TextInput(
 			cursorBrush = SolidColor(colors.primaryFocus),
 			visualTransformation = if (password && !visible) PasswordVisualTransformation() else VisualTransformation.None,
 			keyboardOptions = KeyboardOptions(
-				keyboardType = if (password) KeyboardType.Password else KeyboardType.Ascii,
+				keyboardType = when {
+					password -> KeyboardType.Password
+					numeric -> KeyboardType.Decimal
+					else -> KeyboardType.Ascii
+				},
 				imeAction = imeAction,
 				autoCorrectEnabled = false,
 			),

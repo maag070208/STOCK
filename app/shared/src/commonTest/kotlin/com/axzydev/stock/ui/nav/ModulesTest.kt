@@ -48,6 +48,16 @@ class ModulesTest {
 	}
 
 	@Test
+	fun anOperatorWhoReceivesOpensCountAndPlacement() {
+		val receipts = moduleById("receipts")!!
+		val pages = visiblePages(
+			receipts,
+			permissions("receipts.view" to "OWN", "receipts.receive" to "OWN", "receipts.place" to "OWN"),
+		).map { it.id }
+		assertEquals(listOf("my-receipts", "count", "placement"), pages)
+	}
+
+	@Test
 	fun everyModuleAnOperatorReceivesHasAtLeastOnePageToOpen() {
 		for (module in MODULES) {
 			if (module.anyOf.isEmpty()) continue

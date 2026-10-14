@@ -95,7 +95,19 @@ data class Discrepancy(
 	val countedAt: String? = null,
 )
 
-// The receiving endpoints the app uses: what the operator has to receive, and the differences to resolve.
+// One location to place into: where, and how much. The quantity is the text the person typed, which the API reads
+// as a decimal, so no digit is lost and nothing is rounded.
+@Serializable
+data class PlacementBody(val locationId: String, val quantity: String)
+
+// A count, with the notes the operator may add. `countedQuantity` travels as text for the same reason.
+@Serializable
+private data class CountBody(val countedQuantity: String, val notes: String? = null)
+
+@Serializable
+private data class PlacementsBody(val placements: List<PlacementBody>)
+
+// The receiving endpoints the app uses: what the operator has to receive, what they count, and where they place it.
 class ReceivingApi(engine: HttpClientEngine, private val baseUrl: String, private val language: () -> Language) {
 
 	private val http = apiClient(engine)
@@ -109,4 +121,22 @@ class ReceivingApi(engine: HttpClientEngine, private val baseUrl: String, privat
 			jsonBody()
 			setBody(TableQuery(limit = PAGE_LIMIT))
 		}.bodyOrThrow<Page<Discrepancy>>().data
+
+	// What the operator counted for an assignment. The API refuses a negative or over-precise quantity with its
+	// own message; the app only refuses what it can see is not a number at all.
+	suspend fun count(token: String, assignmentId: String, countedQuantity: String, notes: String?): AssignmentView =
+		http.post("$baseUrl/receipts/assignments/$assignmentId/count") {
+			fromApp(language(), token)
+			jsonBody()
+			setBody(CountBody(countedQuantity, notes?.takeIf { it.isNotBlank() }))
+		}.bodyOrThrow()
+
+	// Where the operator put what they counted. The API needs every placement in one warehouse's locations, and
+	// refuses a total above the counted quantity with its own message.
+	suspend fun placements(token: String, assignmentId: String, placements: List<PlacementBody>): AssignmentView =
+		http.post("$baseUrl/receipts/assignments/$assignmentId/placements") {
+			fromApp(language(), token)
+			jsonBody()
+			setBody(PlacementsBody(placements))
+		}.bodyOrThrow()
 }

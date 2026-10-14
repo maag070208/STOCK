@@ -22,6 +22,7 @@ import com.axzydev.stock.brand.reducedMotionEnabled
 import com.axzydev.stock.data.catalogs.CatalogApi
 import com.axzydev.stock.data.customers.CustomersApi
 import com.axzydev.stock.data.health.HealthClient
+import com.axzydev.stock.data.locations.LocationsApi
 import com.axzydev.stock.data.products.ProductApi
 import com.axzydev.stock.data.receipts.ReceivingApi
 import com.axzydev.stock.data.session.AuthApi
@@ -31,7 +32,9 @@ import com.axzydev.stock.data.warehouses.WarehouseApi
 import com.axzydev.stock.feature.customers.CustomersViewModel
 import com.axzydev.stock.feature.lookup.LookupViewModel
 import com.axzydev.stock.feature.orders.OrderStatusesViewModel
+import com.axzydev.stock.feature.receipts.CountViewModel
 import com.axzydev.stock.feature.receipts.DiscrepanciesViewModel
+import com.axzydev.stock.feature.receipts.PlacementViewModel
 import com.axzydev.stock.feature.receipts.ReceiptsViewModel
 import com.axzydev.stock.feature.session.SessionState
 import com.axzydev.stock.feature.session.SessionViewModel
@@ -50,8 +53,10 @@ import com.axzydev.stock.ui.module.ModuleMenuScreen
 import com.axzydev.stock.ui.nav.AppBackHandler
 import com.axzydev.stock.ui.nav.visibleModulesWithPages
 import com.axzydev.stock.ui.orders.OrderStatusesScreen
+import com.axzydev.stock.ui.receipts.CountScreen
 import com.axzydev.stock.ui.receipts.DiscrepanciesScreen
 import com.axzydev.stock.ui.receipts.MyReceiptsScreen
+import com.axzydev.stock.ui.receipts.PlacementScreen
 import com.axzydev.stock.ui.signin.ChangePasswordScreen
 import com.axzydev.stock.ui.signin.SignInScreen
 import com.axzydev.stock.ui.stock.StockScreen
@@ -86,6 +91,7 @@ fun App(
 	val warehouses = remember { WarehouseApi(platformEngine(), apiBaseUrl) { currentLanguage } }
 	val customersApi = remember { CustomersApi(platformEngine(), apiBaseUrl) { currentLanguage } }
 	val catalogsApi = remember { CatalogApi(platformEngine(), apiBaseUrl) { currentLanguage } }
+	val locationsApi = remember { LocationsApi(platformEngine(), apiBaseUrl) { currentLanguage } }
 	val lookup = viewModel {
 		LookupViewModel(products, session, { textFor(Text.FIELD_REQUIRED, currentLanguage) }) {
 			textFor(Text.HEALTH_UNREACHABLE, currentLanguage)
@@ -96,6 +102,29 @@ fun App(
 	val noConnection = { textFor(Text.HEALTH_UNREACHABLE, currentLanguage) }
 	val receipts = viewModel { ReceiptsViewModel(receiving, session, noConnection) }
 	val discrepancies = viewModel { DiscrepanciesViewModel(receiving, session, noConnection) }
+	val count = viewModel {
+		CountViewModel(
+			products,
+			receiving,
+			session,
+			{ textFor(Text.FIELD_REQUIRED, currentLanguage) },
+			{ textFor(Text.QUANTITY_INVALID, currentLanguage) },
+			{ textFor(Text.PRODUCT_NOT_IN_ASSIGNMENT, currentLanguage) },
+			noConnection,
+		)
+	}
+	val placement = viewModel {
+		PlacementViewModel(
+			receiving,
+			locationsApi,
+			session,
+			{ textFor(Text.FIELD_REQUIRED, currentLanguage) },
+			{ textFor(Text.QUANTITY_INVALID, currentLanguage) },
+			{ textFor(Text.LOCATION_NOT_IN_WAREHOUSE, currentLanguage) },
+			{ textFor(Text.PLACEMENT_TOTAL_MISMATCH, currentLanguage) },
+			noConnection,
+		)
+	}
 	val balances = viewModel { StockViewModel(stock, session, noConnection) }
 	val locations = viewModel { WarehousesViewModel(warehouses, session, noConnection) }
 	val customers = viewModel { CustomersViewModel(customersApi, session, noConnection) }
@@ -130,9 +159,15 @@ fun App(
 							val entry = modules.firstOrNull { it.module.id == moduleId }
 							val page = entry?.pages?.firstOrNull { it.id == pageId }
 							// The system's back closes the deepest thing that is open: the page, then the module. Only
-							// at the hub does it leave the app.
+							// at the hub does it leave the app. The placement form is a drill-in: its back returns to
+							// the list, not to the module's menu.
 							AppBackHandler(enabled = entry != null) {
-								if (page != null) pageId = null else moduleId = null
+								val onPlacementForm = entry?.module?.id == "receipts" && page?.id == PLACEMENT && placement.state.value.target != null
+								when {
+									onPlacementForm -> placement.back()
+									page != null -> pageId = null
+									else -> moduleId = null
+								}
 							}
 							when {
 								entry == null -> HomeScreen(
@@ -149,10 +184,17 @@ fun App(
 								page == null -> ModuleMenuScreen(entry, onBack = { moduleId = null }, onOpenPage = { pageId = it.id })
 
 								else -> when (entry.module.id) {
-									"receipts" -> if (page.id == DISCREPANCIES) {
-										DiscrepanciesScreen(discrepancies) { pageId = null }
-									} else {
-										MyReceiptsScreen(receipts) { pageId = null }
+									"receipts" -> when (page.id) {
+										DISCREPANCIES -> DiscrepanciesScreen(discrepancies) { pageId = null }
+										COUNT -> CountScreen(count) {
+											count.clear()
+											pageId = null
+										}
+										PLACEMENT -> PlacementScreen(placement) {
+											placement.clear()
+											pageId = null
+										}
+										else -> MyReceiptsScreen(receipts) { pageId = null }
 									}
 
 									"materials" -> LookupScreen(lookup) {
@@ -181,5 +223,7 @@ fun App(
 }
 
 private const val DISCREPANCIES = "discrepancies"
+private const val COUNT = "count"
+private const val PLACEMENT = "placement"
 private const val CUSTOMERS = "customers"
 private const val ORDER_STATUS = "order-status"
