@@ -1,0 +1,73 @@
+/*
+ * Two Tailwind builds meet in this file: the Axzy UI System's, already compiled inside its own layer, and the app's.
+ * The app's build uses the prefix "sf", so the two never emit a class or a theme variable with the same name.
+ * That lets the app's utilities sit above the kit's layer: they apply only where the app writes them,
+ * and the kit's reset cannot undo them. See docs/architecture/design-system.md.
+ */
+@layer theme, base, axzy-ui-system, components, utilities;
+
+@import "tailwindcss" prefix(sf);
+@import "./design-tokens.css";
+@import "@axzydev/axzy_ui_system/layered.css";
+
+/*
+ * The rules below sit outside the layers on purpose, so they apply on top of the kit.
+ * Every value comes from design-tokens.css, generated from design/command-center-DESIGN.md.
+ */
+
+/* Workspace: warm off-white canvas, brown-gray text, the system sans font. */
+body {
+  background-color: var(--sf-color-background);
+  color: var(--sf-color-on-background);
+  font-family: var(--sf-font-sans);
+
+  /* The kit's text colors, so its components read in the same warm neutrals. */
+  --color-heading-default: var(--sf-color-on-background);
+  --color-text-default: var(--sf-color-on-surface);
+  --color-text-muted: var(--sf-color-on-surface-muted);
+  --it-layout-bg: var(--sf-color-background);
+
+  /*
+   * Shell: dark glass around the light workspace. These are the kit's public tokens for the sidebar and the top bar.
+   * They are set here because, in light mode, the kit's own palette turns a dark shell white.
+   */
+  --it-sidebar-bg: var(--sf-c-shell-sidebar-background-color);
+  --it-sidebar-border: var(--sf-shell-border);
+  --it-sidebar-brand-color: var(--sf-c-shell-sidebar-text-color);
+  --it-sidebar-label-color: var(--sf-c-nav-item-text-color);
+  --it-sidebar-icon-color: var(--sf-c-nav-item-text-color);
+  --it-sidebar-hover-bg: var(--sf-c-nav-item-active-background-color);
+  --it-sidebar-active-bg: var(--sf-c-nav-item-active-background-color);
+  --it-sidebar-active-color: var(--sf-c-nav-item-active-text-color);
+  --it-sidebar-active-icon: var(--sf-c-nav-item-active-text-color);
+  --it-topbar-bg: var(--sf-c-shell-header-background-color);
+  --it-topbar-border: var(--sf-shell-border);
+  --it-topbar-text: var(--sf-c-shell-header-text-color);
+  --it-topbar-icon: var(--sf-c-button-ghost-shell-text-color);
+  --it-topbar-icon-hover: var(--sf-c-shell-header-text-color);
+  /* The person's name and username in the top bar: white, and white at 70%, as the design writes text on the shell. */
+  --it-topbar-user-text: var(--sf-c-shell-header-text-color);
+  --it-topbar-user-subtitle: var(--sf-c-nav-item-text-color);
+  --it-topbar-user-hover: var(--sf-c-input-shell-background-color);
+}
+
+/* The glass: the kit only blurs its shell in the "soft" look, which also adds glows the design does not have. */
+.sf-shell aside,
+.sf-shell header {
+  -webkit-backdrop-filter: blur(var(--sf-elevation-shell-blur));
+  backdrop-filter: blur(var(--sf-elevation-shell-blur));
+}
+
+/* Navigation items: the design's corner and padding. The kit draws them as pills with its own spacing. */
+.sf-shell aside nav [role="button"] {
+  border-radius: var(--sf-c-nav-item-rounded);
+  padding: var(--sf-c-nav-item-padding);
+}
+
+/* The kit's flat shell is 248px wide, and 72px collapsed. The design asks for 256px and 64px. */
+.sf-shell .w-\[248px\] {
+  width: var(--sf-layout-shell-sidebar-expanded);
+}
+.sf-shell .w-\[72px\] {
+  width: var(--sf-layout-shell-sidebar-collapsed);
+}

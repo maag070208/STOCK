@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The window before the first frame. Its color is the design's workspace color (design_colors.xml, generated),
+         so the app does not open on a flash. Everything after that is drawn by the shared interface. -->
+    <style name="Theme.StockFlow" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/design_background</item>
+    </style>
+</resources>

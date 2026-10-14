@@ -1,0 +1,72 @@
+{
+  "title": "Access",
+  "description": "Roles, the permissions of each role, policies and what each role sees.",
+  "tabs": {
+    "roles": "Roles",
+    "matrix": "Matrix",
+    "policies": "Policies",
+    "screens": "What each role sees"
+  },
+  "roles": {
+    "new": "New role",
+    "key": "Key",
+    "keyHint": "Uppercase letters, digits and underscores. It cannot change.",
+    "name": "Name",
+    "type": "Type",
+    "system": "System",
+    "custom": "Custom",
+    "users": "Users",
+    "status": "Status",
+    "actions": "Actions",
+    "deactivate": "Deactivate",
+    "activate": "Activate",
+    "deleteConfirm": "The role {{name}} will be deleted."
+  },
+  "matrix": {
+    "permission": "Permission",
+    "sensitive": "Sensitive",
+    "save": "Save changes",
+    "pending": "{{count}} unsaved changes",
+    "saved": "Matrix saved."
+  },
+  "policies": {
+    "new": "New policy",
+    "editTitle": "Edit policy",
+    "key": "Key",
+    "priority": "Priority",
+    "effect": "Effect",
+    "action": "Action",
+    "conditions": "Conditions",
+    "roles": "Roles",
+    "allRoles": "Every role",
+    "active": "Active",
+    "field": "Field",
+    "operator": "Operator",
+    "value": "Value",
+    "valueHint": "Text, a number, true or false, or a comma-separated list.",
+    "addCondition": "Add condition",
+    "none": "There are no policies.",
+    "deleteConfirm": "The policy {{key}} will be deleted.",
+    "description": "A policy denies or allows an action under some conditions, after the permissions allowed it. The first one that matches, by priority, decides.",
+    "effects": {
+      "ALLOW": "Allow",
+      "DENY": "Deny"
+    },
+    "operators": {
+      "eq": "equals",
+      "neq": "differs from",
+      "in": "is in",
+      "not_in": "is not in",
+      "contains": "contains",
+      "not_contains": "does not contain",
+      "gt": "is greater than",
+      "gte": "is at least",
+      "lt": "is less than",
+      "lte": "is at most",
+      "exists": "exists"
+    }
+  },
+  "screens": {
+    "screen": "Screen"
+  }
+}

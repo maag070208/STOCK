@@ -1,0 +1,156 @@
+{
+  "brand": {
+    "loading": "Loading StockFlow"
+  },
+  "app": {
+    "name": "StockFlow"
+  },
+  "nav": {
+    "home": "Home",
+    "users": "Users",
+    "roles": "Access",
+    "catalogs": "Catalogs",
+    "audit": "Audit log",
+    "admin": "Administration",
+    "warehouses": "Warehouses",
+    "products": "Materials",
+    "suppliers": "Suppliers",
+    "customers": "Customers",
+    "stock": "Stock",
+    "invoices": "Invoices",
+    "discrepancies": "Discrepancies",
+    "labels": "Labels",
+    "printers": "Printers"
+  },
+  "language": {
+    "label": "Language",
+    "es": "Spanish",
+    "en": "English"
+  },
+  "actions": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "close": "Close",
+    "create": "Create",
+    "edit": "Edit",
+    "delete": "Delete",
+    "signOut": "Sign out",
+    "copy": "Copy",
+    "copied": "Copied",
+    "add": "Add",
+    "remove": "Remove",
+    "confirm": "Confirm"
+  },
+  "status": {
+    "active": "Active",
+    "inactive": "Inactive",
+    "locked": "Locked",
+    "pendingPassword": "Password change pending"
+  },
+  "scope": {
+    "NONE": "No access",
+    "OWN": "Own",
+    "AREA": "Their warehouse",
+    "ALL": "All"
+  },
+  "roles": {
+    "ADMIN": "Administrator",
+    "OFFICE": "Office",
+    "WAREHOUSE_MANAGER": "Warehouse manager",
+    "WAREHOUSE_OPERATOR": "Warehouse",
+    "APP_USER": "App user"
+  },
+  "permissions": {
+    "users": {
+      "view": "View users",
+      "create": "Create users",
+      "edit": "Edit users",
+      "delete": "Deactivate users",
+      "permissions": "Per-person access"
+    },
+    "roles": {
+      "manage": "Manage roles and access"
+    },
+    "audit": {
+      "view": "View audit log"
+    },
+    "config": {
+      "view": "View settings",
+      "manage": "Change settings"
+    },
+    "catalogs": {
+      "view": "View catalogs",
+      "manage": "Manage catalogs"
+    },
+    "web": {
+      "access": "Sign in on the web"
+    },
+    "app": {
+      "access": "Sign in on the app"
+    },
+    "locations": {
+      "view": "View warehouses and locations",
+      "manage": "Manage warehouses and locations"
+    },
+    "products": {
+      "view": "View materials",
+      "manage": "Manage materials"
+    },
+    "suppliers": {
+      "view": "View suppliers",
+      "manage": "Manage suppliers"
+    },
+    "customers": {
+      "view": "View customers",
+      "manage": "Manage customers"
+    },
+    "stock": {
+      "view": "View stock",
+      "opening": "Load the opening inventory"
+    },
+    "invoices": {
+      "view": "View invoices",
+      "create": "Create invoices",
+      "manage": "Manage invoices"
+    },
+    "receipts": {
+      "view": "View material entries",
+      "assign": "Assign entries",
+      "receive": "Count received material",
+      "place": "Place material"
+    },
+    "discrepancies": {
+      "resolve": "Adjust discrepancies"
+    },
+    "staff_templates": {
+      "manage": "Manage staff templates"
+    },
+    "labels": {
+      "view": "View label templates",
+      "manage": "Manage label templates",
+      "print": "Print labels"
+    },
+    "printers": {
+      "view": "View printers",
+      "manage": "Manage printers"
+    }
+  },
+  "validation": {
+    "required": "This field is required."
+  },
+  "errors": {
+    "network": "No connection to the API.",
+    "unexpected": "An unexpected error occurred. Try again.",
+    "notFound": "The record was not found."
+  },
+  "forbidden": {
+    "title": "No access",
+    "description": "You do not have permission to see this screen.",
+    "back": "Go home"
+  },
+  "home": {
+    "greeting": "Hello, {{name}}",
+    "description": "Choose an option from the menu to start."
+  },
+  "saved": "Changes saved."
+}

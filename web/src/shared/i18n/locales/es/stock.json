@@ -1,0 +1,49 @@
+{
+  "title": "Existencias",
+  "description": "Lo que hay en cada ubicación y de cada material. Solo lectura: las existencias cambian con las entradas y salidas.",
+  "tabs": {
+    "byLocation": "Por ubicación",
+    "byProduct": "Por material"
+  },
+  "columns": {
+    "warehouse": "Almacén",
+    "location": "Ubicación",
+    "aisle": "Pasillo",
+    "rack": "Rack",
+    "code": "Código",
+    "product": "Material",
+    "unit": "Unidad",
+    "quantity": "Cantidad",
+    "locations": "Ubicaciones"
+  },
+  "temporary": "Temporal",
+  "opening": {
+    "button": "Inventario inicial",
+    "title": "Inventario inicial",
+    "description": "Carga las existencias del archivo de inventario (.xlsx) en la ubicación temporal del almacén. Primero se revisa sin guardar nada; después confirmas. Se carga una sola vez por almacén.",
+    "warehouse": "Almacén",
+    "file": "Archivo de inventario (.xlsx)",
+    "choose": "Elegir archivo",
+    "noFile": "Ningún archivo elegido",
+    "review": "Revisar archivo",
+    "reviewing": "Revisando…",
+    "confirm": "Cargar {{count}} materiales con existencias",
+    "confirming": "Cargando…",
+    "report": "Resultado de la revisión",
+    "products": "Materiales en el archivo",
+    "withStock": "Con existencias",
+    "total": "Unidades",
+    "control": {
+      "label": "Total de control",
+      "matches": "La suma ({{total}}) coincide con el total de control ({{control}}).",
+      "mismatch": "La suma ({{total}}) no coincide con el total de control ({{control}}). No se puede cargar.",
+      "none": "El archivo no trae total de control."
+    },
+    "missing": "Materiales del archivo que no existen: importa primero los materiales.",
+    "row": "Fila",
+    "code": "Código",
+    "alreadyLoaded": "Este almacén ya tiene su inventario inicial. Confirmar no cargará nada.",
+    "done": "Se cargaron {{count}} materiales en la ubicación temporal.",
+    "nothing": "No se cargó nada: el almacén ya tenía su inventario inicial."
+  }
+}

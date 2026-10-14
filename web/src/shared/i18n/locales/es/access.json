@@ -1,0 +1,72 @@
+{
+  "title": "Acceso",
+  "description": "Roles, permisos de cada rol, políticas y lo que ve cada rol.",
+  "tabs": {
+    "roles": "Roles",
+    "matrix": "Matriz",
+    "policies": "Políticas",
+    "screens": "Qué ve cada rol"
+  },
+  "roles": {
+    "new": "Nuevo rol",
+    "key": "Clave",
+    "keyHint": "Mayúsculas, números y guion bajo. No se puede cambiar.",
+    "name": "Nombre",
+    "type": "Tipo",
+    "system": "Del sistema",
+    "custom": "Personalizado",
+    "users": "Usuarios",
+    "status": "Estado",
+    "actions": "Acciones",
+    "deactivate": "Desactivar",
+    "activate": "Activar",
+    "deleteConfirm": "Se eliminará el rol {{name}}."
+  },
+  "matrix": {
+    "permission": "Permiso",
+    "sensitive": "Sensible",
+    "save": "Guardar cambios",
+    "pending": "{{count}} cambios sin guardar",
+    "saved": "Matriz guardada."
+  },
+  "policies": {
+    "new": "Nueva política",
+    "editTitle": "Editar política",
+    "key": "Clave",
+    "priority": "Prioridad",
+    "effect": "Efecto",
+    "action": "Acción",
+    "conditions": "Condiciones",
+    "roles": "Roles",
+    "allRoles": "Todos los roles",
+    "active": "Activa",
+    "field": "Campo",
+    "operator": "Operador",
+    "value": "Valor",
+    "valueHint": "Texto, número, true o false, o una lista separada por comas.",
+    "addCondition": "Agregar condición",
+    "none": "No hay políticas.",
+    "deleteConfirm": "Se eliminará la política {{key}}.",
+    "description": "Una política niega o permite una acción en ciertas condiciones, después de que los permisos la permitieron. La primera que coincide, por prioridad, decide.",
+    "effects": {
+      "ALLOW": "Permitir",
+      "DENY": "Negar"
+    },
+    "operators": {
+      "eq": "es igual a",
+      "neq": "es distinto de",
+      "in": "está en",
+      "not_in": "no está en",
+      "contains": "contiene",
+      "not_contains": "no contiene",
+      "gt": "es mayor que",
+      "gte": "es mayor o igual que",
+      "lt": "es menor que",
+      "lte": "es menor o igual que",
+      "exists": "existe"
+    }
+  },
+  "screens": {
+    "screen": "Pantalla"
+  }
+}

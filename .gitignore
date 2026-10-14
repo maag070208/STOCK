@@ -1,0 +1,20 @@
+# secrets and local settings
+.env
+local.properties
+
+# dependencies and build output
+node_modules/
+build/
+.gradle/
+.kotlin/
+dist/
+playwright-report/
+test-results/
+
+# IDE and OS
+.idea/
+*.iml
+.DS_Store
+# Xcode keeps each person's state here; the shared scheme lives in xcshareddata/
+xcuserdata/
+DerivedData/

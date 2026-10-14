@@ -1,0 +1,75 @@
+{
+  "suppliers": {
+    "title": "Suppliers",
+    "description": "The companies that send invoices, with their address, payment terms and contacts.",
+    "new": "New supplier",
+    "edit": "Edit supplier",
+    "back": "Back to suppliers"
+  },
+  "customers": {
+    "title": "Customers",
+    "description": "Who the orders go to, with their address, payment terms and contacts.",
+    "new": "New customer",
+    "edit": "Edit customer",
+    "back": "Back to customers"
+  },
+  "columns": {
+    "code": "Code",
+    "name": "Name",
+    "taxId": "RFC",
+    "status": "Status",
+    "actions": "Actions"
+  },
+  "form": {
+    "general": "General",
+    "code": "Code",
+    "codeHint": "Uppercase letters, digits and hyphens. It cannot change later.",
+    "name": "Name or company name",
+    "taxId": "RFC",
+    "taxIdHint": "12 characters for companies, 13 for people.",
+    "paymentTerms": "Payment terms",
+    "noPaymentTerms": "There are no payment terms yet. An administrator adds them in Catalogs.",
+    "address": "Address",
+    "street": "Street",
+    "exteriorNumber": "Exterior number",
+    "exteriorHint": "No number: S/N",
+    "interiorNumber": "Interior number",
+    "neighborhood": "Neighborhood",
+    "city": "City",
+    "state": "State",
+    "postalCode": "Postal code",
+    "country": "Country",
+    "save": "Save",
+    "cancel": "Cancel"
+  },
+  "detail": {
+    "paymentTerms": "Payment terms",
+    "address": "Address",
+    "createdAt": "Created",
+    "interior": "Int. {{number}}"
+  },
+  "contacts": {
+    "title": "Contacts",
+    "none": "No contacts yet.",
+    "new": "New contact",
+    "edit": "Edit contact",
+    "name": "Name",
+    "email": "Email",
+    "phone": "Phone",
+    "channelHint": "Give an email or a phone.",
+    "deactivate": "Deactivate",
+    "reactivate": "Reactivate"
+  },
+  "actions": {
+    "open": "View",
+    "edit": "Edit",
+    "deactivate": "Deactivate",
+    "reactivate": "Reactivate"
+  },
+  "confirm": {
+    "deactivate": "Deactivate {{name}}? It will not be offered for new records, and it stays in history.",
+    "reactivate": "Reactivate {{name}}?",
+    "deactivateContact": "Deactivate the contact {{name}}?",
+    "reactivateContact": "Reactivate the contact {{name}}?"
+  }
+}

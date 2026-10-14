@@ -1,0 +1,156 @@
+{
+  "brand": {
+    "loading": "Cargando StockFlow"
+  },
+  "app": {
+    "name": "StockFlow"
+  },
+  "nav": {
+    "home": "Inicio",
+    "users": "Usuarios",
+    "roles": "Acceso",
+    "catalogs": "Catálogos",
+    "audit": "Bitácora",
+    "admin": "Administración",
+    "warehouses": "Almacenes",
+    "products": "Materiales",
+    "suppliers": "Proveedores",
+    "customers": "Clientes",
+    "stock": "Existencias",
+    "invoices": "Facturas",
+    "discrepancies": "Diferencias",
+    "labels": "Etiquetas",
+    "printers": "Impresoras"
+  },
+  "language": {
+    "label": "Idioma",
+    "es": "Español",
+    "en": "Inglés"
+  },
+  "actions": {
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "close": "Cerrar",
+    "create": "Crear",
+    "edit": "Editar",
+    "delete": "Eliminar",
+    "signOut": "Cerrar sesión",
+    "copy": "Copiar",
+    "copied": "Copiado",
+    "add": "Agregar",
+    "remove": "Quitar",
+    "confirm": "Confirmar"
+  },
+  "status": {
+    "active": "Activo",
+    "inactive": "Inactivo",
+    "locked": "Bloqueado",
+    "pendingPassword": "Cambio de contraseña pendiente"
+  },
+  "scope": {
+    "NONE": "Sin acceso",
+    "OWN": "Propio",
+    "AREA": "Su almacén",
+    "ALL": "Todo"
+  },
+  "roles": {
+    "ADMIN": "Administrador",
+    "OFFICE": "Oficinas",
+    "WAREHOUSE_MANAGER": "Gerente de almacén",
+    "WAREHOUSE_OPERATOR": "Almacén",
+    "APP_USER": "Usuario app"
+  },
+  "permissions": {
+    "users": {
+      "view": "Ver usuarios",
+      "create": "Crear usuarios",
+      "edit": "Editar usuarios",
+      "delete": "Dar de baja usuarios",
+      "permissions": "Acceso por persona"
+    },
+    "roles": {
+      "manage": "Administrar roles y acceso"
+    },
+    "audit": {
+      "view": "Ver bitácora"
+    },
+    "config": {
+      "view": "Ver configuración",
+      "manage": "Cambiar configuración"
+    },
+    "catalogs": {
+      "view": "Ver catálogos",
+      "manage": "Administrar catálogos"
+    },
+    "web": {
+      "access": "Entrar por la web"
+    },
+    "app": {
+      "access": "Entrar por la app"
+    },
+    "locations": {
+      "view": "Ver almacenes y ubicaciones",
+      "manage": "Administrar almacenes y ubicaciones"
+    },
+    "products": {
+      "view": "Ver materiales",
+      "manage": "Administrar materiales"
+    },
+    "suppliers": {
+      "view": "Ver proveedores",
+      "manage": "Administrar proveedores"
+    },
+    "customers": {
+      "view": "Ver clientes",
+      "manage": "Administrar clientes"
+    },
+    "stock": {
+      "view": "Ver existencias",
+      "opening": "Cargar el inventario inicial"
+    },
+    "invoices": {
+      "view": "Ver facturas",
+      "create": "Crear facturas",
+      "manage": "Administrar facturas"
+    },
+    "receipts": {
+      "view": "Ver entradas de material",
+      "assign": "Asignar entradas",
+      "receive": "Contar material recibido",
+      "place": "Colocar material"
+    },
+    "discrepancies": {
+      "resolve": "Ajustar diferencias"
+    },
+    "staff_templates": {
+      "manage": "Administrar plantillas de personal"
+    },
+    "labels": {
+      "view": "Ver plantillas de etiquetas",
+      "manage": "Administrar plantillas de etiquetas",
+      "print": "Imprimir etiquetas"
+    },
+    "printers": {
+      "view": "Ver impresoras",
+      "manage": "Administrar impresoras"
+    }
+  },
+  "validation": {
+    "required": "Este campo es obligatorio."
+  },
+  "errors": {
+    "network": "Sin conexión con la API.",
+    "unexpected": "Ocurrió un error inesperado. Inténtalo de nuevo.",
+    "notFound": "No se encontró el registro."
+  },
+  "forbidden": {
+    "title": "Sin acceso",
+    "description": "No tienes permiso para ver esta pantalla.",
+    "back": "Ir al inicio"
+  },
+  "home": {
+    "greeting": "Hola, {{name}}",
+    "description": "Elige una opción del menú para empezar."
+  },
+  "saved": "Cambios guardados."
+}

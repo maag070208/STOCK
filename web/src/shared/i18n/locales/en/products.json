@@ -1,0 +1,75 @@
+{
+  "title": "Materials",
+  "description": "The materials the warehouse stores, receives and ships. The code never changes; the barcode is the code unless another is given.",
+  "new": "New material",
+  "edit": "Edit material",
+  "import": "Import inventory",
+  "columns": {
+    "code": "Code",
+    "name": "Name",
+    "barcode": "Barcode",
+    "unit": "Unit",
+    "status": "Status",
+    "actions": "Actions"
+  },
+  "form": {
+    "code": "Code",
+    "codeHint": "Uppercase letters, digits and hyphens. It cannot change later.",
+    "name": "Name",
+    "unit": "Unit",
+    "barcode": "Barcode",
+    "barcodeHint": "Left empty, the material's code is used."
+  },
+  "detail": {
+    "back": "Back to materials",
+    "legacyId": "Id in the previous file",
+    "createdAt": "Created",
+    "none": "—"
+  },
+  "actions": {
+    "open": "View",
+    "edit": "Edit",
+    "deactivate": "Deactivate",
+    "reactivate": "Reactivate"
+  },
+  "confirm": {
+    "deactivate": "Deactivate {{name}}? It will not be offered for new records, it stays in history, and its barcode becomes free.",
+    "reactivate": "Reactivate {{name}}?"
+  },
+  "importPage": {
+    "title": "Import inventory",
+    "description": "Loads the materials of the inventory file (.xlsx). The file is reviewed first, without saving anything; then you confirm the import of the same file. Stock is loaded later, with the opening inventory.",
+    "file": "Inventory file (.xlsx)",
+    "review": "Review file",
+    "reviewing": "Reviewing…",
+    "confirm": "Import {{count}} new materials",
+    "confirming": "Importing…",
+    "report": "Review result",
+    "accepted": "Accepted rows",
+    "newProducts": "New materials",
+    "existingProducts": "Already there (left as they are)",
+    "rejected": "Rejected rows",
+    "control": {
+      "label": "Control total",
+      "matches": "The stock adds up ({{stock}}) to the control total ({{control}}).",
+      "mismatch": "The stock ({{stock}}) does not add up to the control total ({{control}}). It cannot be imported.",
+      "none": "The file carries no control total."
+    },
+    "rejectedTitle": "Rows that are not imported",
+    "row": "Row",
+    "field": "Field",
+    "reason": "Reason",
+    "fields": {
+      "code": "Code",
+      "name": "Name",
+      "legacyId": "Id",
+      "unit": "Unit",
+      "stock": "Stock",
+      "barcode": "Barcode"
+    },
+    "done": "{{created}} new materials were imported. {{existing}} were already there.",
+    "nothingNew": "No new materials: they were all there already.",
+    "choose": "Choose file",
+    "noFile": "No file chosen"
+  }
+}

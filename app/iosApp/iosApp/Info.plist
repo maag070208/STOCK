@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+    <dict>
+        <key>CADisableMinimumFrameDurationOnPhone</key>
+        <true/>
+        <!-- The shell behind the status bar is dark in both modes, so the status bar text is always light. -->
+        <key>UIViewControllerBasedStatusBarAppearance</key>
+        <false/>
+        <key>UIStatusBarStyle</key>
+        <string>UIStatusBarStyleLightContent</string>
+        <!-- Shown by iOS when the app first asks for the camera. The app's default language is Spanish. -->
+        <key>NSCameraUsageDescription</key>
+        <string>StockFlow usa la cámara para leer los códigos de barras de materiales y ubicaciones.</string>
+    </dict>
+</plist>

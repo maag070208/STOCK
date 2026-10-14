@@ -1,0 +1,36 @@
+{
+  "title": "Catálogos",
+  "description": "Las listas de valores del sistema: estados, unidades y las que agregues.",
+  "catalog": "Catálogo",
+  "system": "Del sistema",
+  "new": "Nuevo catálogo",
+  "newItem": "Nuevo valor",
+  "editItem": "Editar valor",
+  "showInactive": "Mostrar inactivos",
+  "columns": {
+    "code": "Código",
+    "label": "Nombre",
+    "labelEs": "Nombre en español",
+    "labelEn": "Nombre en inglés",
+    "sortOrder": "Orden",
+    "status": "Estado",
+    "attributes": "Atributos",
+    "actions": "Acciones"
+  },
+  "form": {
+    "code": "Código",
+    "codeHint": "Mayúsculas, números y guion bajo. No se puede cambiar.",
+    "labelEs": "Nombre en español",
+    "labelEn": "Nombre en inglés",
+    "descriptionEs": "Descripción en español",
+    "descriptionEn": "Descripción en inglés",
+    "sortOrder": "Orden",
+    "active": "Activo",
+    "terminal": "Final: no se puede pasar a otro valor",
+    "decimalPlaces": "Decimales permitidos"
+  },
+  "attributes": {
+    "terminal": "Final",
+    "decimal_places": "Decimales: {{value}}"
+  }
+}

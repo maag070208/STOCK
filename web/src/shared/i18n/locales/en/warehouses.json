@@ -1,0 +1,58 @@
+{
+  "title": "Warehouses",
+  "description": "The warehouses and their locations. A location is aisle, rack and level, such as K05A.",
+  "new": "New warehouse",
+  "edit": "Edit warehouse",
+  "columns": {
+    "code": "Code",
+    "name": "Name",
+    "status": "Status",
+    "actions": "Actions",
+    "location": "Location",
+    "aisle": "Aisle",
+    "rack": "Rack",
+    "level": "Level"
+  },
+  "form": {
+    "code": "Code",
+    "codeHint": "Uppercase letters, digits and hyphens. It cannot change later.",
+    "name": "Name"
+  },
+  "actions": {
+    "open": "View locations",
+    "edit": "Edit",
+    "deactivate": "Deactivate",
+    "reactivate": "Reactivate"
+  },
+  "confirm": {
+    "deactivate": "Deactivate {{name}}? It will not be offered for new records, and it stays in history.",
+    "reactivate": "Reactivate {{name}}?",
+    "deactivateLocation": "Deactivate location {{code}}? It will not receive new material.",
+    "reactivateLocation": "Reactivate location {{code}}?"
+  },
+  "detail": {
+    "back": "Back to warehouses",
+    "locations": "Locations",
+    "groups": "Aisles and racks",
+    "noGroups": "This warehouse has no racks yet.",
+    "aisle": "Aisle {{aisle}}",
+    "rackLabel": "Rack {{group}}: {{count}} locations",
+    "temporary": "Temporary",
+    "showing": "Rack {{group}}",
+    "showAll": "Show all"
+  },
+  "rack": {
+    "new": "New rack",
+    "warehouse": "Warehouse",
+    "aisle": "Aisle",
+    "aisleHint": "One letter, A to Z.",
+    "rack": "Rack",
+    "rackHint": "Two digits, 00 to 99.",
+    "levels": "Levels",
+    "levelsHint": "1 to 26. Each level is a letter from A.",
+    "preview": "This creates: {{codes}}",
+    "previewEmpty": "Enter the aisle, rack and levels to see the locations to create.",
+    "exists": "Already exist: {{codes}}. No location was created.",
+    "created": "Locations {{codes}} were created."
+  }
+}

@@ -1,0 +1,59 @@
+{
+  "title": "Usuarios",
+  "description": "Las personas que entran a StockFlow, sus roles y su acceso.",
+  "columns": {
+    "username": "Usuario",
+    "name": "Nombre",
+    "email": "Correo",
+    "roles": "Roles",
+    "status": "Estado",
+    "lastLoginAt": "Último acceso",
+    "actions": "Acciones"
+  },
+  "new": "Nuevo usuario",
+  "form": {
+    "title": "Nuevo usuario",
+    "editTitle": "Editar usuario",
+    "username": "Usuario",
+    "name": "Nombre",
+    "email": "Correo",
+    "language": "Idioma",
+    "roles": "Roles"
+  },
+  "created": {
+    "title": "Usuario creado",
+    "description": "Comparte esta contraseña temporal con {{name}}. Solo se muestra esta vez; al entrar deberá cambiarla.",
+    "password": "Contraseña temporal"
+  },
+  "reset": {
+    "title": "Contraseña restablecida",
+    "description": "La nueva contraseña temporal de {{name}}. Solo se muestra esta vez; sus sesiones se cerraron."
+  },
+  "actions": {
+    "access": "Acceso",
+    "edit": "Editar",
+    "resetPassword": "Restablecer contraseña",
+    "unlock": "Desbloquear",
+    "deactivate": "Dar de baja",
+    "reactivate": "Reactivar"
+  },
+  "confirm": {
+    "resetPassword": "Se generará una contraseña temporal nueva para {{name}} y se cerrarán sus sesiones.",
+    "deactivate": "{{name}} ya no podrá entrar y sus sesiones se cerrarán.",
+    "reactivate": "{{name}} podrá volver a entrar."
+  },
+  "access": {
+    "title": "Acceso de {{name}}",
+    "roles": "Roles",
+    "saveRoles": "Guardar roles",
+    "exceptions": "Excepciones",
+    "exceptionsDescription": "Una excepción reemplaza lo que dan los roles para un permiso, hasta que vence. Necesita un motivo.",
+    "permission": "Permiso",
+    "scope": "Alcance",
+    "reason": "Motivo",
+    "expiresAt": "Vence",
+    "never": "No vence",
+    "add": "Agregar excepción",
+    "none": "Sin excepciones."
+  }
+}

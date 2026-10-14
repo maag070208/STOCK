@@ -1,0 +1,58 @@
+{
+  "title": "Almacenes",
+  "description": "Los almacenes y sus ubicaciones. Una ubicación es pasillo, rack y nivel, como K05A.",
+  "new": "Nuevo almacén",
+  "edit": "Editar almacén",
+  "columns": {
+    "code": "Código",
+    "name": "Nombre",
+    "status": "Estado",
+    "actions": "Acciones",
+    "location": "Ubicación",
+    "aisle": "Pasillo",
+    "rack": "Rack",
+    "level": "Nivel"
+  },
+  "form": {
+    "code": "Código",
+    "codeHint": "Mayúsculas, números y guiones. No se puede cambiar después.",
+    "name": "Nombre"
+  },
+  "actions": {
+    "open": "Ver ubicaciones",
+    "edit": "Editar",
+    "deactivate": "Dar de baja",
+    "reactivate": "Reactivar"
+  },
+  "confirm": {
+    "deactivate": "¿Dar de baja {{name}}? No se ofrecerá para registros nuevos y seguirá en el historial.",
+    "reactivate": "¿Reactivar {{name}}?",
+    "deactivateLocation": "¿Dar de baja la ubicación {{code}}? No recibirá material nuevo.",
+    "reactivateLocation": "¿Reactivar la ubicación {{code}}?"
+  },
+  "detail": {
+    "back": "Volver a almacenes",
+    "locations": "Ubicaciones",
+    "groups": "Pasillos y racks",
+    "noGroups": "Este almacén aún no tiene racks.",
+    "aisle": "Pasillo {{aisle}}",
+    "rackLabel": "Rack {{group}}: {{count}} ubicaciones",
+    "temporary": "Temporal",
+    "showing": "Rack {{group}}",
+    "showAll": "Ver todas"
+  },
+  "rack": {
+    "new": "Nuevo rack",
+    "warehouse": "Almacén",
+    "aisle": "Pasillo",
+    "aisleHint": "Una letra, de la A a la Z.",
+    "rack": "Rack",
+    "rackHint": "Dos dígitos, de 00 a 99.",
+    "levels": "Niveles",
+    "levelsHint": "De 1 a 26. Cada nivel es una letra desde la A.",
+    "preview": "Se crearán: {{codes}}",
+    "previewEmpty": "Escribe pasillo, rack y niveles para ver las ubicaciones que se crearán.",
+    "exists": "Ya existen: {{codes}}. No se creó ninguna ubicación.",
+    "created": "Se crearon las ubicaciones {{codes}}."
+  }
+}

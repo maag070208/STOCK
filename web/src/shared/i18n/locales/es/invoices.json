@@ -1,0 +1,106 @@
+{
+  "title": "Facturas",
+  "description": "Las facturas de proveedor que traen material al almacén, con sus líneas y quién recibe cada una.",
+  "new": "Nueva factura",
+  "columns": {
+    "number": "Número",
+    "supplier": "Proveedor",
+    "warehouse": "Almacén",
+    "date": "Fecha",
+    "status": "Estado",
+    "actions": "Acciones"
+  },
+  "form": {
+    "header": "Datos de la factura",
+    "number": "Número de factura",
+    "numberHint": "Letras, números, guiones y diagonales.",
+    "supplier": "Proveedor",
+    "contact": "Contacto",
+    "noContact": "Sin contacto",
+    "date": "Fecha de la factura",
+    "warehouse": "Almacén que recibe",
+    "lines": "Materiales",
+    "addLine": "Agregar material",
+    "product": "Material",
+    "productSearch": "Busca por código o nombre",
+    "quantity": "Cantidad",
+    "unit": "Unidad",
+    "remove": "Quitar",
+    "assignNow": "Asignar ahora",
+    "shares": "Quién recibe",
+    "addShare": "Agregar operador",
+    "operator": "Operador",
+    "share": "Cantidad",
+    "total": "Asignado: {{assigned}} de {{line}}",
+    "save": "Guardar factura",
+    "saving": "Guardando…",
+    "noLines": "Puedes guardar sin materiales y agregarlos en el detalle.",
+    "noStaff": "El almacén no tiene operadores en su plantilla.",
+    "chooseWarehouse": "Elige primero el almacén que recibe: sus operadores aparecerán aquí."
+  },
+  "shareErrors": {
+    "FIELD_REQUIRED": "Elige un operador y su cantidad.",
+    "QUANTITY_INVALID": "Cada cantidad debe ser mayor que cero.",
+    "DUPLICATE_VALUE": "Un operador aparece dos veces.",
+    "ASSIGNMENT_TOTAL_MISMATCH": "Las cantidades deben sumar la cantidad de la línea."
+  },
+  "detail": {
+    "back": "Volver a facturas",
+    "lines": "Líneas",
+    "assign": "Asignar",
+    "reassign": "Cambiar asignación",
+    "addLine": "Agregar material",
+    "expected": "Esperado",
+    "counted": "Contado",
+    "difference": "Diferencia",
+    "placed": "Colocado",
+    "notAssigned": "Sin asignar",
+    "notCounted": "Sin contar",
+    "match": "Coincide",
+    "discrepancy": "Diferencia",
+    "contact": "Contacto",
+    "date": "Fecha",
+    "warehouse": "Almacén",
+    "supplier": "Proveedor",
+    "adjust": "Ajustar",
+    "noLines": "La factura aún no tiene materiales."
+  },
+  "assignDialog": {
+    "title": "Asignar {{product}}",
+    "line": "Cantidad de la línea: {{quantity}}"
+  },
+  "addLineDialog": {
+    "title": "Agregar material"
+  },
+  "discrepancies": {
+    "title": "Diferencias",
+    "description": "Conteos que no coinciden con lo esperado. Ajusta cada uno a lo contado; la línea de la factura cambia en la misma cantidad.",
+    "columns": {
+      "invoice": "Factura",
+      "warehouse": "Almacén",
+      "product": "Material",
+      "operator": "Operador",
+      "expected": "Esperado",
+      "counted": "Contado",
+      "difference": "Diferencia",
+      "notes": "Notas",
+      "actions": "Acciones"
+    }
+  },
+  "adjustDialog": {
+    "title": "Ajustar diferencia",
+    "body": "Lo esperado pasará de {{expected}} a {{counted}} ({{difference}}).",
+    "note": "Nota",
+    "noteHint": "Explica el ajuste. Queda en la bitácora.",
+    "confirm": "Ajustar",
+    "done": "Diferencia ajustada."
+  },
+  "staff": {
+    "title": "Plantilla de personal",
+    "description": "Los operadores entre los que se reparten las entradas de este almacén.",
+    "edit": "Editar plantilla",
+    "none": "Aún no hay operadores en la plantilla.",
+    "candidates": "Operadores del almacén",
+    "noCandidates": "No hay operadores con este almacén asignado."
+  }
+}

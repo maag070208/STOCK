@@ -1,0 +1,72 @@
+{
+  "templates": {
+    "title": "Labels",
+    "description": "The ZPL templates of each label type. Each change of the ZPL is a new version; the active version is printed.",
+    "new": "New template",
+    "columns": {
+      "key": "Key",
+      "name": "Name",
+      "version": "Version",
+      "status": "Status",
+      "updatedAt": "Changed"
+    }
+  },
+  "editor": {
+    "newTitle": "New template",
+    "back": "Back to labels",
+    "key": "Key",
+    "keyHint": "UPPER_SNAKE_CASE, such as PRODUCT. It cannot change later.",
+    "nameEs": "Name in Spanish",
+    "nameEn": "Name in English",
+    "active": "Active",
+    "zpl": "ZPL",
+    "placeholders": "Fields you can use",
+    "report": "Check",
+    "checking": "Checking…",
+    "valid": "The template follows the rules.",
+    "line": "Line {{line}}",
+    "lines": "Lines {{lines}}",
+    "save": "Save",
+    "saved": "Template saved. Version {{version}}.",
+    "unchanged": "The ZPL did not change: the version is still {{version}}.",
+    "versions": "Versions",
+    "version": "Version {{version}}",
+    "current": "Active",
+    "createdAt": "Created"
+  },
+  "printers": {
+    "title": "Printers",
+    "description": "The Zebra printers of each warehouse. Labels are sent only to printers on this list.",
+    "new": "New printer",
+    "edit": "Edit printer",
+    "columns": {
+      "name": "Name",
+      "warehouse": "Warehouse",
+      "ipAddress": "IP address",
+      "port": "Port",
+      "status": "Status"
+    },
+    "form": {
+      "name": "Name",
+      "warehouse": "Warehouse",
+      "ipAddress": "IP address",
+      "ipHint": "Four numbers from 0 to 255 separated by dots, such as 192.168.1.40.",
+      "ipInvalid": "Not a valid IPv4 address.",
+      "port": "Port 9100, the printing port of Zebra printers. It does not change.",
+      "active": "Active"
+    }
+  },
+  "print": {
+    "button": "Print label",
+    "title": "Print label",
+    "product": "Material",
+    "location": "Location",
+    "printer": "Printer",
+    "noPrinters": "There are no active printers in your warehouses.",
+    "noPrintersHere": "There are no active printers in this location's warehouse.",
+    "copies": "Copies",
+    "copiesRange": "Enter a whole number from 1 to 100.",
+    "submit": "Print",
+    "sent": "Label sent to {{printer}}: {{count}} copies."
+  }
+}

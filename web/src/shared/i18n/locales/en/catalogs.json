@@ -1,0 +1,36 @@
+{
+  "title": "Catalogs",
+  "description": "The value lists of the system: statuses, units and the ones you add.",
+  "catalog": "Catalog",
+  "system": "System",
+  "new": "New catalog",
+  "newItem": "New value",
+  "editItem": "Edit value",
+  "showInactive": "Show inactive",
+  "columns": {
+    "code": "Code",
+    "label": "Name",
+    "labelEs": "Spanish name",
+    "labelEn": "English name",
+    "sortOrder": "Order",
+    "status": "Status",
+    "attributes": "Attributes",
+    "actions": "Actions"
+  },
+  "form": {
+    "code": "Code",
+    "codeHint": "Uppercase letters, digits and underscores. It cannot change.",
+    "labelEs": "Spanish name",
+    "labelEn": "English name",
+    "descriptionEs": "Spanish description",
+    "descriptionEn": "English description",
+    "sortOrder": "Order",
+    "active": "Active",
+    "terminal": "Final: no move to another value",
+    "decimalPlaces": "Decimals allowed"
+  },
+  "attributes": {
+    "terminal": "Final",
+    "decimal_places": "Decimals: {{value}}"
+  }
+}

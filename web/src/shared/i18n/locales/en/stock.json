@@ -1,0 +1,49 @@
+{
+  "title": "Stock",
+  "description": "What is in each location and of each material. Read-only: stock changes with entries and exits.",
+  "tabs": {
+    "byLocation": "By location",
+    "byProduct": "By material"
+  },
+  "columns": {
+    "warehouse": "Warehouse",
+    "location": "Location",
+    "aisle": "Aisle",
+    "rack": "Rack",
+    "code": "Code",
+    "product": "Material",
+    "unit": "Unit",
+    "quantity": "Quantity",
+    "locations": "Locations"
+  },
+  "temporary": "Temporary",
+  "opening": {
+    "button": "Opening inventory",
+    "title": "Opening inventory",
+    "description": "Loads the stock of the inventory file (.xlsx) into the warehouse's temporary location. It is reviewed first without saving anything; then you confirm. A warehouse is loaded once.",
+    "warehouse": "Warehouse",
+    "file": "Inventory file (.xlsx)",
+    "choose": "Choose file",
+    "noFile": "No file chosen",
+    "review": "Review file",
+    "reviewing": "Reviewing…",
+    "confirm": "Load {{count}} materials with stock",
+    "confirming": "Loading…",
+    "report": "Review result",
+    "products": "Materials in the file",
+    "withStock": "With stock",
+    "total": "Units",
+    "control": {
+      "label": "Control total",
+      "matches": "The sum ({{total}}) matches the control total ({{control}}).",
+      "mismatch": "The sum ({{total}}) does not match the control total ({{control}}). It cannot be loaded.",
+      "none": "The file carries no control total."
+    },
+    "missing": "Materials of the file that do not exist: import the materials first.",
+    "row": "Row",
+    "code": "Code",
+    "alreadyLoaded": "This warehouse already has its opening inventory. Confirming loads nothing.",
+    "done": "{{count}} materials were loaded into the temporary location.",
+    "nothing": "Nothing was loaded: the warehouse already had its opening inventory."
+  }
+}

@@ -1,0 +1,72 @@
+{
+  "templates": {
+    "title": "Etiquetas",
+    "description": "Las plantillas ZPL de cada tipo de etiqueta. Cada cambio del ZPL es una versión nueva; se imprime la versión activa.",
+    "new": "Nueva plantilla",
+    "columns": {
+      "key": "Clave",
+      "name": "Nombre",
+      "version": "Versión",
+      "status": "Estado",
+      "updatedAt": "Modificada"
+    }
+  },
+  "editor": {
+    "newTitle": "Nueva plantilla",
+    "back": "Volver a etiquetas",
+    "key": "Clave",
+    "keyHint": "MAYÚSCULAS_CON_GUION_BAJO, como PRODUCT. No cambia después.",
+    "nameEs": "Nombre en español",
+    "nameEn": "Nombre en inglés",
+    "active": "Activa",
+    "zpl": "ZPL",
+    "placeholders": "Campos que puedes usar",
+    "report": "Revisión",
+    "checking": "Revisando…",
+    "valid": "La plantilla cumple las reglas.",
+    "line": "Línea {{line}}",
+    "lines": "Líneas {{lines}}",
+    "save": "Guardar",
+    "saved": "Plantilla guardada. Versión {{version}}.",
+    "unchanged": "Sin cambios en el ZPL: la versión sigue siendo {{version}}.",
+    "versions": "Versiones",
+    "version": "Versión {{version}}",
+    "current": "Activa",
+    "createdAt": "Creada"
+  },
+  "printers": {
+    "title": "Impresoras",
+    "description": "Las impresoras Zebra de cada almacén. Las etiquetas solo se envían a impresoras de esta lista.",
+    "new": "Nueva impresora",
+    "edit": "Editar impresora",
+    "columns": {
+      "name": "Nombre",
+      "warehouse": "Almacén",
+      "ipAddress": "Dirección IP",
+      "port": "Puerto",
+      "status": "Estado"
+    },
+    "form": {
+      "name": "Nombre",
+      "warehouse": "Almacén",
+      "ipAddress": "Dirección IP",
+      "ipHint": "Cuatro números de 0 a 255 separados por puntos, como 192.168.1.40.",
+      "ipInvalid": "No es una dirección IPv4 válida.",
+      "port": "Puerto 9100, el de impresión de las Zebra. No se cambia.",
+      "active": "Activa"
+    }
+  },
+  "print": {
+    "button": "Imprimir etiqueta",
+    "title": "Imprimir etiqueta",
+    "product": "Material",
+    "location": "Ubicación",
+    "printer": "Impresora",
+    "noPrinters": "No hay impresoras activas en tus almacenes.",
+    "noPrintersHere": "No hay impresoras activas en el almacén de esta ubicación.",
+    "copies": "Copias",
+    "copiesRange": "Escribe un número entero de 1 a 100.",
+    "submit": "Imprimir",
+    "sent": "Etiqueta enviada a {{printer}}: {{count}} copias."
+  }
+}

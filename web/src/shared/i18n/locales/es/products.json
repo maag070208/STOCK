@@ -1,0 +1,75 @@
+{
+  "title": "Materiales",
+  "description": "Los materiales que el almacén guarda, recibe y entrega. El código no cambia; el código de barras es el código si no se da otro.",
+  "new": "Nuevo material",
+  "edit": "Editar material",
+  "import": "Importar inventario",
+  "columns": {
+    "code": "Código",
+    "name": "Nombre",
+    "barcode": "Código de barras",
+    "unit": "Unidad",
+    "status": "Estado",
+    "actions": "Acciones"
+  },
+  "form": {
+    "code": "Código",
+    "codeHint": "Mayúsculas, números y guiones. No se puede cambiar después.",
+    "name": "Nombre",
+    "unit": "Unidad",
+    "barcode": "Código de barras",
+    "barcodeHint": "Si lo dejas vacío, se usa el código del material."
+  },
+  "detail": {
+    "back": "Volver a materiales",
+    "legacyId": "Id del archivo anterior",
+    "createdAt": "Alta",
+    "none": "—"
+  },
+  "actions": {
+    "open": "Ver",
+    "edit": "Editar",
+    "deactivate": "Dar de baja",
+    "reactivate": "Reactivar"
+  },
+  "confirm": {
+    "deactivate": "¿Dar de baja {{name}}? No se ofrecerá para registros nuevos, seguirá en el historial y su código de barras quedará libre.",
+    "reactivate": "¿Reactivar {{name}}?"
+  },
+  "importPage": {
+    "title": "Importar inventario",
+    "description": "Carga los materiales del archivo de inventario (.xlsx). Primero se revisa el archivo sin guardar nada; después confirmas la importación del mismo archivo. Las existencias se cargan después, con el inventario inicial.",
+    "file": "Archivo de inventario (.xlsx)",
+    "review": "Revisar archivo",
+    "reviewing": "Revisando…",
+    "confirm": "Importar {{count}} materiales nuevos",
+    "confirming": "Importando…",
+    "report": "Resultado de la revisión",
+    "accepted": "Filas aceptadas",
+    "newProducts": "Materiales nuevos",
+    "existingProducts": "Ya existían (se dejan igual)",
+    "rejected": "Filas rechazadas",
+    "control": {
+      "label": "Total de control",
+      "matches": "La suma de existencias ({{stock}}) coincide con el total de control ({{control}}).",
+      "mismatch": "La suma de existencias ({{stock}}) no coincide con el total de control ({{control}}). No se puede importar.",
+      "none": "El archivo no trae total de control."
+    },
+    "rejectedTitle": "Filas que no se importan",
+    "row": "Fila",
+    "field": "Campo",
+    "reason": "Motivo",
+    "fields": {
+      "code": "Código",
+      "name": "Nombre",
+      "legacyId": "Id",
+      "unit": "Unidad",
+      "stock": "Existencias",
+      "barcode": "Código de barras"
+    },
+    "done": "Se importaron {{created}} materiales nuevos. {{existing}} ya existían.",
+    "nothingNew": "No hay materiales nuevos: todos ya existían.",
+    "choose": "Elegir archivo",
+    "noFile": "Ningún archivo elegido"
+  }
+}

@@ -1,0 +1,59 @@
+{
+  "title": "Users",
+  "description": "The people who sign in to StockFlow, their roles and their access.",
+  "columns": {
+    "username": "Username",
+    "name": "Name",
+    "email": "Email",
+    "roles": "Roles",
+    "status": "Status",
+    "lastLoginAt": "Last sign-in",
+    "actions": "Actions"
+  },
+  "new": "New user",
+  "form": {
+    "title": "New user",
+    "editTitle": "Edit user",
+    "username": "Username",
+    "name": "Name",
+    "email": "Email",
+    "language": "Language",
+    "roles": "Roles"
+  },
+  "created": {
+    "title": "User created",
+    "description": "Share this temporary password with {{name}}. It is shown only now; they must change it when they sign in.",
+    "password": "Temporary password"
+  },
+  "reset": {
+    "title": "Password reset",
+    "description": "The new temporary password of {{name}}. It is shown only now; their sessions were ended."
+  },
+  "actions": {
+    "access": "Access",
+    "edit": "Edit",
+    "resetPassword": "Reset password",
+    "unlock": "Unlock",
+    "deactivate": "Deactivate",
+    "reactivate": "Reactivate"
+  },
+  "confirm": {
+    "resetPassword": "A new temporary password will be generated for {{name}}, and their sessions will end.",
+    "deactivate": "{{name}} will no longer be able to sign in, and their sessions will end.",
+    "reactivate": "{{name}} will be able to sign in again."
+  },
+  "access": {
+    "title": "Access of {{name}}",
+    "roles": "Roles",
+    "saveRoles": "Save roles",
+    "exceptions": "Exceptions",
+    "exceptionsDescription": "An exception replaces what the roles give for one permission, until it expires. It needs a reason.",
+    "permission": "Permission",
+    "scope": "Scope",
+    "reason": "Reason",
+    "expiresAt": "Expires",
+    "never": "Does not expire",
+    "add": "Add exception",
+    "none": "No exceptions."
+  }
+}

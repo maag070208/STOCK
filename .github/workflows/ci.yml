@@ -1,0 +1,93 @@
+# CI: runs only the packages a change touches. A push to main runs everything (testing.md section 5).
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  detect:
+    runs-on: ubuntu-latest
+    outputs:
+      packages: ${{ steps.affected.outputs.packages }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - id: affected
+        run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            echo "packages=api,web,app" >> "$GITHUB_OUTPUT"
+          else
+            export BASE_REF="origin/${{ github.base_ref }}"
+            echo "packages=$(node scripts/affected.mjs)" >> "$GITHUB_OUTPUT"
+          fi
+
+  ops:
+    needs: detect
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      # Compose reads .env. The example holds placeholders that pass every check.
+      - run: cp .env.example .env
+      - run: node --test tests/ops/
+
+  api:
+    needs: detect
+    if: contains(needs.detect.outputs.packages, 'api')
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: ci-only
+          POSTGRES_DB: stockflow
+        ports: ["5432:5432"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - run: ./gradlew test
+        working-directory: api
+
+  web:
+    needs: detect
+    if: contains(needs.detect.outputs.packages, 'web')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+          cache-dependency-path: web/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+        working-directory: web
+      - run: pnpm lint && pnpm exec tsc -b && pnpm exec playwright install --with-deps chromium && pnpm test:unit
+        working-directory: web
+      # The end-to-end suite drives the screens against the real API, with the profile e2e from the example .env.
+      - run: cp .env.example .env && docker compose up -d --build --wait api
+      - run: pnpm test:e2e
+        working-directory: web
+      - if: failure()
+        run: docker compose logs api
+
+  app:
+    needs: detect
+    if: contains(needs.detect.outputs.packages, 'app')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - run: ./gradlew :shared:testAndroidHostTest
+        working-directory: app

@@ -1,0 +1,106 @@
+{
+  "title": "Invoices",
+  "description": "The supplier invoices that bring material to the warehouse, with their lines and who receives each one.",
+  "new": "New invoice",
+  "columns": {
+    "number": "Number",
+    "supplier": "Supplier",
+    "warehouse": "Warehouse",
+    "date": "Date",
+    "status": "Status",
+    "actions": "Actions"
+  },
+  "form": {
+    "header": "Invoice data",
+    "number": "Invoice number",
+    "numberHint": "Letters, digits, hyphens and slashes.",
+    "supplier": "Supplier",
+    "contact": "Contact",
+    "noContact": "No contact",
+    "date": "Invoice date",
+    "warehouse": "Receiving warehouse",
+    "lines": "Materials",
+    "addLine": "Add material",
+    "product": "Material",
+    "productSearch": "Search by code or name",
+    "quantity": "Quantity",
+    "unit": "Unit",
+    "remove": "Remove",
+    "assignNow": "Assign now",
+    "shares": "Who receives",
+    "addShare": "Add operator",
+    "operator": "Operator",
+    "share": "Quantity",
+    "total": "Assigned: {{assigned}} of {{line}}",
+    "save": "Save invoice",
+    "saving": "Saving…",
+    "noLines": "You can save without materials and add them on the detail.",
+    "noStaff": "The warehouse has no operators in its template.",
+    "chooseWarehouse": "Choose the receiving warehouse first: its operators show here."
+  },
+  "shareErrors": {
+    "FIELD_REQUIRED": "Choose an operator and their quantity.",
+    "QUANTITY_INVALID": "Each quantity must be above zero.",
+    "DUPLICATE_VALUE": "An operator appears twice.",
+    "ASSIGNMENT_TOTAL_MISMATCH": "The quantities must add up to the line quantity."
+  },
+  "detail": {
+    "back": "Back to invoices",
+    "lines": "Lines",
+    "assign": "Assign",
+    "reassign": "Change assignment",
+    "addLine": "Add material",
+    "expected": "Expected",
+    "counted": "Counted",
+    "difference": "Difference",
+    "placed": "Placed",
+    "notAssigned": "Not assigned",
+    "notCounted": "Not counted",
+    "match": "Match",
+    "discrepancy": "Discrepancy",
+    "contact": "Contact",
+    "date": "Date",
+    "warehouse": "Warehouse",
+    "supplier": "Supplier",
+    "adjust": "Adjust",
+    "noLines": "The invoice has no materials yet."
+  },
+  "assignDialog": {
+    "title": "Assign {{product}}",
+    "line": "Line quantity: {{quantity}}"
+  },
+  "addLineDialog": {
+    "title": "Add material"
+  },
+  "discrepancies": {
+    "title": "Discrepancies",
+    "description": "Counts that do not match what was expected. Adjust each one to what was counted; the invoice line changes by the same amount.",
+    "columns": {
+      "invoice": "Invoice",
+      "warehouse": "Warehouse",
+      "product": "Material",
+      "operator": "Operator",
+      "expected": "Expected",
+      "counted": "Counted",
+      "difference": "Difference",
+      "notes": "Notes",
+      "actions": "Actions"
+    }
+  },
+  "adjustDialog": {
+    "title": "Adjust discrepancy",
+    "body": "The expected quantity goes from {{expected}} to {{counted}} ({{difference}}).",
+    "note": "Note",
+    "noteHint": "Explain the adjustment. It stays in the audit log.",
+    "confirm": "Adjust",
+    "done": "Discrepancy adjusted."
+  },
+  "staff": {
+    "title": "Staff template",
+    "description": "The operators this warehouse's entries are shared among.",
+    "edit": "Edit template",
+    "none": "No operators in the template yet.",
+    "candidates": "Operators of the warehouse",
+    "noCandidates": "No operators have this warehouse assigned."
+  }
+}
