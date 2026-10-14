@@ -1,0 +1,134 @@
+{
+	"title": "Orders",
+	"description": "The orders that take material out of a warehouse: they reserve it when created, are picked and validated.",
+	"new": "New order",
+	"columns": {
+		"number": "Number",
+		"customer": "Customer",
+		"warehouse": "Warehouse",
+		"dueDate": "Due",
+		"status": "Status",
+		"operator": "Operator",
+		"progress": "Picked"
+	},
+	"status": {
+		"CREATED": "Created",
+		"FULFILLING": "Fulfilling",
+		"FULFILLED": "Fulfilled",
+		"VALIDATED": "Validated",
+		"CANCELLED": "Cancelled"
+	},
+	"form": {
+		"header": "Order header",
+		"number": "Order number",
+		"numberHint": "Letters, digits, hyphens and slashes.",
+		"customer": "Customer",
+		"contact": "Contact",
+		"noContact": "No contact",
+		"warehouse": "Warehouse it leaves from",
+		"dueDate": "Due date",
+		"lines": "Materials",
+		"addLine": "Add material",
+		"product": "Material",
+		"productSearch": "Search by code or name",
+		"quantity": "Quantity",
+		"available": "Available: {{quantity}}",
+		"availableUnknown": "Available: —",
+		"remove": "Remove",
+		"save": "Save order",
+		"saving": "Saving…",
+		"noLines": "Add at least one material.",
+		"chooseWarehouse": "Choose the warehouse first: its availability will show here."
+	},
+	"lineErrors": {
+		"FIELD_REQUIRED": "Write the quantity.",
+		"QUANTITY_INVALID": "The quantity must be greater than zero.",
+		"STOCK_INSUFFICIENT": "The warehouse does not have that much available."
+	},
+	"detail": {
+		"back": "Back to orders",
+		"customer": "Customer",
+		"contact": "Contact",
+		"warehouse": "Warehouse",
+		"dueDate": "Due",
+		"createdBy": "Created by",
+		"operator": "Operator",
+		"noOperator": "No operator",
+		"validatedBy": "Validated by",
+		"lines": "Materials",
+		"noLines": "The order has no materials.",
+		"quantity": "Quantity",
+		"picked": "Picked",
+		"pending": "To go",
+		"assign": "Assign",
+		"reassignOperator": "Change operator",
+		"validate": "Validate",
+		"acceptDifference": "Accept difference",
+		"cancel": "Cancel order",
+		"transfer": "Move to another order",
+		"returnStock": "Return to the floor",
+		"document": "Download receipt"
+	},
+	"alerts": {
+		"title": "Due date alerts",
+		"empty": "No order is close to its due date.",
+		"BEFORE": "Due tomorrow",
+		"DUE": "Due today",
+		"OVERDUE": "Overdue"
+	},
+	"assignDialog": {
+		"title": "Assign the order",
+		"operator": "Operator",
+		"noStaff": "The warehouse has no operators in its staff template."
+	},
+	"validateDialog": {
+		"title": "Validate the order",
+		"body": "The order is locked: its receipt is stored and it can no longer change.",
+		"note": "Note (optional)",
+		"noteHint": "Write it if something does not match what was picked.",
+		"confirm": "Validate"
+	},
+	"differenceDialog": {
+		"title": "Accept the difference",
+		"body": "Every line becomes what was picked, as in material entries, and the order can be validated.",
+		"note": "Note",
+		"noteHint": "Explain why the customer accepts the difference.",
+		"confirm": "Accept"
+	},
+	"cancelDialog": {
+		"title": "Cancel the order",
+		"body": "The reservation is released and the order cannot be reopened.",
+		"confirm": "Cancel order"
+	},
+	"reassignDialog": {
+		"title": "Change the operator",
+		"body": "The lines, the picked material and the reservation stay with the order.",
+		"operator": "New operator",
+		"note": "Note",
+		"noteHint": "Why the operator changes.",
+		"confirm": "Change"
+	},
+	"transferDialog": {
+		"title": "Move picked material to another order",
+		"body": "The material already left its locations: it now serves the target order and no balance changes.",
+		"line": "Picked material",
+		"target": "Target order",
+		"noTargets": "There is no other open order in this warehouse.",
+		"quantity": "Quantity",
+		"note": "Note",
+		"noteHint": "Why it moves to the other order.",
+				"abovePicked": "That is more than the line has picked.",
+		"aboveTarget": "The target order does not need that much.",
+		"confirm": "Move"
+	},
+	"returnDialog": {
+		"title": "Return picked material to the floor",
+		"body": "The material goes back into a location of the warehouse, with a movement in.",
+		"line": "Picked material",
+		"location": "Location",
+		"quantity": "Quantity",
+		"note": "Note",
+		"noteHint": "Why it goes back to the floor.",
+		"confirm": "Return"
+	}
+}

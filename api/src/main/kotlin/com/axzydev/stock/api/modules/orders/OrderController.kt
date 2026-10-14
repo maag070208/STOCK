@@ -84,6 +84,11 @@ class OrderController(
 	fun assign(@PathVariable id: UUID, @RequestBody request: AssignRequest, user: CurrentUser, locale: Locale): OrderView =
 		orders.assign(user, id, request, locale.language)
 
+	// The warehouses a new order may leave from, for the form (order-fulfillment.md section 3).
+	@GetMapping("/warehouse-options")
+	@RequiresPermission(OrderService.CREATE)
+	fun warehouseOptions(user: CurrentUser): List<Ref> = orders.warehouseOptions(user)
+
 	// The people an order of this warehouse can be assigned to, for the assignment form.
 	@GetMapping("/operators")
 	@RequiresPermission(OrderService.ASSIGN)

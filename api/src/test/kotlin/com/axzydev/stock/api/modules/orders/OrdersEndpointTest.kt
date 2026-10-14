@@ -4,6 +4,7 @@ import com.axzydev.stock.api.core.security.Actor
 import com.axzydev.stock.api.modules.stock.MovementCommand
 import com.axzydev.stock.api.modules.stock.StockService
 import com.axzydev.stock.api.support.ApiTest
+import com.axzydev.stock.api.support.list
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -162,6 +163,18 @@ class OrdersEndpointTest : ApiTest() {
 	private fun query(f: OrdersFixture, filters: Map<String, Any>): List<tools.jackson.databind.JsonNode> =
 		api.post("/orders/query", f.admin, mapOf("filters" to (filters + mapOf("warehouseId" to f.warehouse)), "limit" to 200))
 			.also { assertEquals(200, it.status, it.body) }.json.get("data").let { rows -> rows.values().toList() }
+
+	@Test
+	fun `whoever creates orders lists the warehouses a new order may leave from`() {
+		val f = OrdersFixture(api)
+		val office = api.newUser("OFFICE")
+		val listed = api.get("/orders/warehouse-options", office.token)
+		assertEquals(200, listed.status, listed.body)
+		assertTrue(listed.json.list.any { it.get("id").asString() == f.warehouse }, listed.body)
+		assertTrue(listed.json.list.all { it.get("code").asString().isNotBlank() })
+		// Without orders.create there is nothing to fill the form with.
+		assertEquals(403, api.get("/orders/warehouse-options", api.newUser("WAREHOUSE_MANAGER").token).status)
+	}
 
 	@Test
 	fun `the availability of a material is its balance minus what open orders reserve`() {

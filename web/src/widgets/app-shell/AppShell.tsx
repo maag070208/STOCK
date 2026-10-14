@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { useDispatch, useSelector } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -14,6 +14,7 @@ const ICONS: Record<string, ReactNode> = {
 	products: <FaBoxes />,
 	stock: <FaCubes />,
 	invoices: <FaFileInvoice />,
+	orders: <FaClipboardList />,
 	discrepancies: <FaBalanceScale />,
 	suppliers: <FaTruck />,
 	customers: <FaHandshake />,
@@ -35,8 +36,6 @@ export function AppShell({ children }: { children: ReactNode }) {
 	const user = useSessionUser();
 	const permissions = usePermissions();
 	const refreshToken = useSelector((state: { auth: { refreshToken: string | null } }) => state.auth.refreshToken);
-	// The sidebar starts open and the top bar's menu button collapses it. The kit's default is a rail that opens on hover.
-	const [collapsed, setCollapsed] = useState(false);
 
 	const active = (screen: AppScreen) =>
 		screen.match === "exact" ? location.pathname === screen.path : location.pathname === screen.path || location.pathname.startsWith(`${screen.path}/`);

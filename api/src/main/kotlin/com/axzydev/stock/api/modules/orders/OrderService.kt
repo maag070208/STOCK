@@ -169,6 +169,14 @@ class OrderService(
 		return staff.orderOperators(warehouseId).values.map { OrderOperatorView(it.id, it.username, it.name) }.sortedBy { it.name }
 	}
 
+	// The warehouses a new order may leave from: the active ones this person can create in (order-fulfillment.md section 3).
+	@Transactional(readOnly = true)
+	fun warehouseOptions(user: CurrentUser): List<Ref> {
+		val active = warehouses.activeOptions()
+		val reached = if (user.scopeOf(CREATE) == Scope.ALL) active else active.filter { it.first in user.warehouseIds }
+		return reached.map { Ref(it.first, it.second, it.third) }
+	}
+
 	// The availability of the materials a creator is about to order: the balance in the warehouse minus what open orders
 	// reserve there. The screen shows it while the lines are written, and the creation checks it again under the lock.
 	@Transactional(readOnly = true)

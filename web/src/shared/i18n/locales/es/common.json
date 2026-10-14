@@ -18,6 +18,7 @@
     "customers": "Clientes",
     "stock": "Existencias",
     "invoices": "Facturas",
+    "orders": "Órdenes",
     "discrepancies": "Diferencias",
     "labels": "Etiquetas",
     "printers": "Impresoras"

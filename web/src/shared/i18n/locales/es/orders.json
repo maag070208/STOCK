@@ -1,0 +1,134 @@
+{
+	"title": "Órdenes",
+	"description": "Las órdenes que sacan material del almacén: se reservan al crearlas, se surten y se validan.",
+	"new": "Nueva orden",
+	"columns": {
+		"number": "Número",
+		"customer": "Cliente",
+		"warehouse": "Almacén",
+		"dueDate": "Entrega",
+		"status": "Estado",
+		"operator": "Operador",
+		"progress": "Surtido"
+	},
+	"status": {
+		"CREATED": "Creada",
+		"FULFILLING": "Surtiendo",
+		"FULFILLED": "Surtida",
+		"VALIDATED": "Validada",
+		"CANCELLED": "Cancelada"
+	},
+	"form": {
+		"header": "Datos de la orden",
+		"number": "Número de orden",
+		"numberHint": "Letras, números, guiones y diagonales.",
+		"customer": "Cliente",
+		"contact": "Contacto",
+		"noContact": "Sin contacto",
+		"warehouse": "Almacén que surte",
+		"dueDate": "Fecha de entrega",
+		"lines": "Materiales",
+		"addLine": "Agregar material",
+		"product": "Material",
+		"productSearch": "Busca por código o nombre",
+		"quantity": "Cantidad",
+		"available": "Disponible: {{quantity}}",
+		"availableUnknown": "Disponible: —",
+		"remove": "Quitar",
+		"save": "Guardar orden",
+		"saving": "Guardando…",
+		"noLines": "Agrega al menos un material.",
+		"chooseWarehouse": "Elige primero el almacén que surte: la disponibilidad aparecerá aquí."
+	},
+	"lineErrors": {
+		"FIELD_REQUIRED": "Escribe la cantidad.",
+		"QUANTITY_INVALID": "La cantidad debe ser mayor que cero.",
+		"STOCK_INSUFFICIENT": "No hay esa cantidad disponible en el almacén."
+	},
+	"detail": {
+		"back": "Volver a órdenes",
+		"customer": "Cliente",
+		"contact": "Contacto",
+		"warehouse": "Almacén",
+		"dueDate": "Entrega",
+		"createdBy": "Creada por",
+		"operator": "Operador",
+		"noOperator": "Sin operador",
+		"validatedBy": "Validada por",
+		"lines": "Materiales",
+		"noLines": "La orden no tiene materiales.",
+		"quantity": "Cantidad",
+		"picked": "Surtido",
+		"pending": "Falta",
+		"assign": "Asignar",
+		"reassignOperator": "Cambiar operador",
+		"validate": "Validar",
+		"acceptDifference": "Aceptar diferencia",
+		"cancel": "Cancelar orden",
+		"transfer": "Pasar a otra orden",
+		"returnStock": "Devolver a piso",
+		"document": "Descargar comprobante"
+	},
+	"alerts": {
+		"title": "Alertas de entrega",
+		"empty": "Ninguna orden está por vencer.",
+		"BEFORE": "Vence mañana",
+		"DUE": "Vence hoy",
+		"OVERDUE": "Vencida"
+	},
+	"assignDialog": {
+		"title": "Asignar la orden",
+		"operator": "Operador",
+		"noStaff": "El almacén no tiene operadores en su plantilla."
+	},
+	"validateDialog": {
+		"title": "Validar la orden",
+		"body": "La orden queda bloqueada: su comprobante se guarda y ya no se puede cambiar.",
+		"note": "Nota (opcional)",
+		"noteHint": "Escríbela si algo no coincide con lo surtido.",
+		"confirm": "Validar"
+	},
+	"differenceDialog": {
+		"title": "Aceptar la diferencia",
+		"body": "Cada línea queda en lo surtido, como en las entradas de material, y la orden puede validarse.",
+		"note": "Nota",
+		"noteHint": "Explica por qué el cliente acepta la diferencia.",
+		"confirm": "Aceptar"
+	},
+	"cancelDialog": {
+		"title": "Cancelar la orden",
+		"body": "Se libera lo reservado y la orden no se puede reabrir.",
+		"confirm": "Cancelar orden"
+	},
+	"reassignDialog": {
+		"title": "Cambiar el operador",
+		"body": "Las líneas, lo surtido y lo reservado siguen con la orden.",
+		"operator": "Operador nuevo",
+		"note": "Nota",
+		"noteHint": "Por qué cambia de operador.",
+		"confirm": "Cambiar"
+	},
+	"transferDialog": {
+		"title": "Pasar material surtido a otra orden",
+		"body": "El material ya salió de las ubicaciones: sirve a la orden destino y ningún saldo cambia.",
+		"line": "Material surtido",
+		"target": "Orden destino",
+		"noTargets": "No hay otra orden abierta en este almacén.",
+		"quantity": "Cantidad",
+		"note": "Nota",
+		"noteHint": "Por qué pasa a la otra orden.",
+				"abovePicked": "Es más de lo que se surtió de la línea.",
+		"aboveTarget": "La orden destino no necesita esa cantidad.",
+		"confirm": "Pasar"
+	},
+	"returnDialog": {
+		"title": "Devolver material surtido a piso",
+		"body": "El material regresa a una ubicación del almacén, con un movimiento de entrada.",
+		"line": "Material surtido",
+		"location": "Ubicación",
+		"quantity": "Cantidad",
+		"note": "Nota",
+		"noteHint": "Por qué regresa a piso.",
+		"confirm": "Devolver"
+	}
+}

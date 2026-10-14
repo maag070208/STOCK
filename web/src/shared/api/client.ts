@@ -93,3 +93,5 @@ export const post = <T>(path: string, body?: unknown, headers?: Record<string, s
 export const put = <T>(path: string, body?: unknown) => http.put<T>(path, body).then((r) => r.data);
 export const patch = <T>(path: string, body?: unknown) => http.patch<T>(path, body).then((r) => r.data);
 export const del = <T>(path: string) => http.delete<T>(path).then((r) => r.data);
+// A private file the API answers, such as the receipt of an order: the bytes, with the session and the language.
+export const download = (path: string) => http.get<Blob>(path, { responseType: "blob" }).then((r) => r.data);

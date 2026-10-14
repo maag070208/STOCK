@@ -15,8 +15,9 @@ function setting(name: string): string {
 	return line.slice(name.length + 1).trim();
 }
 
-export async function call(method: string, path: string, options: { token?: string; body?: unknown; channel?: string } = {}) {
-	const headers: Record<string, string> = { "X-Client-Channel": options.channel ?? "web" };
+export async function call(method: string, path: string, options: { token?: string; body?: unknown; channel?: string; headers?: Record<string, string> } = {}) {
+	// `headers` adds request headers, such as the Idempotency-Key a creation takes (api.md section 2).
+	const headers: Record<string, string> = { "X-Client-Channel": options.channel ?? "web", ...options.headers };
 	if (options.token) headers.Authorization = `Bearer ${options.token}`;
 	if (options.body !== undefined) headers["Content-Type"] = "application/json";
 	const request = () => fetch(base + path, { method, headers, body: options.body === undefined ? undefined : JSON.stringify(options.body) });

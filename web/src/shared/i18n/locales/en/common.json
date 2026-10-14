@@ -18,6 +18,7 @@
     "customers": "Customers",
     "stock": "Stock",
     "invoices": "Invoices",
+    "orders": "Orders",
     "discrepancies": "Discrepancies",
     "labels": "Labels",
     "printers": "Printers"
