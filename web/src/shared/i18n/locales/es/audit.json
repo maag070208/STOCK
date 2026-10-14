@@ -84,7 +84,13 @@
     "ORDER_CREATED": "Orden creada",
     "ORDER_ASSIGNED": "Orden asignada",
     "ORDER_PICKED": "Material surtido",
-    "ORDER_STATUS_CHANGED": "Estado de orden cambiado"
+    "ORDER_STATUS_CHANGED": "Estado de orden cambiado",
+    "ORDER_VALIDATED": "Orden validada",
+    "ORDER_DIFFERENCE_ACCEPTED": "Diferencia aceptada",
+    "ORDER_CANCELLED": "Orden cancelada",
+    "ORDER_REASSIGNED": "Orden reasignada",
+    "ORDER_PICKS_TRANSFERRED": "Material surtido traspasado",
+    "ORDER_PICKS_RETURNED": "Material surtido devuelto"
   },
   "targets": {
     "user": "Usuario",

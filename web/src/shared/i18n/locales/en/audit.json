@@ -84,7 +84,13 @@
     "ORDER_CREATED": "Order created",
     "ORDER_ASSIGNED": "Order assigned",
     "ORDER_PICKED": "Material picked",
-    "ORDER_STATUS_CHANGED": "Order status changed"
+    "ORDER_STATUS_CHANGED": "Order status changed",
+    "ORDER_VALIDATED": "Order validated",
+    "ORDER_DIFFERENCE_ACCEPTED": "Difference accepted",
+    "ORDER_CANCELLED": "Order cancelled",
+    "ORDER_REASSIGNED": "Order reassigned",
+    "ORDER_PICKS_TRANSFERRED": "Picked material transferred",
+    "ORDER_PICKS_RETURNED": "Picked material returned"
   },
   "targets": {
     "user": "User",

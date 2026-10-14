@@ -1,6 +1,7 @@
 package com.axzydev.stock.api.modules.orders
 
 import com.axzydev.stock.api.core.errors.ErrorCode
+import java.math.BigDecimal
 import java.time.LocalDate
 
 // The rules of an order that need no database (order-fulfillment.md sections 3, 4 and 6).
@@ -30,5 +31,14 @@ object OrderRules {
 			Status.VALIDATED -> from == Status.FULFILLED
 			Status.CANCELLED -> from == Status.CREATED || from == Status.FULFILLING
 			Status.CREATED -> false
+		}
+
+	// What a reassignment moves (order-fulfillment.md section 8): never more than the line has picked, and, when the
+	// material moves to another order, never more than that order still needs. A return to stock passes no need.
+	fun reassignableQuantity(picked: BigDecimal, needed: BigDecimal?, quantity: BigDecimal): ErrorCode? =
+		when {
+			quantity > picked -> ErrorCode.REASSIGN_EXCEEDS_PICKED
+			needed != null && quantity > needed -> ErrorCode.REASSIGN_EXCEEDS_TARGET
+			else -> null
 		}
 }

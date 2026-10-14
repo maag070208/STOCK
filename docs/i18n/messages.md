@@ -40,6 +40,10 @@ Messages with `{{name}}` take values from the error's details.
 | `ORDER_LOCKED` | La orden está validada y ya no se puede cambiar. | The order is validated and can no longer be changed. |
 | `ORDER_STATUS_INVALID` | La orden no está en el estado que permite esta acción. | The order is not in the status that allows this action. |
 | `PICK_EXCEEDS_LINE` | Lo surtido supera lo que falta de la línea. | What is picked is more than the line still needs. |
+| `ORDER_HAS_PICKS` | La orden ya tiene material surtido y no se puede cancelar. | The order has picked material and cannot be cancelled. |
+| `REASSIGN_EXCEEDS_PICKED` | No puedes mover más de lo surtido en la línea. | You cannot move more than the line has picked. |
+| `REASSIGN_EXCEEDS_TARGET` | La orden destino no necesita esa cantidad. | The target order does not need that much. |
+| `ORDER_WAREHOUSE_MISMATCH` | La orden destino es de otro almacén. | The target order belongs to another warehouse. |
 | `IDEMPOTENCY_KEY_REUSED` | Esa clave de idempotencia ya se usó para otra solicitud. | That idempotency key was already used for another request. |
 | `PRINTER_UNREACHABLE` | La impresora no responde. Revisa que esté encendida y conectada. | The printer does not respond. Check that it is on and connected. |
 | `UNAUTHENTICATED` | Inicia sesión para continuar. | Sign in to continue. |

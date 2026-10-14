@@ -1,15 +1,24 @@
 package com.axzydev.stock.api.modules.audit
 
+import com.axzydev.stock.api.core.security.Actor
+import com.axzydev.stock.api.modules.orders.OrdersFixture
+import com.axzydev.stock.api.modules.stock.MovementCommand
+import com.axzydev.stock.api.modules.stock.StockService
 import com.axzydev.stock.api.support.ApiResponse
 import com.axzydev.stock.api.support.ApiTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import org.springframework.beans.factory.annotation.Autowired
+import java.math.BigDecimal
 import java.util.UUID
 
 // F1 acceptance criterion 11 · e2e: every write, through the API, leaves its record in the audit log,
 // and so does every denial. A module that adds writes adds them here.
 class AuditCoverageTest : ApiTest() {
+
+	@Autowired
+	lateinit var stock: StockService
 
 	private val written = mutableListOf<Triple<String, String, String>>()
 
@@ -148,6 +157,44 @@ class AuditCoverageTest : ApiTest() {
 		write("RECEIPT_PLACED", "receipt_assignment", assignment) {
 			api.call("POST", "/receipts/assignments/$assignment/placements", operator.token, mapOf("placements" to listOf(mapOf("locationId" to f.locations[0], "quantity" to 9))), channel = "app")
 		}
+
+		// Orders, from creation to validation, with the three reassignment actions on the way.
+		val o = OrdersFixture(api)
+		written += Triple("STAFF_TEMPLATE_CHANGED", "warehouse", o.warehouse)
+		val ordered = o.product()
+		stock.apply(
+			Actor(null, "test"),
+			listOf(MovementCommand(StockService.RECEIPT, UUID.fromString(o.locations[0]), UUID.fromString(ordered), BigDecimal(200), "prueba", "test", UUID.randomUUID().toString())),
+		)
+		val order = o.create(o.body(o.line(ordered, 30))).json
+		val orderId = order.get("id").asString()
+		val orderLine = order.get("lines").get(0).get("id").asString()
+		written += Triple("ORDER_CREATED", "order", orderId)
+		write("ORDER_ASSIGNED", "order", orderId) { api.put("/orders/$orderId/assignment", admin, mapOf("operatorId" to o.operators[0].id)) }
+		write("ORDER_PICKED", "order", orderId) {
+			api.call("POST", "/orders/$orderId/picks", o.operators[0].token, mapOf("lineId" to orderLine, "locationId" to o.locations[0], "quantity" to 25), channel = "app")
+		}
+		written += Triple("ORDER_STATUS_CHANGED", "order", orderId)
+		write("ORDER_REASSIGNED", "order", orderId) { api.post("/orders/$orderId/reassignments/operator", admin, mapOf("operatorId" to o.operators[1].id, "note" to "Cambio de turno")) }
+		val target = o.create(o.body(o.line(ordered, 20))).json
+		write("ORDER_PICKS_TRANSFERRED", "order", orderId) {
+			api.post("/orders/$orderId/reassignments/transfer", admin, mapOf("lineId" to orderLine, "targetOrderId" to target.get("id").asString(), "quantity" to 20, "note" to "Traspaso"))
+		}
+		write("ORDER_PICKS_RETURNED", "order", orderId) {
+			api.post("/orders/$orderId/reassignments/return", admin, mapOf("lineId" to orderLine, "locationId" to o.locations[0], "quantity" to 5, "note" to "Devolución"))
+		}
+		write("ORDER_CANCELLED", "order", orderId) { api.post("/orders/$orderId/cancellation", admin) }
+
+		// A shortage the customer accepts becomes a complete order, and then a validated one.
+		val short = o.create(o.body(o.line(ordered, 10))).json
+		val shortId = short.get("id").asString()
+		val shortLine = short.get("lines").get(0).get("id").asString()
+		write("ORDER_ASSIGNED", "order", shortId) { api.put("/orders/$shortId/assignment", admin, mapOf("operatorId" to o.operators[0].id)) }
+		write("ORDER_PICKED", "order", shortId) {
+			api.call("POST", "/orders/$shortId/picks", o.operators[0].token, mapOf("lineId" to shortLine, "locationId" to o.locations[0], "quantity" to 8), channel = "app")
+		}
+		write("ORDER_DIFFERENCE_ACCEPTED", "order", shortId) { api.post("/orders/$shortId/accept-difference", admin, mapOf("note" to "El cliente acepta 8 de 10")) }
+		write("ORDER_VALIDATED", "order", shortId) { api.post("/orders/$shortId/validation", admin, emptyMap<String, Any>()) }
 
 		val missing = written.distinct().filter { (action, targetType, targetId) ->
 			val found = api.post("/audit-log/query", admin, mapOf("filters" to mapOf("action" to action, "targetType" to targetType, "targetId" to targetId)))

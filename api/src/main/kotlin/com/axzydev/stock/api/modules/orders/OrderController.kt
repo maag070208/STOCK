@@ -68,4 +68,33 @@ class OrderController(
 	@RequiresPermission(OrderService.FULFILL)
 	fun pick(@PathVariable id: UUID, @RequestBody request: PickBody, user: CurrentUser, locale: Locale): OrderView =
 		orders.pick(user, id, request, locale.language)
+
+	@PostMapping("/{id}/validation")
+	@RequiresPermission(OrderService.VALIDATE)
+	fun validate(@PathVariable id: UUID, @RequestBody request: NoteRequest, user: CurrentUser, locale: Locale): OrderView =
+		orders.validate(user, id, request, locale.language)
+
+	@PostMapping("/{id}/accept-difference")
+	@RequiresPermission(OrderService.ACCEPT_DIFFERENCE)
+	fun acceptDifference(@PathVariable id: UUID, @RequestBody request: NoteRequest, user: CurrentUser, locale: Locale): OrderView =
+		orders.acceptDifference(user, id, request, locale.language)
+
+	@PostMapping("/{id}/cancellation")
+	@RequiresPermission(OrderService.CANCEL)
+	fun cancel(@PathVariable id: UUID, user: CurrentUser, locale: Locale): OrderView = orders.cancel(user, id, locale.language)
+
+	@PostMapping("/{id}/reassignments/operator")
+	@RequiresPermission(OrderService.REASSIGN)
+	fun reassignOperator(@PathVariable id: UUID, @RequestBody request: ReassignOperatorRequest, user: CurrentUser, locale: Locale): OrderView =
+		orders.reassignOperator(user, id, request, locale.language)
+
+	@PostMapping("/{id}/reassignments/transfer")
+	@RequiresPermission(OrderService.REASSIGN)
+	fun transferPicks(@PathVariable id: UUID, @RequestBody request: TransferPicksRequest, user: CurrentUser, locale: Locale): OrderView =
+		orders.transferPicks(user, id, request, locale.language)
+
+	@PostMapping("/{id}/reassignments/return")
+	@RequiresPermission(OrderService.REASSIGN)
+	fun returnPicks(@PathVariable id: UUID, @RequestBody request: ReturnPicksRequest, user: CurrentUser, locale: Locale): OrderView =
+		orders.returnPicks(user, id, request, locale.language)
 }
