@@ -19,6 +19,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.axzydev.stock.brand.BrandIntro
 import com.axzydev.stock.brand.BrandTheme
 import com.axzydev.stock.brand.reducedMotionEnabled
+import com.axzydev.stock.data.catalogs.CatalogApi
+import com.axzydev.stock.data.customers.CustomersApi
 import com.axzydev.stock.data.health.HealthClient
 import com.axzydev.stock.data.products.ProductApi
 import com.axzydev.stock.data.receipts.ReceivingApi
@@ -26,7 +28,9 @@ import com.axzydev.stock.data.session.AuthApi
 import com.axzydev.stock.data.session.secureTokenStorage
 import com.axzydev.stock.data.stock.StockApi
 import com.axzydev.stock.data.warehouses.WarehouseApi
+import com.axzydev.stock.feature.customers.CustomersViewModel
 import com.axzydev.stock.feature.lookup.LookupViewModel
+import com.axzydev.stock.feature.orders.OrderStatusesViewModel
 import com.axzydev.stock.feature.receipts.DiscrepanciesViewModel
 import com.axzydev.stock.feature.receipts.ReceiptsViewModel
 import com.axzydev.stock.feature.session.SessionState
@@ -39,13 +43,13 @@ import com.axzydev.stock.i18n.LocalLanguage
 import com.axzydev.stock.i18n.Text
 import com.axzydev.stock.i18n.textFor
 import com.axzydev.stock.ui.components.ShellStatusBar
+import com.axzydev.stock.ui.customers.CustomersScreen
 import com.axzydev.stock.ui.home.HomeScreen
 import com.axzydev.stock.ui.lookup.LookupScreen
 import com.axzydev.stock.ui.module.ModuleMenuScreen
 import com.axzydev.stock.ui.nav.AppBackHandler
-import com.axzydev.stock.ui.nav.moduleById
 import com.axzydev.stock.ui.nav.visibleModulesWithPages
-import com.axzydev.stock.ui.nav.visiblePages
+import com.axzydev.stock.ui.orders.OrderStatusesScreen
 import com.axzydev.stock.ui.receipts.DiscrepanciesScreen
 import com.axzydev.stock.ui.receipts.MyReceiptsScreen
 import com.axzydev.stock.ui.signin.ChangePasswordScreen
@@ -80,6 +84,8 @@ fun App(
 	val receiving = remember { ReceivingApi(platformEngine(), apiBaseUrl) { currentLanguage } }
 	val stock = remember { StockApi(platformEngine(), apiBaseUrl) { currentLanguage } }
 	val warehouses = remember { WarehouseApi(platformEngine(), apiBaseUrl) { currentLanguage } }
+	val customersApi = remember { CustomersApi(platformEngine(), apiBaseUrl) { currentLanguage } }
+	val catalogsApi = remember { CatalogApi(platformEngine(), apiBaseUrl) { currentLanguage } }
 	val lookup = viewModel {
 		LookupViewModel(products, session, { textFor(Text.FIELD_REQUIRED, currentLanguage) }) {
 			textFor(Text.HEALTH_UNREACHABLE, currentLanguage)
@@ -92,6 +98,8 @@ fun App(
 	val discrepancies = viewModel { DiscrepanciesViewModel(receiving, session, noConnection) }
 	val balances = viewModel { StockViewModel(stock, session, noConnection) }
 	val locations = viewModel { WarehousesViewModel(warehouses, session, noConnection) }
+	val customers = viewModel { CustomersViewModel(customersApi, session, noConnection) }
+	val orderStatuses = viewModel { OrderStatusesViewModel(catalogsApi, session, noConnection) }
 
 	CompositionLocalProvider(LocalLanguage provides language) {
 		StockFlowTheme {
@@ -119,16 +127,15 @@ fun App(
 							// screen. Both are kept when the phone turns and Android rebuilds the screen.
 							var moduleId by rememberSaveable(current.user.id) { mutableStateOf<String?>(null) }
 							var pageId by rememberSaveable(current.user.id) { mutableStateOf<String?>(null) }
-							val module = moduleId?.let(::moduleById)
-							val pages = module?.let { visiblePages(it, permissions) } ?: emptyList()
-							val page = pages.firstOrNull { it.id == pageId }
+							val entry = modules.firstOrNull { it.module.id == moduleId }
+							val page = entry?.pages?.firstOrNull { it.id == pageId }
 							// The system's back closes the deepest thing that is open: the page, then the module. Only
 							// at the hub does it leave the app.
-							AppBackHandler(enabled = module != null) {
+							AppBackHandler(enabled = entry != null) {
 								if (page != null) pageId = null else moduleId = null
 							}
 							when {
-								module == null -> HomeScreen(
+								entry == null -> HomeScreen(
 									client = client,
 									user = current.user,
 									modules = modules,
@@ -139,9 +146,9 @@ fun App(
 									onSignOut = session::signOut,
 								)
 
-								page == null -> ModuleMenuScreen(module, pages, onBack = { moduleId = null }, onOpenPage = { pageId = it.id })
+								page == null -> ModuleMenuScreen(entry, onBack = { moduleId = null }, onOpenPage = { pageId = it.id })
 
-								else -> when (module.id) {
+								else -> when (entry.module.id) {
 									"receipts" -> if (page.id == DISCREPANCIES) {
 										DiscrepanciesScreen(discrepancies) { pageId = null }
 									} else {
@@ -155,8 +162,14 @@ fun App(
 
 									"stock" -> StockScreen(balances) { pageId = null }
 									"locations" -> WarehousesScreen(locations) { pageId = null }
-									// A module the API does not serve yet keeps its menu and never opens a page.
-									else -> ModuleMenuScreen(module, pages, onBack = { moduleId = null }, onOpenPage = { pageId = it.id })
+									"orders" -> when (page.id) {
+										CUSTOMERS -> CustomersScreen(customers) { pageId = null }
+										ORDER_STATUS -> OrderStatusesScreen(orderStatuses) { pageId = null }
+										// The orders page waits for F5, so there is nothing to open yet.
+										else -> ModuleMenuScreen(entry, onBack = { moduleId = null }, onOpenPage = { pageId = it.id })
+									}
+
+									else -> ModuleMenuScreen(entry, onBack = { moduleId = null }, onOpenPage = { pageId = it.id })
 								}
 							}
 						}
@@ -168,3 +181,5 @@ fun App(
 }
 
 private const val DISCREPANCIES = "discrepancies"
+private const val CUSTOMERS = "customers"
+private const val ORDER_STATUS = "order-status"

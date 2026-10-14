@@ -67,6 +67,11 @@ enum class Text {
 	PAGE_STOCK_HINT,
 	PAGE_WAREHOUSES,
 	PAGE_WAREHOUSES_HINT,
+	PAGE_CUSTOMERS,
+	PAGE_CUSTOMERS_HINT,
+	PAGE_ORDER_STATUS,
+	PAGE_ORDER_STATUS_HINT,
+	ORDER_STATUS_TERMINAL,
 	PAGE_ORDERS,
 	PAGE_ORDERS_HINT,
 	COMING_SOON,
@@ -146,7 +151,7 @@ fun textFor(key: Text, language: Language): String =
 			Text.MODULE_LOCATIONS -> "Ubicaciones"
 			Text.MODULE_LOCATIONS_HINT -> "Consulta los almacenes."
 			Text.MODULE_ORDERS -> "Órdenes"
-			Text.MODULE_ORDERS_HINT -> "Surte los pedidos que te asignen."
+			Text.MODULE_ORDERS_HINT -> "Los pedidos que surtes, y sus clientes."
 			Text.PAGE_MY_RECEIPTS -> "Mis recepciones"
 			Text.PAGE_MY_RECEIPTS_HINT -> "Lo que te toca contar y ubicar."
 			Text.PAGE_DISCREPANCIES -> "Discrepancias"
@@ -157,6 +162,11 @@ fun textFor(key: Text, language: Language): String =
 			Text.PAGE_STOCK_HINT -> "Existencias por almacén."
 			Text.PAGE_WAREHOUSES -> "Almacenes"
 			Text.PAGE_WAREHOUSES_HINT -> "Los almacenes que puedes ver."
+			Text.PAGE_CUSTOMERS -> "Clientes"
+			Text.PAGE_CUSTOMERS_HINT -> "Para quién se surten los pedidos."
+			Text.PAGE_ORDER_STATUS -> "Estados de un pedido"
+			Text.PAGE_ORDER_STATUS_HINT -> "Los estados por los que pasa un pedido."
+			Text.ORDER_STATUS_TERMINAL -> "Final"
 			Text.PAGE_ORDERS -> "Mis órdenes"
 			Text.PAGE_ORDERS_HINT -> "Los pedidos que te asignen."
 			Text.COMING_SOON -> "Próximamente"
@@ -233,7 +243,7 @@ fun textFor(key: Text, language: Language): String =
 			Text.MODULE_LOCATIONS -> "Locations"
 			Text.MODULE_LOCATIONS_HINT -> "Look up the warehouses."
 			Text.MODULE_ORDERS -> "Orders"
-			Text.MODULE_ORDERS_HINT -> "Pick the orders assigned to you."
+			Text.MODULE_ORDERS_HINT -> "The orders you fulfill, and their customers."
 			Text.PAGE_MY_RECEIPTS -> "My receipts"
 			Text.PAGE_MY_RECEIPTS_HINT -> "What you have to count and place."
 			Text.PAGE_DISCREPANCIES -> "Discrepancies"
@@ -244,6 +254,11 @@ fun textFor(key: Text, language: Language): String =
 			Text.PAGE_STOCK_HINT -> "Stock per warehouse."
 			Text.PAGE_WAREHOUSES -> "Warehouses"
 			Text.PAGE_WAREHOUSES_HINT -> "The warehouses you may see."
+			Text.PAGE_CUSTOMERS -> "Customers"
+			Text.PAGE_CUSTOMERS_HINT -> "Who the orders are fulfilled for."
+			Text.PAGE_ORDER_STATUS -> "Order states"
+			Text.PAGE_ORDER_STATUS_HINT -> "The states an order goes through."
+			Text.ORDER_STATUS_TERMINAL -> "Terminal"
 			Text.PAGE_ORDERS -> "My orders"
 			Text.PAGE_ORDERS_HINT -> "The orders assigned to you."
 			Text.COMING_SOON -> "Coming soon"

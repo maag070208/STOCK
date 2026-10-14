@@ -8,7 +8,9 @@ import com.axzydev.stock.ui.components.AppIcon
 // This file is the single place where the modules and their pages are listed; adding one is adding a line here and a
 // screen in the navigation of App.kt.
 
-// A page of a module: a row in the module's menu, and a screen.
+// A page of a module: a row in the module's menu, and a screen. A page the API does not serve yet is marked
+// `comingSoon`: it keeps its place, so the shape of the app is visible before the phase that fills it, but it says so
+// and does not open.
 data class ModulePage(
 	val id: String,
 	val title: Text,
@@ -16,6 +18,7 @@ data class ModulePage(
 	val icon: AppIcon,
 	// The page shows when the person holds any of these permissions. Empty: any signed-in person.
 	val anyOf: List<String> = emptyList(),
+	val comingSoon: Boolean = false,
 )
 
 // A module: a button on the home, with its own menu of pages.
@@ -27,9 +30,14 @@ data class Module(
 	val pages: List<ModulePage>,
 	// The module shows when the person holds any of these permissions. Empty: any signed-in person.
 	val anyOf: List<String> = emptyList(),
-	// The module is listed, but its pages are not built yet.
-	val comingSoon: Boolean = false,
 )
+
+// A module as the home shows it: the module and the pages this person may open. Everything it offers is still to come
+// when it holds nothing else, and then the home and its menu say so. It is worked out, not a flag, so a module that
+// only opens real pages for an administrator still says "coming soon" to someone who can only see the planned one.
+data class ModuleEntry(val module: Module, val pages: List<ModulePage>) {
+	val comingSoon: Boolean get() = pages.isNotEmpty() && pages.all { it.comingSoon }
+}
 
 // The modules of the app, in the order of the home. Their permissions are the API's (PermissionCatalog).
 val MODULES: List<Module> = listOf(
@@ -74,15 +82,18 @@ val MODULES: List<Module> = listOf(
 			ModulePage("warehouses", Text.PAGE_WAREHOUSES, Text.PAGE_WAREHOUSES_HINT, AppIcon.WAREHOUSE),
 		),
 	),
-	// F5 has not been built: orders live in the API's roadmap, not in it yet (docs/phases/F5-orders.md).
+	// F5 has not been built: orders live in the API's roadmap, not in it yet (docs/phases/F5-orders.md). What the API
+	// does hold is the customers an order is for, so that page reads real data today and the orders page says when it
+	// will arrive.
 	Module(
 		id = "orders",
 		title = Text.MODULE_ORDERS,
 		hint = Text.MODULE_ORDERS_HINT,
 		icon = AppIcon.CLIPBOARD,
-		comingSoon = true,
 		pages = listOf(
-			ModulePage("my-orders", Text.PAGE_ORDERS, Text.PAGE_ORDERS_HINT, AppIcon.CLIPBOARD),
+			ModulePage("customers", Text.PAGE_CUSTOMERS, Text.PAGE_CUSTOMERS_HINT, AppIcon.USER, anyOf = listOf("customers.view")),
+			ModulePage("order-status", Text.PAGE_ORDER_STATUS, Text.PAGE_ORDER_STATUS_HINT, AppIcon.CLIPBOARD, anyOf = listOf("catalogs.view")),
+			ModulePage("my-orders", Text.PAGE_ORDERS, Text.PAGE_ORDERS_HINT, AppIcon.CLIPBOARD, comingSoon = true),
 		),
 	),
 )
@@ -93,11 +104,14 @@ private fun Map<String, String>.holds(key: String): Boolean = (this[key] ?: "NON
 fun visibleModules(permissions: Map<String, String>): List<Module> =
 	MODULES.filter { it.anyOf.isEmpty() || it.anyOf.any(permissions::holds) }
 
-// The pages of a module the person may open. A module with no visible page is not shown on the home.
+// The pages of a module the person may open.
 fun visiblePages(module: Module, permissions: Map<String, String>): List<ModulePage> =
 	module.pages.filter { it.anyOf.isEmpty() || it.anyOf.any(permissions::holds) }
 
-fun visibleModulesWithPages(permissions: Map<String, String>): List<Module> =
-	visibleModules(permissions).filter { it.comingSoon || visiblePages(it, permissions).isNotEmpty() }
+// The modules of the home, each with the pages this person may open. A module with no page to open is not shown.
+fun visibleModulesWithPages(permissions: Map<String, String>): List<ModuleEntry> =
+	visibleModules(permissions).mapNotNull { module ->
+		visiblePages(module, permissions).takeIf { it.isNotEmpty() }?.let { ModuleEntry(module, it) }
+	}
 
 fun moduleById(id: String): Module? = MODULES.firstOrNull { it.id == id }
