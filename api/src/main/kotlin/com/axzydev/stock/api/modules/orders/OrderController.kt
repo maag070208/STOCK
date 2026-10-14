@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import tools.jackson.databind.json.JsonMapper
 import java.security.MessageDigest
@@ -82,6 +83,16 @@ class OrderController(
 	@RequiresPermission(OrderService.ASSIGN)
 	fun assign(@PathVariable id: UUID, @RequestBody request: AssignRequest, user: CurrentUser, locale: Locale): OrderView =
 		orders.assign(user, id, request, locale.language)
+
+	// The people an order of this warehouse can be assigned to, for the assignment form.
+	@GetMapping("/operators")
+	@RequiresPermission(OrderService.ASSIGN)
+	fun operators(@RequestParam warehouseId: UUID, user: CurrentUser): List<OrderOperatorView> = orders.operators(user, warehouseId)
+
+	// What a creator asks while writing the lines of a new order.
+	@PostMapping("/availability")
+	@RequiresPermission(OrderService.VIEW)
+	fun availability(@RequestBody request: AvailabilityRequest, user: CurrentUser): AvailabilityResponse = orders.availability(user, request)
 
 	@PostMapping("/{id}/picks")
 	@RequiresPermission(OrderService.FULFILL)

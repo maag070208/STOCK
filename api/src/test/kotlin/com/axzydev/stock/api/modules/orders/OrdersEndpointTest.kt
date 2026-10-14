@@ -163,6 +163,29 @@ class OrdersEndpointTest : ApiTest() {
 		api.post("/orders/query", f.admin, mapOf("filters" to (filters + mapOf("warehouseId" to f.warehouse)), "limit" to 200))
 			.also { assertEquals(200, it.status, it.body) }.json.get("data").let { rows -> rows.values().toList() }
 
+	@Test
+	fun `the availability of a material is its balance minus what open orders reserve`() {
+		val f = OrdersFixture(api)
+		val product = f.product()
+		addStock(f.locations[0], product, 140)
+		// 100 are reserved by an open order: 40 are available.
+		assertEquals(201, f.create(f.body(f.line(product, 100))).status)
+		val asked = api.post("/orders/availability", f.admin, mapOf("warehouseId" to f.warehouse, "productIds" to listOf(product)))
+		assertEquals(200, asked.status, asked.body)
+		val row = asked.json.get("items").get(0)
+		assertEquals(product, row.get("productId").asString())
+		assertEquals(0, BigDecimal(40).compareTo(row.get("available").decimalValue()))
+		// Another warehouse, with no stock and no orders, has nothing available.
+		val other = api.createWarehouse()
+		val empty = api.post("/orders/availability", f.admin, mapOf("warehouseId" to other, "productIds" to listOf(product)))
+		assertEquals(0, BigDecimal.ZERO.compareTo(empty.json.get("items").get(0).get("available").decimalValue()))
+		// Someone who reads no order of that warehouse cannot ask, and the field is required.
+		val stranger = api.newUser("WAREHOUSE_MANAGER")
+		api.put("/users/${stranger.id}/warehouses", f.admin, mapOf("warehouseIds" to listOf(other)))
+		assertEquals(404, api.post("/orders/availability", stranger.token, mapOf("warehouseId" to f.warehouse, "productIds" to listOf(product))).status)
+		assertEquals(400, api.post("/orders/availability", f.admin, mapOf("productIds" to listOf(product))).status)
+	}
+
 	// Runs the same work in several threads, released together.
 	private fun <T> parallel(threads: Int, work: () -> T): List<T> {
 		val pool = Executors.newFixedThreadPool(threads)

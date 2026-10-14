@@ -5,6 +5,7 @@ import com.axzydev.stock.api.modules.stock.MovementCommand
 import com.axzydev.stock.api.modules.stock.StockService
 import com.axzydev.stock.api.support.ApiTest
 import com.axzydev.stock.api.support.TestUser
+import com.axzydev.stock.api.support.list
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -64,6 +65,19 @@ class OrderFulfillmentTest : ApiTest() {
 		val refused = assign(f, order, outsider)
 		assertEquals(400, refused.status, refused.body)
 		assertEquals("CATALOG_VALUE_INVALID", refused.code)
+	}
+
+	@Test
+	fun `the order operators of a warehouse are listed to whoever assigns there, and to no one else`() {
+		val f = OrdersFixture(api)
+		val manager = api.newUser("WAREHOUSE_MANAGER").also { api.put("/users/${it.id}/warehouses", f.admin, mapOf("warehouseIds" to listOf(f.warehouse))) }
+		val listed = api.get("/orders/operators?warehouseId=${f.warehouse}", manager.token)
+		assertEquals(200, listed.status, listed.body)
+		assertEquals(f.operators.map { it.id }.sorted(), listed.json.list.map { it.get("id").asString() }.sorted())
+		// The operator does not assign, and a manager of another warehouse does not see this one.
+		assertEquals(403, api.get("/orders/operators?warehouseId=${f.warehouse}", f.operators[0].token, channel = "app").status)
+		val stranger = api.newUser("WAREHOUSE_MANAGER").also { api.put("/users/${it.id}/warehouses", f.admin, mapOf("warehouseIds" to listOf(api.createWarehouse()))) }
+		assertEquals(404, api.get("/orders/operators?warehouseId=${f.warehouse}", stranger.token).status)
 	}
 
 	@Test

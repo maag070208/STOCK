@@ -61,6 +61,17 @@ data class TransferPicksRequest(val lineId: UUID? = null, val targetOrderId: UUI
 
 data class ReturnPicksRequest(val lineId: UUID? = null, val locationId: UUID? = null, val quantity: BigDecimal? = null, val note: String? = null)
 
+// What a creator asks before writing the lines of an order: how much of each material can still be taken from a
+// warehouse (order-fulfillment.md section 5).
+data class AvailabilityRequest(val warehouseId: UUID? = null, val productIds: List<UUID>? = null)
+
+data class AvailabilityView(val productId: UUID, val available: BigDecimal)
+
+data class AvailabilityResponse(val items: List<AvailabilityView>)
+
+// One person an order can be assigned to: an active operator of the warehouse who can fulfill orders there.
+data class OrderOperatorView(val id: UUID, val username: String, val name: String)
+
 // Orders (order-fulfillment.md): creation with the availability check and reservation, the reads, and later the
 // picking, status machine, validation, cancellation and reassignment.
 @Service
@@ -149,6 +160,25 @@ class OrderService(
 		}
 		audit.record(user.actor, "ORDER_CREATED", "order", order.id.toString(), after = mapOf("number" to number, "lines" to bodies.size))
 		return views.full(order, language)
+	}
+
+	// The people an order of this warehouse can be assigned to (section 7a): the active operators of its staff template.
+	@Transactional(readOnly = true)
+	fun operators(user: CurrentUser, warehouseId: UUID): List<OrderOperatorView> {
+		user.requireRead(ASSIGN, warehouseId)
+		return staff.orderOperators(warehouseId).values.map { OrderOperatorView(it.id, it.username, it.name) }.sortedBy { it.name }
+	}
+
+	// The availability of the materials a creator is about to order: the balance in the warehouse minus what open orders
+	// reserve there. The screen shows it while the lines are written, and the creation checks it again under the lock.
+	@Transactional(readOnly = true)
+	fun availability(user: CurrentUser, request: AvailabilityRequest): AvailabilityResponse {
+		val warehouseId = request.warehouseId
+			?: throw ValidationException(listOf(FieldError("warehouseId", ErrorCode.FIELD_REQUIRED)))
+		user.requireRead(VIEW, warehouseId)
+		if (!warehouses.codes(listOf(warehouseId)).containsKey(warehouseId)) throw ApiException(ErrorCode.NOT_FOUND)
+		val ids = request.productIds.orEmpty().distinct()
+		return AvailabilityResponse(ids.map { AvailabilityView(it, balance(it, warehouseId).subtract(reserved(it, warehouseId))) })
 	}
 
 	// The order goes to one active operator of its warehouse (order-fulfillment.md section 7a). Assigning changes no stock.
