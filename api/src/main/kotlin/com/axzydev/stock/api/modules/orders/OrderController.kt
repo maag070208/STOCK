@@ -10,6 +10,7 @@ import com.axzydev.stock.api.core.security.RequiresPermission
 import com.axzydev.stock.api.core.validation.FieldError
 import com.axzydev.stock.api.core.validation.ValidationException
 import org.springframework.http.HttpStatus
+import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
@@ -31,6 +32,7 @@ import java.util.UUID
 class OrderController(
 	private val orders: OrderService,
 	private val alerts: OrderAlertService,
+	private val documents: OrderDocumentService,
 	private val idempotency: IdempotencyService,
 	private val json: JsonMapper,
 ) {
@@ -47,6 +49,17 @@ class OrderController(
 	@GetMapping("/{id}")
 	@RequiresPermission(OrderService.VIEW)
 	fun get(@PathVariable id: UUID, user: CurrentUser, locale: Locale): OrderView = orders.get(user, id, locale.language)
+
+	// The comprobante of a validated order (order-fulfillment.md section 10): the stored bytes, never regenerated.
+	@GetMapping("/{id}/document")
+	@RequiresPermission(OrderService.VIEW)
+	fun document(@PathVariable id: UUID, user: CurrentUser): ResponseEntity<ByteArray> {
+		val document = documents.read(user, id)
+		return ResponseEntity.ok()
+			.header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"${document.fileName}\"")
+			.contentType(MediaType.parseMediaType(document.contentType))
+			.body(document.content)
+	}
 
 	// Creation takes an Idempotency-Key (api.md section 2): the same key and request answer the first response again.
 	@PostMapping

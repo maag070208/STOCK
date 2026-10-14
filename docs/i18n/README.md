@@ -35,6 +35,7 @@
 | Text | Where | Source |
 |---|---|---|
 | Error messages | API, `core/i18n` | [messages.md](messages.md) |
+| Document labels (the comprobante of an order) | API, `messages/documents` | [documents.md](documents.md) |
 | Catalog values (statuses, units, payment terms) | Database, `catalog_item_label` | [glossary.md](glossary.md) |
 | Role and permission names | Seed data and i18n keys | [glossary.md](glossary.md) |
 | Label template names | Database, catalog labels | [labels.md](../modules/labels.md) |
@@ -53,4 +54,5 @@ Each phase adds its keys to this folder before it closes.
 ## 7. Files
 
 - [messages.md](messages.md): error codes, Spanish and English.
+- [documents.md](documents.md): the labels the API prints on its documents, Spanish and English.
 - [glossary.md](glossary.md): roles, statuses, units, movement types, payment terms, label names, and domain terms.

@@ -76,6 +76,7 @@ class OrderService(
 	private val products: ProductService,
 	private val catalogs: CatalogService,
 	private val views: OrderViews,
+	private val documents: OrderDocumentService,
 	private val audit: AuditService,
 	private val jdbc: JdbcTemplate,
 	private val clock: Clock,
@@ -221,6 +222,8 @@ class OrderService(
 		order.validatedBy = user.id
 		touch(order)
 		move(user.actor, order, Status.VALIDATED)
+		// The comprobante is built from the order as it stands, and kept: it is the delivery receipt (section 10).
+		documents.store(order, language)
 		audit.record(user.actor, "ORDER_VALIDATED", "order", order.id.toString())
 		return views.full(order, language)
 	}

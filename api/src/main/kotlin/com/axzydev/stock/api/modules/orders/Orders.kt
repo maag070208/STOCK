@@ -117,3 +117,16 @@ class OrderAlert(
 interface OrderAlertRepository : JpaRepository<OrderAlert, UUID> {
 	fun findByUserIdOrderByAlertDateDescDueDateAsc(userId: UUID): List<OrderAlert>
 }
+
+// The comprobante of a validated order (order-fulfillment.md section 10): one per order, built and written once.
+@Entity
+@Table(name = "order_documents")
+class OrderDocument(
+	@Id var orderId: UUID,
+	var content: ByteArray,
+	var contentType: String,
+	var fileName: String,
+	var createdAt: Instant,
+)
+
+interface OrderDocumentRepository : JpaRepository<OrderDocument, UUID>

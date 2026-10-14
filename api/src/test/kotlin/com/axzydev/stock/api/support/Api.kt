@@ -15,6 +15,11 @@ class ApiResponse(val status: Int, val body: String) {
 	fun text(field: String): String = json.get(field).asString()
 }
 
+// A file the API answers, such as the comprobante of an order: the bytes, and what the response says they are.
+class ApiDownload(val status: Int, val contentType: String?, val contentDisposition: String?, val bytes: ByteArray) {
+	val text: String get() = String(bytes, Charsets.UTF_8)
+}
+
 // The elements of a JSON array, as a Kotlin list.
 val JsonNode.list: List<JsonNode> get() = values().toList()
 
@@ -54,6 +59,20 @@ class Api(private val port: Int) {
 	fun put(path: String, token: String? = null, body: Any? = null) = call("PUT", path, token, body)
 	fun patch(path: String, token: String? = null, body: Any? = null) = call("PATCH", path, token, body)
 	fun delete(path: String, token: String? = null) = call("DELETE", path, token)
+
+	// A download: the bytes as they are, with what the response says about them.
+	fun download(path: String, token: String? = null, channel: String? = "web"): ApiDownload {
+		val request = HttpRequest.newBuilder(URI.create("http://localhost:$port/api/v1$path")).GET()
+		if (token != null) request.header("Authorization", "Bearer $token")
+		if (channel != null) request.header("X-Client-Channel", channel)
+		val response = client.send(request.build(), HttpResponse.BodyHandlers.ofByteArray())
+		return ApiDownload(
+			response.statusCode(),
+			response.headers().firstValue("Content-Type").orElse(null),
+			response.headers().firstValue("Content-Disposition").orElse(null),
+			response.body(),
+		)
+	}
 
 	// Sends a file as a form, the way a browser uploads it: the file in `file`, and the other fields as text.
 	fun upload(path: String, token: String?, file: ByteArray, fields: Map<String, String> = emptyMap(), filename: String = "inventario.xlsx"): ApiResponse {

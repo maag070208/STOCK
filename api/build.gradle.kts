@@ -30,6 +30,8 @@ dependencies {
 	// Password hashing (BCrypt) and signed tokens (JWT). The request checks themselves are the API's own (core/security).
 	implementation("org.springframework.security:spring-security-crypto")
 	implementation("com.nimbusds:nimbus-jose-jwt:10.10")
+	// The comprobante of an order, built by the API and kept once (order-fulfillment.md section 10).
+	implementation("org.apache.pdfbox:pdfbox:3.0.8")
 	implementation("tools.jackson.module:jackson-module-kotlin")
 	runtimeOnly("org.postgresql:postgresql")
 	testImplementation("org.springframework.boot:spring-boot-starter-data-jpa-test")
