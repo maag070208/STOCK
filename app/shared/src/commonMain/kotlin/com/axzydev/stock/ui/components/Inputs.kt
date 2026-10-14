@@ -28,6 +28,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.autofill.ContentType
 import androidx.compose.ui.focus.focusProperties
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.testTag
@@ -64,6 +65,7 @@ fun TextInput(
 	error: String? = null,
 	imeAction: ImeAction = ImeAction.Next,
 	onDone: () -> Unit = {},
+	onFocusChanged: ((Boolean) -> Unit)? = null,
 ) {
 	val colors = StockFlow.colors
 	val interaction = remember { MutableInteractionSource() }
@@ -95,6 +97,7 @@ fun TextInput(
 				.heightIn(min = AppLayout.pillHeight)
 				.background(colors.surface, AppLayout.pill)
 				.border(2.dp, border, AppLayout.pill)
+				.onFocusChanged { onFocusChanged?.invoke(it.isFocused) }
 				.semantics {
 					contentDescription = label
 					if (contentType != null) this.contentType = contentType

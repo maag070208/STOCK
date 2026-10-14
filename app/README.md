@@ -20,6 +20,20 @@ options:
 - Android app: `./gradlew :androidApp:assembleDebug`
 - iOS app: open the [/iosApp](./iosApp) directory in Xcode and run it from there.
 
+### Pointing the app at the API
+
+The app reads its API address from the build, not the source. On a simulator or an emulator it defaults to
+`http://localhost:8080/api/v1`. To try the app on a real phone, put the machine that runs the API on the same
+network and add its address to `local.properties` (never committed), then rebuild:
+
+```
+apiBaseUrl=http://<ip-of-your-machine>:8080/api/v1
+```
+
+You can also pass it once with `./gradlew :androidApp:assembleDebug -Pstockflow.apiBaseUrl=http://<ip>:8080/api/v1`.
+On Android, the debug build already allows plain HTTP (`androidApp/src/debug/AndroidManifest.xml`); with a cable,
+`adb reverse tcp:8080 tcp:8080` is another way to reach the API from the phone.
+
 ### Running tests
 
 Use the run button in your IDE's editor gutter, or run tests using Gradle tasks:

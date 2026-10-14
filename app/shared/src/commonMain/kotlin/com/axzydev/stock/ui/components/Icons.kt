@@ -21,7 +21,7 @@ import com.axzydev.stock.ui.theme.AppLayout
 
 // The app's line icons, drawn on a 24-unit grid with a round 1.8-unit stroke. There is no icon font or Material
 // dependency (mobile-app.md section 7), so each one is a few lines of geometry.
-enum class AppIcon { USER, LOCK, EYE, EYE_OFF, SEARCH, BACK, SIGN_OUT, SCAN }
+enum class AppIcon { USER, LOCK, EYE, EYE_OFF, SEARCH, BACK, SIGN_OUT, SCAN, INBOX, BOXES, WAREHOUSE, CLIPBOARD, ALERT, CHEVRON }
 
 private const val GRID = 24f
 private const val STROKE = 1.8f
@@ -66,5 +66,33 @@ private fun DrawScope.draw(icon: AppIcon, color: Color) {
 			moveTo(21f, 16f); lineTo(21f, 21f); lineTo(16f, 21f); moveTo(8f, 21f); lineTo(3f, 21f); lineTo(3f, 16f)
 			for (x in listOf(7f, 10f, 12f, 15f, 17f)) { moveTo(x, 8f); lineTo(x, 16f) }
 		}
+		// The modules of the home and their pages.
+		AppIcon.INBOX -> {
+			// A tray, and an arrow going down into it.
+			path { moveTo(3f, 12f); lineTo(3f, 20f); lineTo(21f, 20f); lineTo(21f, 12f) }
+			path { moveTo(12f, 4f); lineTo(12f, 14f); moveTo(8f, 10f); lineTo(12f, 14f); lineTo(16f, 10f) }
+		}
+		AppIcon.BOXES -> {
+			// Two boxes on a shelf.
+			drawRoundRect(color, topLeft = Offset(3f, 4f), size = Size(8f, 8f), cornerRadius = CornerRadius(1.5f), style = line)
+			drawRoundRect(color, topLeft = Offset(13f, 4f), size = Size(8f, 8f), cornerRadius = CornerRadius(1.5f), style = line)
+			drawRoundRect(color, topLeft = Offset(3f, 15f), size = Size(18f, 5f), cornerRadius = CornerRadius(1.5f), style = line)
+		}
+		AppIcon.WAREHOUSE -> {
+			path { moveTo(3f, 10f); lineTo(12f, 4f); lineTo(21f, 10f) }
+			path { moveTo(5f, 10f); lineTo(5f, 20f); lineTo(19f, 20f); lineTo(19f, 10f) }
+			path { moveTo(10f, 20f); lineTo(10f, 14f); lineTo(14f, 14f); lineTo(14f, 20f) }
+		}
+		AppIcon.CLIPBOARD -> {
+			drawRoundRect(color, topLeft = Offset(5f, 4f), size = Size(14f, 17f), cornerRadius = CornerRadius(2f), style = line)
+			path { moveTo(9f, 4f); lineTo(9f, 2.5f); lineTo(15f, 2.5f); lineTo(15f, 4f) }
+			path { moveTo(9f, 10f); lineTo(15f, 10f); moveTo(9f, 14f); lineTo(15f, 14f) }
+		}
+		AppIcon.ALERT -> {
+			path { moveTo(12f, 4f); lineTo(21f, 19f); lineTo(3f, 19f); close() }
+			path { moveTo(12f, 10f); lineTo(12f, 14f) }
+			drawCircle(color, radius = 1f, center = Offset(12f, 16.5f))
+		}
+		AppIcon.CHEVRON -> path { moveTo(9f, 6f); lineTo(15f, 12f); lineTo(9f, 18f) }
 	}
 }

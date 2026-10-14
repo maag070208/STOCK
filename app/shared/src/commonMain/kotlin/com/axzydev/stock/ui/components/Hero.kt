@@ -1,6 +1,7 @@
 package com.axzydev.stock.ui.components
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -61,12 +62,15 @@ import stock_flow.shared.generated.resources.stockflow_glyph_light
 // A screen of the app: the orange hero on top, with the brand and the screen's headline, and the sheet below with
 // its content, its rounded top laid over the hero's bottom edge. The hero sits right under the orange status bar
 // strip. `art` adds the device card of the reference, the brand on its screen, half hidden by the sheet. The page
-// scrolls, so the keyboard never covers a field. Dark mode changes the sheet; the hero is the brand, and stays orange.
+// scrolls, so the keyboard never covers a field. The caller may bring its own `scrollState` when it has to move the
+// page itself (the entry forms scroll to their button when a field takes the keyboard). Dark mode changes the sheet;
+// the hero is the brand, and stays orange.
 @Composable
 fun HeroScreen(
 	hero: @Composable ColumnScope.() -> Unit,
 	modifier: Modifier = Modifier,
 	art: Boolean = false,
+	scrollState: ScrollState = rememberScrollState(),
 	content: @Composable ColumnScope.() -> Unit,
 ) {
 	val colors = StockFlow.colors
@@ -75,7 +79,7 @@ fun HeroScreen(
 		modifier
 			.fillMaxSize()
 			.background(colors.background)
-			.verticalScroll(rememberScrollState())
+			.verticalScroll(scrollState)
 			.imePadding(),
 	) {
 		Box(

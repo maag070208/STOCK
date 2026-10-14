@@ -44,6 +44,48 @@ enum class Text {
 	CHANGE_PASSWORD_HEADLINE,
 	HOME_PROMPT,
 	LOOKUP_HINT,
+	// The home hub: the modules, each with its own menu of pages.
+	MODULES_LABEL,
+	MODULES_HINT,
+	MODULE_RECEIPTS,
+	MODULE_RECEIPTS_HINT,
+	MODULE_MATERIALS,
+	MODULE_MATERIALS_HINT,
+	MODULE_STOCK,
+	MODULE_STOCK_HINT,
+	MODULE_LOCATIONS,
+	MODULE_LOCATIONS_HINT,
+	MODULE_ORDERS,
+	MODULE_ORDERS_HINT,
+	PAGE_MY_RECEIPTS,
+	PAGE_MY_RECEIPTS_HINT,
+	PAGE_DISCREPANCIES,
+	PAGE_DISCREPANCIES_HINT,
+	PAGE_LOOKUP,
+	PAGE_LOOKUP_HINT,
+	PAGE_STOCK,
+	PAGE_STOCK_HINT,
+	PAGE_WAREHOUSES,
+	PAGE_WAREHOUSES_HINT,
+	PAGE_ORDERS,
+	PAGE_ORDERS_HINT,
+	COMING_SOON,
+	COMING_SOON_HINT,
+	BACK_HOME,
+	BACK_MODULES,
+	LOADING,
+	LOAD_ERROR,
+	RETRY,
+	REFRESH,
+	EMPTY,
+	SUPPLIER,
+	WAREHOUSE,
+	EXPECTED,
+	COUNTED,
+	PLACED,
+	LOCATIONS_COUNT,
+	ACTIVE,
+	INACTIVE,
 }
 
 fun textFor(key: Text, language: Language): String =
@@ -91,6 +133,47 @@ fun textFor(key: Text, language: Language): String =
 			Text.CHANGE_PASSWORD_HEADLINE -> "Elige *tu propia contraseña* para empezar."
 			Text.HOME_PROMPT -> "¿Qué vas a hacer hoy?"
 			Text.LOOKUP_HINT -> "Lee el código de barras con la cámara, o escribe el código o el nombre."
+			Text.MODULES_LABEL -> "Módulos"
+			Text.MODULES_HINT -> "Elige un módulo para ver sus opciones."
+			Text.MODULE_RECEIPTS -> "Entradas"
+			Text.MODULE_RECEIPTS_HINT -> "Recibe y ubica el material de una factura."
+			Text.MODULE_MATERIALS -> "Materiales"
+			Text.MODULE_MATERIALS_HINT -> "Busca un material por código, nombre o código de barras."
+			Text.MODULE_STOCK -> "Existencias"
+			Text.MODULE_STOCK_HINT -> "Mira cuánto hay de cada material."
+			Text.MODULE_LOCATIONS -> "Ubicaciones"
+			Text.MODULE_LOCATIONS_HINT -> "Consulta los almacenes."
+			Text.MODULE_ORDERS -> "Órdenes"
+			Text.MODULE_ORDERS_HINT -> "Surte los pedidos que te asignen."
+			Text.PAGE_MY_RECEIPTS -> "Mis recepciones"
+			Text.PAGE_MY_RECEIPTS_HINT -> "Lo que te toca contar y ubicar."
+			Text.PAGE_DISCREPANCIES -> "Discrepancias"
+			Text.PAGE_DISCREPANCIES_HINT -> "Diferencias por resolver."
+			Text.PAGE_LOOKUP -> "Buscar material"
+			Text.PAGE_LOOKUP_HINT -> "Código, nombre o código de barras."
+			Text.PAGE_STOCK -> "Por material"
+			Text.PAGE_STOCK_HINT -> "Existencias por almacén."
+			Text.PAGE_WAREHOUSES -> "Almacenes"
+			Text.PAGE_WAREHOUSES_HINT -> "Los almacenes que puedes ver."
+			Text.PAGE_ORDERS -> "Mis órdenes"
+			Text.PAGE_ORDERS_HINT -> "Los pedidos que te asignen."
+			Text.COMING_SOON -> "Próximamente"
+			Text.COMING_SOON_HINT -> "Esta sección todavía no está lista."
+			Text.BACK_HOME -> "Inicio"
+			Text.BACK_MODULES -> "Módulos"
+			Text.LOADING -> "Cargando…"
+			Text.LOAD_ERROR -> "No se pudo cargar."
+			Text.RETRY -> "Reintentar"
+			Text.REFRESH -> "Actualizar"
+			Text.EMPTY -> "No hay nada que mostrar."
+			Text.SUPPLIER -> "Proveedor"
+			Text.WAREHOUSE -> "Almacén"
+			Text.EXPECTED -> "Esperado"
+			Text.COUNTED -> "Contado"
+			Text.PLACED -> "Ubicado"
+			Text.LOCATIONS_COUNT -> "{count} ubicaciones"
+			Text.ACTIVE -> "Activo"
+			Text.INACTIVE -> "Inactivo"
 		}
 		Language.EN -> when (key) {
 			Text.SIGN_IN_TITLE -> "Sign in"
@@ -135,5 +218,46 @@ fun textFor(key: Text, language: Language): String =
 			Text.CHANGE_PASSWORD_HEADLINE -> "Choose *a password of your own* to start."
 			Text.HOME_PROMPT -> "What will you do today?"
 			Text.LOOKUP_HINT -> "Read the barcode with the camera, or type the code or the name."
+			Text.MODULES_LABEL -> "Modules"
+			Text.MODULES_HINT -> "Pick a module to see its options."
+			Text.MODULE_RECEIPTS -> "Inbound"
+			Text.MODULE_RECEIPTS_HINT -> "Receive and place a supplier invoice's material."
+			Text.MODULE_MATERIALS -> "Materials"
+			Text.MODULE_MATERIALS_HINT -> "Find a material by code, name or barcode."
+			Text.MODULE_STOCK -> "Stock"
+			Text.MODULE_STOCK_HINT -> "See how much of each material there is."
+			Text.MODULE_LOCATIONS -> "Locations"
+			Text.MODULE_LOCATIONS_HINT -> "Look up the warehouses."
+			Text.MODULE_ORDERS -> "Orders"
+			Text.MODULE_ORDERS_HINT -> "Pick the orders assigned to you."
+			Text.PAGE_MY_RECEIPTS -> "My receipts"
+			Text.PAGE_MY_RECEIPTS_HINT -> "What you have to count and place."
+			Text.PAGE_DISCREPANCIES -> "Discrepancies"
+			Text.PAGE_DISCREPANCIES_HINT -> "Differences to resolve."
+			Text.PAGE_LOOKUP -> "Find material"
+			Text.PAGE_LOOKUP_HINT -> "Code, name or barcode."
+			Text.PAGE_STOCK -> "By material"
+			Text.PAGE_STOCK_HINT -> "Stock per warehouse."
+			Text.PAGE_WAREHOUSES -> "Warehouses"
+			Text.PAGE_WAREHOUSES_HINT -> "The warehouses you may see."
+			Text.PAGE_ORDERS -> "My orders"
+			Text.PAGE_ORDERS_HINT -> "The orders assigned to you."
+			Text.COMING_SOON -> "Coming soon"
+			Text.COMING_SOON_HINT -> "This section is not ready yet."
+			Text.BACK_HOME -> "Home"
+			Text.BACK_MODULES -> "Modules"
+			Text.LOADING -> "Loading…"
+			Text.LOAD_ERROR -> "It could not be loaded."
+			Text.RETRY -> "Retry"
+			Text.REFRESH -> "Refresh"
+			Text.EMPTY -> "There is nothing to show."
+			Text.SUPPLIER -> "Supplier"
+			Text.WAREHOUSE -> "Warehouse"
+			Text.EXPECTED -> "Expected"
+			Text.COUNTED -> "Counted"
+			Text.PLACED -> "Placed"
+			Text.LOCATIONS_COUNT -> "{count} locations"
+			Text.ACTIVE -> "Active"
+			Text.INACTIVE -> "Inactive"
 		}
 	}
