@@ -141,6 +141,28 @@ class OrderFulfillmentTest : ApiTest() {
 	}
 
 	@Test
+	fun `an order fulfilled over two days keeps the picks and the reservation of the first day`() {
+		val f = OrdersFixture(api)
+		val product = f.product()
+		addStock(f.locations[0], product, 100)
+		val order = create(f, product, 60)
+		val line = order.get("lines").get(0)
+		assertEquals(200, assign(f, order, f.operators[0]).status)
+		// The first day: 40 leave the shelf, and the order keeps the other 20 reserved.
+		assertEquals(200, pick(f.operators[0], order, line, f.locations[0], 40).status)
+		assertEquals("FULFILLING", api.get("/orders/${order.get("id").asString()}", f.admin).json.get("status").get("code").asString())
+		// What the first day left reserved is not available to another order, and what it left on the shelf is.
+		val tooMuch = f.create(f.body(f.line(product, 41)))
+		assertEquals(409, tooMuch.status, tooMuch.body)
+		assertEquals(201, f.create(f.body(f.line(product, 40))).status)
+		// The next day the rest is picked, and what was picked the first day is still on the line.
+		val done = pick(f.operators[0], order, line, f.locations[0], 20)
+		assertEquals(200, done.status, done.body)
+		assertEquals("FULFILLED", done.json.get("status").get("code").asString())
+		assertEquals(60, done.json.get("lines").get(0).get("pickedQuantity").asInt())
+	}
+
+	@Test
 	fun `an operator of another warehouse does not see the order`() {
 		val f = OrdersFixture(api)
 		val product = f.product()

@@ -60,6 +60,6 @@
 
 These are open in [order-fulfillment.md](../modules/order-fulfillment.md) section 9. The phase builds around them:
 
-- Shortage found while picking. Proposed: recorded, and the rest reassigned.
+- Shortage found while picking. Proposed: recorded, and the rest reassigned. **Still open:** the phase refuses a pick above the location's balance with `STOCK_INSUFFICIENT`, and a shortage the customer accepts is settled with `orders.accept_difference`; recording the shortage and reassigning the rest waits for the owner.
 - Who cancels: decided, `ADMIN`, `OFFICE` and `WAREHOUSE_MANAGER`, only with no picks.
-- Where the PDF is stored. Proposed: private storage, as CYC does ([D-023](../../../CYC/DECISIONES.md)).
+- Where the PDF is stored: decided 2026-10-14, private storage (the API's `order_documents`), reached only through the API with the permission to read the order.
