@@ -84,7 +84,7 @@ class AuthEndpointTest : ApiTest() {
 		assertEquals(400, wrong.status)
 		assertEquals("CURRENT_PASSWORD_WRONG", wrong.code)
 		assertEquals("currentPassword", wrong.json.get("details").get(0).get("field").asString())
-		assertEquals("PASSWORD_INVALID", change(user.password, "short").code)
+		assertEquals("PASSWORD_INVALID", change(user.password, "abcd").code)
 		assertEquals("PASSWORD_REUSED", change(user.password, user.password).code)
 	}
 

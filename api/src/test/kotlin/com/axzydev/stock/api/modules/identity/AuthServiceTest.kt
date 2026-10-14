@@ -129,7 +129,7 @@ class AuthServiceTest {
 			}.errors.single().code
 		}
 		assertEquals(ErrorCode.CURRENT_PASSWORD_WRONG, code("wrong-password", "a-brand-new-password"))
-		assertEquals(ErrorCode.PASSWORD_INVALID, code("correct-password", "short"))
+		assertEquals(ErrorCode.PASSWORD_INVALID, code("correct-password", "abcd"))
 		assertEquals(ErrorCode.PASSWORD_REUSED, code("correct-password", "correct-password"))
 		verify(exactly = 0) { sessions.closeAll(any()) }
 	}

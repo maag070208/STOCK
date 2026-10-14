@@ -42,10 +42,10 @@ test("the password change asks for matching copies, and shows the API's refusal 
 	await page.getByRole("button", { name: "Guardar contraseña" }).click();
 	await expect(page.getByText("Las contraseñas no coinciden.")).toBeVisible();
 
-	await page.getByLabel("Contraseña nueva", { exact: true }).fill("corta");
-	await page.getByLabel("Confirma la contraseña nueva", { exact: true }).fill("corta");
+	await page.getByLabel("Contraseña nueva", { exact: true }).fill("cort");
+	await page.getByLabel("Confirma la contraseña nueva", { exact: true }).fill("cort");
 	await page.getByRole("button", { name: "Guardar contraseña" }).click();
-	await expect(page.getByText("La contraseña debe tener entre 10 y 72 caracteres.")).toBeVisible();
+	await expect(page.getByText("La contraseña debe tener entre 5 y 72 caracteres.")).toBeVisible();
 });
 
 test("the menu shows only the screens the person's permissions allow", async ({ page }) => {

@@ -68,10 +68,10 @@ class TokenServiceTest {
 	}
 
 	@Test
-	fun `a password must have 10 to 72 characters`() {
-		Passwords.check("a".repeat(10))
+	fun `a password must have 5 to 72 characters`() {
+		Passwords.check("a".repeat(5))
 		Passwords.check("a".repeat(72))
-		assertThrows(com.axzydev.stock.api.core.errors.ApiException::class.java) { Passwords.check("a".repeat(9)) }
+		assertThrows(com.axzydev.stock.api.core.errors.ApiException::class.java) { Passwords.check("a".repeat(4)) }
 		assertThrows(com.axzydev.stock.api.core.errors.ApiException::class.java) { Passwords.check("a".repeat(73)) }
 		assertThrows(com.axzydev.stock.api.core.errors.ApiException::class.java) { Passwords.check(null) }
 	}

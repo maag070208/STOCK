@@ -20,7 +20,7 @@ class Passwords {
 	fun temporary(): String = (1..TEMPORARY_LENGTH).map { TEMPORARY_ALPHABET[random.nextInt(TEMPORARY_ALPHABET.length)] }.joinToString("")
 
 	companion object {
-		const val MIN_LENGTH = 10
+		const val MIN_LENGTH = 5
 		// BCrypt reads 72 bytes at most.
 		const val MAX_LENGTH = 72
 		const val TEMPORARY_LENGTH = 14

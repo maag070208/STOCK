@@ -76,9 +76,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 				navigationItems,
 				// The shell is dark in both modes, so it always carries the glyph drawn for dark backgrounds.
 				brand: { text: t("app.name"), logo: <img src="/brand/stockflow-glyph-dark.svg" alt="" className="sf:size-10" /> },
-				expandOnHover: false,
-				isCollapsed: collapsed,
-				onToggleCollapse: () => setCollapsed((value) => !value),
+				expandOnHover: true,
 			}}
 		>
 			{children}

@@ -198,14 +198,14 @@ class SessionViewModelTest {
 	fun aRefusedPasswordChangeNamesTheField() = runTest {
 		val session = viewModel(MemoryStorage()) { request ->
 			if (request.url.encodedPath.endsWith("/auth/change-password")) {
-				reply("""{"code":"PASSWORD_INVALID","message":"La contraseña debe tener entre 10 y 72 caracteres.","details":[{"field":"newPassword","code":"PASSWORD_INVALID","message":"La contraseña debe tener entre 10 y 72 caracteres."}]}""", HttpStatusCode.BadRequest)
+				reply("""{"code":"PASSWORD_INVALID","message":"La contraseña debe tener entre 5 y 72 caracteres.","details":[{"field":"newPassword","code":"PASSWORD_INVALID","message":"La contraseña debe tener entre 5 y 72 caracteres."}]}""", HttpStatusCode.BadRequest)
 			} else reply("""{"token":"a","refreshToken":"r","user":${user(true)}}""")
 		}
 		session.signIn("ana", "temporary-pass")
 		advanceUntilIdle()
 		session.changePassword("temporary-pass", "short")
 		val state = assertIs<SessionState.PasswordChange>(session.state.value)
-		assertEquals(mapOf("newPassword" to "La contraseña debe tener entre 10 y 72 caracteres."), state.fieldErrors)
+		assertEquals(mapOf("newPassword" to "La contraseña debe tener entre 5 y 72 caracteres."), state.fieldErrors)
 	}
 
 	@Test

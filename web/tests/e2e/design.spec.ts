@@ -103,59 +103,29 @@ test.describe("shell", () => {
 });
 
 test.describe("login", () => {
-  test("the screen is two equal halves: a white brand panel and an orange panel with a white card", async ({ page }) => {
+  // The entry screen is built only with the Axzy UI System (see DOCUMENTACION_DETALLADA_COMPONENTES.txt).
+  test("the entry screen shows the brand, the sign-in form and the language field", async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 800 });
     await page.goto("/#/login");
     await expect(page.getByTestId("brand-intro")).toBeHidden({ timeout: 8000 });
 
-    const brand = page.getByTestId("login-brand-panel");
-    const action = page.getByTestId("login-action-panel");
-    expect(await brand.evaluate((el) => getComputedStyle(el).backgroundColor)).toBe(rgb(colors["surface-elevated"]));
-    expect(await action.evaluate((el) => getComputedStyle(el).backgroundColor)).toBe(rgb(colors["primary-strong"]));
-    expect((await brand.boundingBox())!.width).toBe(640);
-    expect((await action.boundingBox())!.width).toBe(640);
-
-    const card = page.getByTestId("login-card");
-    expect(await card.evaluate((el) => getComputedStyle(el).backgroundColor)).toBe(rgb(colors["surface-elevated"]));
-    expect(await card.evaluate((el) => getComputedStyle(el).borderRadius)).toBe(designTokens.rounded.md);
-    expect(await card.evaluate((el) => getComputedStyle(el).padding)).toBe(designTokens.spacing["2xl"]);
+    await expect(page.getByRole("heading", { name: "StockFlow" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Iniciar sesión" })).toBeVisible();
+    await expect(page.getByLabel("Usuario", { exact: true })).toBeVisible();
+    await expect(page.getByLabel("Contraseña", { exact: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Entrar" })).toBeVisible();
+    await expect(page.getByRole("combobox", { name: "Idioma" })).toBeVisible();
   });
 
-  test("the wordmark is the large hero treatment, and the language field is a surface input", async ({ page }) => {
+  test("the language field switches the screen without leaving it", async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 800 });
     await page.goto("/#/login");
-    const heading = page.getByRole("heading", { name: "StockFlow" });
-    expect(await heading.evaluate((el) => getComputedStyle(el).fontSize)).toBe("96px");
-    expect(await heading.evaluate((el) => getComputedStyle(el).fontWeight)).toBe("600");
-
-    const select = page.getByRole("combobox", { name: "Idioma" });
-    expect(await select.evaluate((el) => getComputedStyle(el).borderRadius)).toBe(designTokens.rounded.sm);
-    expect(await select.evaluate((el) => getComputedStyle(el).borderTopColor)).toBe(rgb(colors["outline-strong"]));
+    await page.getByRole("combobox", { name: "Idioma" }).selectOption("en");
+    await expect(page.getByRole("heading", { name: "Sign in" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Sign in" })).toBeVisible();
   });
 
-  test("in dark mode the entry screen keeps its light look, the brand moment", async ({ page }) => {
-    await page.setViewportSize({ width: 1280, height: 800 });
-    await page.emulateMedia({ colorScheme: "dark" });
-    await page.goto("/#/login");
-    await expect(page.locator("html")).toHaveClass(/dark/);
-    const card = page.getByTestId("login-card");
-    expect(await card.evaluate((el) => getComputedStyle(el).backgroundColor)).toBe(rgb(colors["surface-elevated"]));
-    expect(await card.evaluate((el) => getComputedStyle(el).color)).toBe(rgb(colors["on-surface"]));
-    expect(await page.getByTestId("login-brand-panel").evaluate((el) => getComputedStyle(el).backgroundColor)).toBe(rgb(colors["surface-elevated"]));
-    const action = page.getByTestId("login-action-panel");
-    expect(await action.evaluate((el) => getComputedStyle(el).backgroundColor)).toBe(rgb(colors["primary-strong"]));
-  });
-
-  test("the wordmark fits its half at the narrowest two-column width", async ({ page }) => {
-    await page.setViewportSize({ width: 1024, height: 768 });
-    await page.goto("/#/login");
-    const heading = await page.getByRole("heading", { name: "StockFlow" }).boundingBox();
-    const panel = await page.getByTestId("login-brand-panel").boundingBox();
-    expect(heading!.x).toBeGreaterThanOrEqual(panel!.x);
-    expect(heading!.x + heading!.width).toBeLessThanOrEqual(panel!.x + panel!.width);
-  });
-
-  test("on a phone the halves stack and nothing scrolls sideways", async ({ page }) => {
+  test("on a phone the entry screen stacks and nothing scrolls sideways", async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 812 });
     await page.goto("/#/login");
     await expect(page.getByRole("heading", { name: "StockFlow" })).toBeVisible();

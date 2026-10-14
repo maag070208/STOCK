@@ -41,7 +41,7 @@ Messages with `{{name}}` take values from the error's details.
 | `PRINTER_UNREACHABLE` | La impresora no responde. Revisa que esté encendida y conectada. | The printer does not respond. Check that it is on and connected. |
 | `UNAUTHENTICATED` | Inicia sesión para continuar. | Sign in to continue. |
 | `INVALID_CREDENTIALS` | El usuario o la contraseña no son correctos. | The username or password is not correct. |
-| `PASSWORD_INVALID` | La contraseña debe tener entre 10 y 72 caracteres. | The password must have 10 to 72 characters. |
+| `PASSWORD_INVALID` | La contraseña debe tener entre 5 y 72 caracteres. | The password must have 5 to 72 characters. |
 | `CURRENT_PASSWORD_WRONG` | La contraseña actual no es correcta. | The current password is not correct. |
 | `PASSWORD_REUSED` | La nueva contraseña debe ser distinta de la actual. | The new password must be different from the current one. |
 | `SELF_ROLE_CHANGE` | No puedes cambiar tus propios roles ni permisos. Pídelo a otro administrador. | You cannot change your own roles or permissions. Ask another administrator. |
