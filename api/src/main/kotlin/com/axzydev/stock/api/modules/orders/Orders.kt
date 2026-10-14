@@ -72,3 +72,23 @@ interface OrderRepository : JpaRepository<Order, UUID>, JpaSpecificationExecutor
 interface OrderLineRepository : JpaRepository<OrderLine, UUID> {
 	fun findByOrderId(orderId: UUID): List<OrderLine>
 }
+
+// One pick of a line: how much of it left one location, and the OUT movement that moved it.
+@Entity
+@Table(name = "order_picks")
+class OrderPick(
+	var lineId: UUID,
+	var locationId: UUID,
+	var quantity: BigDecimal,
+	var movementId: UUID,
+	var pickedBy: UUID?,
+	var pickedAt: Instant,
+) {
+	@Id
+	@GeneratedValue(strategy = GenerationType.UUID)
+	var id: UUID? = null
+}
+
+interface OrderPickRepository : JpaRepository<OrderPick, UUID> {
+	fun findByLineIdIn(lineIds: Collection<UUID>): List<OrderPick>
+}

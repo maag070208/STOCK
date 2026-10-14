@@ -81,7 +81,10 @@
     "PRINTER_CREATED": "Printer created",
     "PRINTER_UPDATED": "Printer changed",
     "LABEL_PRINTED": "Label printed",
-    "ORDER_CREATED": "Order created"
+    "ORDER_CREATED": "Order created",
+    "ORDER_ASSIGNED": "Order assigned",
+    "ORDER_PICKED": "Material picked",
+    "ORDER_STATUS_CHANGED": "Order status changed"
   },
   "targets": {
     "user": "User",

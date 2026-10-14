@@ -21,4 +21,14 @@ object OrderRules {
 
 	// The due date is the day the order must leave, so it is never before today.
 	fun dueDate(value: LocalDate, today: LocalDate): ErrorCode? = if (value.isBefore(today)) ErrorCode.DATE_IN_PAST else null
+
+	// CREATED → FULFILLING → FULFILLED → VALIDATED, and CREATED or FULFILLING → CANCELLED (order-fulfillment.md section 6).
+	fun canMove(from: Status, to: Status): Boolean =
+		when (to) {
+			Status.FULFILLING -> from == Status.CREATED
+			Status.FULFILLED -> from == Status.FULFILLING
+			Status.VALIDATED -> from == Status.FULFILLED
+			Status.CANCELLED -> from == Status.CREATED || from == Status.FULFILLING
+			Status.CREATED -> false
+		}
 }

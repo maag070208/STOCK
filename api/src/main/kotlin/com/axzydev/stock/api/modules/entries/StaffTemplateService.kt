@@ -59,21 +59,30 @@ class StaffTemplateService(
 		return people.peopleInWarehouse(warehouseId).filter { isOperator(it, warehouseId) }.map { StaffMemberView(it.id, it.username, it.name) }.sortedBy { it.name }
 	}
 
-	// The operators of the template who still are operators of the warehouse, by id.
+	// The operators of the template who still are operators of the warehouse, by id. An entry operator can count receipts.
 	@Transactional(readOnly = true)
-	fun operators(warehouseId: UUID): Map<UUID, Person> =
-		people.people(staff.findByWarehouseId(warehouseId).map { it.userId }).filterValues { isOperator(it, warehouseId) }
+	fun operators(warehouseId: UUID): Map<UUID, Person> = operators(warehouseId, RECEIVE)
+
+	// The operators of the template who can fulfill orders of the warehouse, by id.
+	@Transactional(readOnly = true)
+	fun orderOperators(warehouseId: UUID): Map<UUID, Person> = operators(warehouseId, FULFILL)
+
+	private fun operators(warehouseId: UUID, permission: String): Map<UUID, Person> =
+		people.people(staff.findByWarehouseId(warehouseId).map { it.userId }).filterValues { isOperator(it, warehouseId, permission) }
 
 	private fun requireExists(warehouseId: UUID) {
 		if (warehouses.codes(listOf(warehouseId)).isEmpty()) throw ApiException(ErrorCode.NOT_FOUND)
 	}
 
-	private fun isOperator(person: Person, warehouseId: UUID): Boolean =
-		person.active && person.access.can(RECEIVE) && (person.access.scopeOf(RECEIVE) == com.axzydev.stock.api.core.security.Scope.ALL || warehouseId in person.access.warehouseIds)
+	private fun isOperator(person: Person, warehouseId: UUID): Boolean = isOperator(person, warehouseId, RECEIVE)
+
+	private fun isOperator(person: Person, warehouseId: UUID, permission: String): Boolean =
+		person.active && person.access.can(permission) && (person.access.scopeOf(permission) == com.axzydev.stock.api.core.security.Scope.ALL || warehouseId in person.access.warehouseIds)
 
 	companion object {
 		const val MANAGE = "staff_templates.manage"
 		const val ASSIGN = "receipts.assign"
 		const val RECEIVE = "receipts.receive"
+		const val FULFILL = "orders.fulfill"
 	}
 }

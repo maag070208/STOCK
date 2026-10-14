@@ -81,7 +81,10 @@
     "PRINTER_CREATED": "Impresora creada",
     "PRINTER_UPDATED": "Impresora modificada",
     "LABEL_PRINTED": "Etiqueta impresa",
-    "ORDER_CREATED": "Orden creada"
+    "ORDER_CREATED": "Orden creada",
+    "ORDER_ASSIGNED": "Orden asignada",
+    "ORDER_PICKED": "Material surtido",
+    "ORDER_STATUS_CHANGED": "Estado de orden cambiado"
   },
   "targets": {
     "user": "Usuario",

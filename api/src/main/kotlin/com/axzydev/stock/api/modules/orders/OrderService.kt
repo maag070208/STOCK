@@ -8,6 +8,7 @@ import com.axzydev.stock.api.core.db.TableSpec
 import com.axzydev.stock.api.core.db.table
 import com.axzydev.stock.api.core.errors.ApiException
 import com.axzydev.stock.api.core.errors.ErrorCode
+import com.axzydev.stock.api.core.security.Actor
 import com.axzydev.stock.api.core.security.CurrentUser
 import com.axzydev.stock.api.core.security.Scope
 import com.axzydev.stock.api.core.validation.FieldError
@@ -15,10 +16,14 @@ import com.axzydev.stock.api.core.validation.ValidationException
 import com.axzydev.stock.api.core.validation.Validator
 import com.axzydev.stock.api.modules.catalogs.CatalogService
 import com.axzydev.stock.api.modules.customers.CustomerService
+import com.axzydev.stock.api.modules.entries.StaffTemplateService
 import com.axzydev.stock.api.modules.orders.OrderRules.Status
 import com.axzydev.stock.api.modules.products.ProductService
 import com.axzydev.stock.api.modules.products.StockProduct
+import com.axzydev.stock.api.modules.stock.MovementCommand
 import com.axzydev.stock.api.modules.stock.StockRules
+import com.axzydev.stock.api.modules.stock.StockService
+import com.axzydev.stock.api.modules.warehouses.LocationService
 import com.axzydev.stock.api.modules.warehouses.WarehouseService
 import org.springframework.data.domain.Sort
 import org.springframework.data.jpa.domain.Specification
@@ -42,14 +47,22 @@ data class CreateOrderRequest(
 	val lines: List<OrderLineBody>? = null,
 )
 
+data class AssignRequest(val operatorId: UUID? = null)
+
+data class PickBody(val lineId: UUID? = null, val locationId: UUID? = null, val quantity: BigDecimal? = null)
+
 // Orders (order-fulfillment.md): creation with the availability check and reservation, the reads, and later the
 // picking, status machine, validation, cancellation and reassignment.
 @Service
 class OrderService(
 	private val orders: OrderRepository,
 	private val lines: OrderLineRepository,
+	private val picks: OrderPickRepository,
 	private val customers: CustomerService,
 	private val warehouses: WarehouseService,
+	private val staff: StaffTemplateService,
+	private val locations: LocationService,
+	private val stock: StockService,
 	private val products: ProductService,
 	private val catalogs: CatalogService,
 	private val views: OrderViews,
@@ -127,6 +140,66 @@ class OrderService(
 		return views.full(order, language)
 	}
 
+	// The order goes to one active operator of its warehouse (order-fulfillment.md section 7a). Assigning changes no stock.
+	@Transactional
+	fun assign(user: CurrentUser, orderId: UUID, request: AssignRequest, language: String): OrderView {
+		val order = readable(user, orderId)
+		user.requireWrite(ASSIGN, order.warehouseId)
+		requireStatus(order, Status.CREATED, Status.FULFILLING)
+		val check = Validator()
+		val operators = staff.orderOperators(order.warehouseId)
+		when {
+			request.operatorId == null -> check.reject("operatorId", ErrorCode.FIELD_REQUIRED)
+			request.operatorId !in operators -> check.reject("operatorId", ErrorCode.CATALOG_VALUE_INVALID)
+		}
+		check.check()
+		val before = order.operatorId
+		order.operatorId = request.operatorId
+		touch(order)
+		audit.record(user.actor, "ORDER_ASSIGNED", "order", order.id.toString(), mapOf("operatorId" to before), mapOf("operatorId" to order.operatorId))
+		return views.full(order, language)
+	}
+
+	// A pick takes material out of one location (order-fulfillment.md section 7). The operator chooses the location; the
+	// system never suggests one. The pick is an OUT movement, and it reduces the reservation and the balance together.
+	@Transactional
+	fun pick(user: CurrentUser, orderId: UUID, request: PickBody, language: String): OrderView {
+		val order = orders.lockById(orderId) ?: throw ApiException(ErrorCode.NOT_FOUND)
+		user.requireRead(FULFILL, order.warehouseId)
+		requireStatus(order, Status.CREATED, Status.FULFILLING)
+		val check = Validator()
+		val line = request.lineId?.let { id -> lines.findById(id).orElse(null)?.takeIf { it.orderId == orderId } }
+		when {
+			request.lineId == null -> check.reject("lineId", ErrorCode.FIELD_REQUIRED)
+			line == null -> check.reject("lineId", ErrorCode.CATALOG_VALUE_INVALID)
+		}
+		val product = line?.let { products.stockProducts(listOf(it.productId))[it.productId] }
+		val target = request.locationId?.let { locations.stockTargets(listOf(it))[it] }
+		when {
+			request.locationId == null -> check.reject("locationId", ErrorCode.FIELD_REQUIRED)
+			target == null -> check.reject("locationId", ErrorCode.CATALOG_VALUE_INVALID)
+			target.warehouseId != order.warehouseId -> check.reject("locationId", ErrorCode.LOCATION_NOT_IN_WAREHOUSE)
+		}
+		quantity(check, "quantity", request.quantity, product)
+		check.check()
+		// A pick cannot exceed the line's remaining quantity; the OUT movement then refuses one above the location's balance.
+		if (line!!.pickedQuantity.add(request.quantity!!) > line.quantity) throw ApiException(ErrorCode.PICK_EXCEEDS_LINE)
+		val movement = stock.apply(
+			user.actor,
+			listOf(MovementCommand(StockService.OUT, target!!.id, line.productId, request.quantity!!, "Orden ${order.number}", SOURCE, order.id.toString())),
+		).single()
+		val now = clock.instant()
+		picks.save(OrderPick(line.id!!, target.id, request.quantity!!, movement.id, user.id, now))
+		line.pickedQuantity = line.pickedQuantity.add(request.quantity!!)
+		touch(order)
+		audit.record(user.actor, "ORDER_PICKED", "order", order.id.toString(), after = mapOf("lineId" to line.id.toString(), "locationId" to target.id.toString(), "quantity" to request.quantity))
+		// The first pick starts fulfillment; the last one ends it.
+		val all = lines.findByOrderId(order.id!!)
+		if (all.isNotEmpty() && all.all { it.picked }) move(user.actor, order, Status.FULFILLED)
+		else if (status(order) == Status.CREATED) move(user.actor, order, Status.FULFILLING)
+		return views.full(order, language)
+	}
+
 	// For other modules: an order the person may read, by id.
 	fun readable(user: CurrentUser, id: UUID): Order {
 		val order = orders.findById(id).orElseThrow { ApiException(ErrorCode.NOT_FOUND) }
@@ -137,6 +210,25 @@ class OrderService(
 	fun status(order: Order): Status = Status.valueOf(catalogs.itemViews(listOf(order.statusId), "es").getValue(order.statusId).code)
 
 	fun statusId(status: Status): UUID = catalogs.itemId(STATUS_CATALOG, status.name) ?: error("ORDER_STATUS has no ${status.name}")
+
+	// Moves the order to the next status, and only to it (order-fulfillment.md section 6).
+	fun move(actor: Actor, order: Order, to: Status) {
+		val from = status(order)
+		if (!OrderRules.canMove(from, to)) throw ApiException(ErrorCode.ORDER_STATUS_INVALID)
+		order.statusId = statusId(to)
+		touch(order)
+		audit.record(actor, "ORDER_STATUS_CHANGED", "order", order.id.toString(), mapOf("status" to from.name), mapOf("status" to to.name))
+	}
+
+	fun requireStatus(order: Order, vararg allowed: Status) {
+		val current = status(order)
+		if (current == Status.VALIDATED) throw ApiException(ErrorCode.ORDER_LOCKED)
+		if (current !in allowed) throw ApiException(ErrorCode.ORDER_STATUS_INVALID)
+	}
+
+	private fun touch(order: Order) {
+		order.updatedAt = clock.instant()
+	}
 
 	// The reservation of one line: available = the warehouse balance minus what open orders have reserved, checked and
 	// taken inside the advisory lock on the material and warehouse. A line above what is available is refused, and the
@@ -184,6 +276,7 @@ class OrderService(
 		const val REASSIGN = "orders.reassign"
 		const val ACCEPT_DIFFERENCE = "orders.accept_difference"
 		const val STATUS_CATALOG = "ORDER_STATUS"
+		const val SOURCE = "order"
 		const val BUSINESS_ZONE = "America/Mexico_City"
 	}
 }

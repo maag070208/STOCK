@@ -38,6 +38,8 @@ Messages with `{{name}}` take values from the error's details.
 | `PRODUCT_NOT_IN_ASSIGNMENT` | Este material no está en tus asignaciones abiertas. | This material is not in your open assignments. |
 | `PRODUCT_NOT_IN_ORDER` | Este material no está en la orden. | This material is not in the order. |
 | `ORDER_LOCKED` | La orden está validada y ya no se puede cambiar. | The order is validated and can no longer be changed. |
+| `ORDER_STATUS_INVALID` | La orden no está en el estado que permite esta acción. | The order is not in the status that allows this action. |
+| `PICK_EXCEEDS_LINE` | Lo surtido supera lo que falta de la línea. | What is picked is more than the line still needs. |
 | `IDEMPOTENCY_KEY_REUSED` | Esa clave de idempotencia ya se usó para otra solicitud. | That idempotency key was already used for another request. |
 | `PRINTER_UNREACHABLE` | La impresora no responde. Revisa que esté encendida y conectada. | The printer does not respond. Check that it is on and connected. |
 | `UNAUTHENTICATED` | Inicia sesión para continuar. | Sign in to continue. |
