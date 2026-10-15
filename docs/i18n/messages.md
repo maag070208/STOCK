@@ -11,7 +11,7 @@ Messages with `{{name}}` take values from the error's details.
 | `FORMAT_INVALID` | El formato no es válido. | The format is not valid. |
 | `UNKNOWN_FIELD` | La solicitud contiene un campo que no existe. | The request contains a field that does not exist. |
 | `DUPLICATE_VALUE` | Ya existe un registro con este valor. | A record with this value already exists. |
-| `DATE_IN_FUTURE` | La fecha no puede ser futura. | The date cannot be in the future. |
+| `DATE_IN_FUTURE` | La fecha no puede ser futura. | The date cannot be in the future. (No module refuses a date for being in the future today: F8-01 dropped it for invoices.) |
 | `DATE_IN_PAST` | La fecha no puede ser anterior a hoy. | The date cannot be before today. |
 | `QUANTITY_INVALID` | La cantidad no es válida. | The quantity is not valid. |
 | `CATALOG_VALUE_INVALID` | El valor del catálogo no existe o está inactivo. | The catalog value does not exist or is inactive. |
@@ -64,6 +64,7 @@ Messages with `{{name}}` take values from the error's details.
 | `ASSIGNMENT_LOCKED` | Ya hay un conteo de esta línea: sus asignaciones ya no se pueden cambiar. | This line has a count: its assignments can no longer change. |
 | `INVOICE_STATUS_INVALID` | La factura no está en el estado que permite esta acción. | The invoice is not in the status that allows this action. |
 | `INVOICE_LOCKED` | La factura está cerrada y ya no se puede cambiar. | The invoice is closed and can no longer change. |
+| `INVOICE_WITHOUT_LINES` | La factura no tiene materiales que cerrar. | The invoice has no lines to close. |
 | `PLACEMENT_EXCEEDS_COUNT` | Lo colocado supera la cantidad contada. | What is placed is more than what was counted. |
 | `ZPL_BLOCK_INVALID` | La plantilla debe ser una sola etiqueta: un ^XA al inicio y un ^XZ al final. | The template must be one label: a ^XA at the start and a ^XZ at the end. |
 | `ZPL_COMMAND_NOT_ALLOWED` | La plantilla usa un comando ZPL que no está permitido. | The template uses a ZPL command that is not allowed. |

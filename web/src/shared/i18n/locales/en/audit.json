@@ -91,7 +91,8 @@
     "ORDER_REASSIGNED": "Order reassigned",
     "ORDER_PICKS_TRANSFERRED": "Picked material transferred",
     "ORDER_PICKS_RETURNED": "Picked material returned",
-    "REPORT_EXPORTED": "Report exported"
+    "REPORT_EXPORTED": "Report exported",
+    "INVOICE_CLOSED": "Invoice closed"
   },
   "targets": {
     "user": "User",

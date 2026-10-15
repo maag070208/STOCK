@@ -19,6 +19,7 @@ import com.axzydev.stock.api.modules.partners.CreatePartnerRequest
 import com.axzydev.stock.api.modules.partners.PartnerRules
 import com.axzydev.stock.api.modules.partners.UpdatePartnerRequest
 import org.springframework.data.domain.Sort
+import org.springframework.data.jpa.domain.Specification
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.Clock
@@ -164,6 +165,16 @@ class SupplierService(
 			check.reject("contactId", ErrorCode.CATALOG_VALUE_INVALID)
 		}
 	}
+
+	// For other modules: the suppliers whose code or name contains a term, for a search box that reads both (F8-02).
+	@Transactional(readOnly = true)
+	fun idsMatching(term: String): List<UUID> =
+		suppliers.findAll(
+			Specification { root, _, builder ->
+				val like = "%" + term.trim().lowercase() + "%"
+				builder.or(builder.like(builder.lower(root.get("code")), like), builder.like(builder.lower(root.get("name")), like))
+			},
+		).map { it.id!! }
 
 	// For other modules: the code and name of each supplier, and the name of each contact, for display.
 	@Transactional(readOnly = true)

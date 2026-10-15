@@ -56,7 +56,7 @@ class InvoicesEndpointTest : ApiTest() {
 		)
 		assertEquals(
 			setOf(
-				"number" to "FORMAT_INVALID", "supplierId" to "CATALOG_VALUE_INVALID", "invoiceDate" to "DATE_IN_FUTURE",
+				"number" to "FORMAT_INVALID", "supplierId" to "CATALOG_VALUE_INVALID",
 				"lines.0.quantity" to "QUANTITY_INVALID", "lines.1.productId" to "DUPLICATE_VALUE",
 			),
 			fields(wrong.json),
@@ -64,6 +64,82 @@ class InvoicesEndpointTest : ApiTest() {
 		assertEquals(setOf("lines.0.quantity" to "QUANTITY_INVALID"), fields(f.create(f.body(mapOf("productId" to f.product(), "quantity" to 1.5))).json))
 		val empty = api.call("POST", "/invoices", f.admin, mapOf<String, Any>(), headers = mapOf("Idempotency-Key" to UUID.randomUUID().toString()))
 		assertEquals(setOf("number", "supplierId", "invoiceDate", "warehouseId"), fields(empty.json).map { it.first }.toSet())
+	}
+
+	@Test
+	fun `an invoice dated in the future is accepted, and the date is the one that was written`() {
+		val f = EntriesFixture(api)
+		val tomorrow = BusinessDays.today(1).toString()
+		val created = f.create(f.body(changes = mapOf("invoiceDate" to tomorrow)))
+		assertEquals(201, created.status, created.body)
+		assertEquals(tomorrow, created.text("invoiceDate"))
+		assertEquals(tomorrow, api.get("/invoices/${created.text("id")}", f.admin).text("invoiceDate"))
+		// The date is still required, and it is still a date.
+		assertEquals(setOf("invoiceDate"), fields(f.create(f.body(changes = mapOf("invoiceDate" to null))).json).map { it.first }.toSet())
+		// A date the JSON cannot carry never reaches the rules.
+		assertEquals(400, f.create(f.body(changes = mapOf("invoiceDate" to "mañana"))).status)
+	}
+
+	@Test
+	fun `the invoice names its supplier and no contact`() {
+		val f = EntriesFixture(api)
+		val contact = api.post("/suppliers/${f.supplier}/contacts", f.admin, mapOf("name" to "Ana Pérez", "email" to "ana@aceros.com.mx")).text("id")
+		// The contact left the contract (F8-04): sending it is an unknown field, not a field that is ignored.
+		assertEquals("UNKNOWN_FIELD", f.create(f.body(changes = mapOf("contactId" to contact))).code)
+		// And it is not answered any more. What is already stored is untouched: the supplier keeps its contacts.
+		val created = f.create(f.body())
+		assertEquals(201, created.status, created.body)
+		assertTrue(created.json.get("contact") == null, created.body)
+		assertEquals(1, api.get("/suppliers/${f.supplier}", f.admin).json.get("contacts").list.size)
+	}
+
+	@Test
+	fun `one search box finds the number, the supplier code and the supplier name`() {
+		val f = EntriesFixture(api)
+		val tornillos = f.create(f.body(f.line(f.product("Tornillo"), 10))).json
+		// A supplier of its own, with a name nobody else uses, so the search can be checked on its own.
+		val otherName = "Aceros del Sur " + UUID.randomUUID().toString().take(6)
+		val other = api.post("/suppliers", f.admin, api.partner(changes = mapOf("name" to otherName))).text("id")
+		val otherCode = api.get("/suppliers/$other", f.admin).text("code")
+		val otherInvoice = f.create(f.body(changes = mapOf("supplierId" to other))).json
+
+		// The number, and a piece of it: the code is unique, so its tail belongs to one invoice only.
+		val number = tornillos.get("number").asString()
+		val byNumber = api.post("/invoices/query", f.admin, mapOf("filters" to mapOf("search" to number))).json
+		assertEquals(listOf(number), byNumber.get("data").list.map { it.get("number").asString() }, byNumber.toString())
+		val byPiece = api.post("/invoices/query", f.admin, mapOf("filters" to mapOf("search" to number.takeLast(8).lowercase()))).json
+		assertEquals(listOf(number), byPiece.get("data").list.map { it.get("number").asString() })
+		// The supplier's code, and its name.
+		val byCode = api.post("/invoices/query", f.admin, mapOf("filters" to mapOf("search" to otherCode))).json
+		assertEquals(listOf(otherInvoice.get("number").asString()), byCode.get("data").list.map { it.get("number").asString() })
+		val byName = api.post("/invoices/query", f.admin, mapOf("filters" to mapOf("search" to otherName.uppercase()))).json
+		assertEquals(listOf(otherInvoice.get("number").asString()), byName.get("data").list.map { it.get("number").asString() }, byName.toString())
+		// It combines with the status with AND, and an unknown filter is still refused.
+		assertEquals(0, api.post("/invoices/query", f.admin, mapOf("filters" to mapOf("search" to otherCode, "status" to "CLOSED"))).json.get("total").asInt())
+		assertEquals("UNKNOWN_FIELD", api.post("/invoices/query", f.admin, mapOf("filters" to mapOf("nope" to "x"))).code)
+	}
+
+	@Test
+	fun `an invoice captured with lines and no operators closes by hand, once`() {
+		val f = EntriesFixture(api)
+		val created = f.create(f.body(f.line(f.product("Arandela"), 25))).json
+		val id = created.get("id").asString()
+		// An invoice without lines has nothing to close.
+		val empty = f.create(f.body()).json
+		assertEquals("INVOICE_WITHOUT_LINES", api.post("/invoices/${empty.get("id").asString()}/closure", f.admin, mapOf<String, Any>()).code)
+		// With lines, the office closes it, and it stays closed.
+		val closed = api.post("/invoices/$id/closure", f.admin, mapOf<String, Any>())
+		assertEquals(200, closed.status, closed.body)
+		assertEquals("CLOSED", closed.json.get("status").get("code").asString())
+		assertEquals("INVOICE_STATUS_INVALID", api.post("/invoices/$id/closure", f.admin, mapOf<String, Any>()).code)
+		// Once a share is counted the invoice closes itself, and by hand is refused.
+		val counted = f.create(f.body(f.line(f.product("Tuerca"), 10, f.operators[0] to 10))).json
+		val share = counted.get("lines").get(0).get("assignments").get(0).get("id").asString()
+		assertEquals(200, api.call("POST", "/receipts/assignments/$share/count", f.operators[0].token, mapOf("countedQuantity" to 10), channel = "app").status)
+		assertEquals("INVOICE_STATUS_INVALID", api.post("/invoices/${counted.get("id").asString()}/closure", f.admin, mapOf<String, Any>()).code)
+		// The audit log keeps who closed it.
+		val log = api.post("/audit-log/query", f.admin, mapOf("filters" to mapOf("action" to "INVOICE_CLOSED", "targetType" to "invoice", "targetId" to id)))
+		assertEquals(1, log.json.get("total").asInt(), log.body)
 	}
 
 	@Test

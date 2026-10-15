@@ -30,12 +30,10 @@ export function InvoiceFormPage() {
 	const key = useRef(newId());
 	const [number, setNumber] = useState("");
 	const [supplierId, setSupplierId] = useState("");
-	const [contactId, setContactId] = useState("");
 	const [invoiceDate, setInvoiceDate] = useState(new Date());
 	const [warehouseId, setWarehouseId] = useState("");
 	const [lines, setLines] = useState<LineState[]>([]);
 	const [suppliers, setSuppliers] = useState<Partner[]>([]);
-	const [supplier, setSupplier] = useState<Partner | null>(null);
 	const [warehouses, setWarehouses] = useState<Ref[]>([]);
 	const [staff, setStaff] = useState<StaffMember[]>([]);
 	const [tried, setTried] = useState(false);
@@ -47,13 +45,6 @@ export function InvoiceFormPage() {
 		void invoiceApi.warehouseOptions().then(setWarehouses);
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
-
-	useEffect(() => {
-		setContactId("");
-		setSupplier(null);
-		if (supplierId) void suppliersApi.get(supplierId).then(setSupplier);
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [supplierId]);
 
 	useEffect(() => {
 		setStaff([]);
@@ -72,7 +63,6 @@ export function InvoiceFormPage() {
 		const input = {
 			number,
 			supplierId,
-			contactId: contactId || null,
 			invoiceDate: isoDate(invoiceDate),
 			warehouseId,
 			lines: lines.map((line) => ({
@@ -121,17 +111,6 @@ export function InvoiceFormPage() {
 							error={fieldError("supplierId", !supplierId)}
 							touched={!!fieldError("supplierId", !supplierId)}
 							required
-						/>
-						<ITSelect
-							name="contactId"
-							label={t("form.contact")}
-							value={contactId}
-							onChange={(e) => setContactId(e.target.value)}
-							options={[{ value: "", label: t("form.noContact") }, ...(supplier?.contacts ?? []).filter((c) => c.active).map((c) => ({ value: c.id, label: c.name }))]}
-							valueField="value"
-							labelField="label"
-							error={submit.fieldErrors.contactId}
-							touched={!!submit.fieldErrors.contactId}
 						/>
 						<ITSelect
 							name="warehouseId"

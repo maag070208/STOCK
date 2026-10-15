@@ -132,7 +132,8 @@ A field that points to a catalog must hold an active catalog value. An inactive 
 
 - Sent in the API as ISO 8601 (`YYYY-MM-DD`).
 - Must be a real calendar date.
-- A date the business does not allow in the future (for example, an invoice date) fails with `DATE_IN_FUTURE`.
+- A date the business does not allow in the future fails with `DATE_IN_FUTURE`. No module refuses a date for being in the
+  future today: an invoice date was the example until F8-01 allowed it.
 
 ### Quantities
 

@@ -158,6 +158,10 @@ class AuditCoverageTest : ApiTest() {
 			api.call("POST", "/receipts/assignments/$assignment/placements", operator.token, mapOf("placements" to listOf(mapOf("locationId" to f.locations[0], "quantity" to 9))), channel = "app")
 		}
 
+		// The fast capture: an invoice with lines and no operators, closed by hand (F8-03).
+		val fast = f.create(f.body(f.line(f.product(), 5))).json
+		write("INVOICE_CLOSED", "invoice", fast.get("id").asString()) { api.post("/invoices/${fast.get("id").asString()}/closure", admin, mapOf<String, Any>()) }
+
 		// Orders, from creation to validation, with the three reassignment actions on the way.
 		val o = OrdersFixture(api)
 		written += Triple("STAFF_TEMPLATE_CHANGED", "warehouse", o.warehouse)

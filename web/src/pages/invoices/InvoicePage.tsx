@@ -71,12 +71,6 @@ export function InvoicePage() {
 						</dd>
 						<dt className="sf:text-label-md sf:text-on-surface-muted">{t("detail.supplier")}</dt>
 						<dd className="sf:text-body-md">{`${invoice.supplier.code ?? ""} · ${invoice.supplier.name ?? ""}`}</dd>
-						{invoice.contact && (
-							<>
-								<dt className="sf:text-label-md sf:text-on-surface-muted">{t("detail.contact")}</dt>
-								<dd className="sf:text-body-md">{invoice.contact.name}</dd>
-							</>
-						)}
 						<dt className="sf:text-label-md sf:text-on-surface-muted">{t("detail.date")}</dt>
 						<dd className="sf:text-body-md">{formatDate(invoice.invoiceDate, i18n.language)}</dd>
 						<dt className="sf:text-label-md sf:text-on-surface-muted">{t("detail.warehouse")}</dt>

@@ -62,6 +62,12 @@ class InvoiceController(
 	}
 
 	// The warehouses an invoice can name: every active one. Who creates invoices needs them without reading locations.
+	// Closing by hand, for the invoice captured fast (F8-03). It is audited, and it moves to CLOSED in one step.
+	@PostMapping("/{id}/closure")
+	@RequiresPermission(InvoiceService.CREATE)
+	fun close(@PathVariable id: UUID, user: CurrentUser, locale: Locale): InvoiceView =
+		invoices.close(user, id, locale.language)
+
 	@GetMapping("/warehouse-options")
 	@RequiresPermission(InvoiceService.CREATE)
 	fun warehouseOptions(): List<Ref> = invoices.warehouseOptions()

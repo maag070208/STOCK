@@ -60,6 +60,8 @@ enum class ErrorCode(val httpStatus: Int) {
     ASSIGNMENT_LOCKED(409),
     INVOICE_STATUS_INVALID(409),
     INVOICE_LOCKED(409),
+    // An invoice with nothing in it has nothing to close by hand (F8-03).
+    INVOICE_WITHOUT_LINES(409),
     PLACEMENT_EXCEEDS_COUNT(409),
     ZPL_BLOCK_INVALID(400),
     ZPL_COMMAND_NOT_ALLOWED(400),

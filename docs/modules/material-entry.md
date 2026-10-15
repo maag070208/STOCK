@@ -97,7 +97,7 @@ All under `/api/v1`, with the headers and checks of [identity.md](identity.md) s
 | `PUT /warehouses/{id}/staff` | `staff_templates.manage` | `userIds`. Each one an active person who can count receipts and works in the warehouse |
 
 **Rules as the API applies them.**
-- The number is uppercased and unique per supplier (`DUPLICATE_VALUE` on `number`). The supplier, the contact and the warehouse must be active (`CATALOG_VALUE_INVALID`). The date is not later than today in Mexico City (`DATE_IN_FUTURE`).
+- The number is uppercased and unique per supplier (`DUPLICATE_VALUE` on `number`). The supplier and the warehouse must be active (`CATALOG_VALUE_INVALID`). The date is required, it is a date, and **it may be in the future** (decided 2026-10-15, F8-01: the office records what the supplier's paper says). There is no contact: it left the contract in F8-04, and what is already stored is untouched.
 - A line names an active material once (`DUPLICATE_VALUE` on `lines.<i>.productId`). Its unit comes from the material and is not sent. Its quantity is positive with the unit's decimals (`QUANTITY_INVALID`).
 - The shares of a line name operators of the warehouse's staff template, once each, and add up to the line quantity (`ASSIGNMENT_TOTAL_MISMATCH` on the line's `assignments`).
 - The first share moves the invoice from `OPEN` to `PENDING`. A `CLOSED` invoice cannot change (`INVOICE_LOCKED`); other actions out of their status answer `INVOICE_STATUS_INVALID`.

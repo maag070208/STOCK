@@ -44,7 +44,6 @@ export interface Invoice {
 	id: string;
 	number: string;
 	supplier: Ref;
-	contact: Ref | null;
 	invoiceDate: string;
 	warehouse: Ref;
 	status: { code: InvoiceStatus; label: string | null };
@@ -63,7 +62,6 @@ export interface LineInput {
 export interface InvoiceInput {
 	number: string;
 	supplierId: string;
-	contactId: string | null;
 	invoiceDate: string;
 	warehouseId: string;
 	lines: LineInput[];

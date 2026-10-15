@@ -39,7 +39,7 @@ data class LineBody(val productId: UUID? = null, val quantity: BigDecimal? = nul
 data class CreateInvoiceRequest(
 	val number: String? = null,
 	val supplierId: UUID? = null,
-	val contactId: UUID? = null,
+
 	val invoiceDate: LocalDate? = null,
 	val warehouseId: UUID? = null,
 	val lines: List<LineBody>? = null,
@@ -75,9 +75,21 @@ class InvoiceService(
 		}
 	}
 
+	// One box for the list (F8-02): the invoice number, the supplier's code or its name, each with OR among themselves
+	// and with AND against every other filter.
+	private val searchFilter: TableFilter<Invoice> = { root, builder, value ->
+		val term = "%" + value.toString().trim().lowercase() + "%"
+		val supplierIds = suppliers.idsMatching(value.toString().trim())
+		builder.or(
+			builder.like(builder.lower(root.get("number")), term),
+			if (supplierIds.isEmpty()) builder.disjunction() else root.get<UUID>("supplierId").`in`(supplierIds),
+		)
+	}
+
 	private val table = TableSpec<Invoice>(
 		filters = mapOf(
 			"number" to TableSpec.contains("number"),
+			"search" to searchFilter,
 			"supplierId" to TableSpec.id("supplierId"),
 			"warehouseId" to TableSpec.id("warehouseId"),
 			"status" to statusFilter,
@@ -98,6 +110,21 @@ class InvoiceService(
 	@Transactional(readOnly = true)
 	fun get(user: CurrentUser, id: UUID, language: String): InvoiceView = views.full(readable(user, id), language)
 
+	// Closing by hand (F8-03): for the invoice captured fast, which never had operators. Only while nothing has been
+	// counted, so the work of the receiving is never thrown away; from there on it closes itself.
+	@Transactional
+	fun close(user: CurrentUser, id: UUID, language: String): InvoiceView {
+		val invoice = readable(user, id)
+		val current = status(invoice)
+		val lines = lines.countByInvoiceId(invoice.id!!)
+		val counted = assignments.countCountedOfInvoice(invoice.id!!)
+		InvoiceRules.canClose(current, lines, counted)?.let { throw ApiException(it) }
+		invoice.statusId = statusId(Status.CLOSED)
+		touch(invoice)
+		audit.record(user.actor, "INVOICE_CLOSED", "invoice", id.toString(), before = mapOf("status" to current.name), after = mapOf("status" to Status.CLOSED.name, "lines" to lines))
+		return views.full(invoice, language)
+	}
+
 	@Transactional(readOnly = true)
 	fun warehouseOptions(): List<Ref> = warehouses.activeOptions().map { Ref(it.first, it.second, it.third) }
 
@@ -105,11 +132,9 @@ class InvoiceService(
 	fun create(user: CurrentUser, request: CreateInvoiceRequest, language: String): InvoiceView {
 		val check = Validator()
 		val number = check.required("number", request.number, InvoiceRules::number) { it.uppercase() }
-		suppliers.requireForNewRecord(check, request.supplierId, request.contactId)
-		when (val date = request.invoiceDate) {
-			null -> check.reject("invoiceDate", ErrorCode.FIELD_REQUIRED)
-			else -> InvoiceRules.date(date, today())?.let { check.reject("invoiceDate", it) }
-		}
+		suppliers.requireForNewRecord(check, request.supplierId, null)
+		// The date is required and is a date; a future one is allowed (F8-01): the office records the supplier's paper.
+		if (request.invoiceDate == null) check.reject("invoiceDate", ErrorCode.FIELD_REQUIRED)
 		warehouses.requireActive(check, "warehouseId", request.warehouseId)
 		val bodies = request.lines.orEmpty()
 		val found = products.stockProducts(bodies.mapNotNull { it.productId })
@@ -129,7 +154,7 @@ class InvoiceService(
 		if (invoices.existsBySupplierIdAndNumber(request.supplierId!!, number)) throw ValidationException(listOf(FieldError("number", ErrorCode.DUPLICATE_VALUE)))
 
 		val now = clock.instant()
-		val invoice = invoices.save(Invoice(number, request.supplierId, request.contactId, request.invoiceDate!!, request.warehouseId!!, statusId(Status.OPEN), user.id, now, now))
+		val invoice = invoices.save(Invoice(number, request.supplierId, null, request.invoiceDate!!, request.warehouseId!!, statusId(Status.OPEN), user.id, now, now))
 		for (body in bodies) {
 			val line = lines.save(InvoiceLine(invoice.id!!, body.productId!!, found.getValue(body.productId).unitId, body.quantity!!))
 			body.assignments?.forEach { assignments.save(ReceiptAssignment(line.id!!, it.operatorId!!, it.quantity!!, now, now)) }
@@ -250,8 +275,6 @@ class InvoiceService(
 	private fun touch(invoice: Invoice) {
 		invoice.updatedAt = clock.instant()
 	}
-
-	private fun today(): LocalDate = LocalDate.ofInstant(clock.instant(), ZoneId.of(BUSINESS_ZONE))
 
 	private fun quantity(check: Validator, field: String, value: BigDecimal?, product: StockProduct?) {
 		when {

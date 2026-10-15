@@ -42,7 +42,6 @@ data class InvoiceView(
 	val id: UUID,
 	val number: String,
 	val supplier: Ref,
-	val contact: Ref?,
 	val invoiceDate: LocalDate,
 	val warehouse: Ref,
 	val status: CodeLabel,
@@ -64,7 +63,7 @@ class InvoiceViews(
 	private val catalogs: CatalogService,
 ) {
 	fun headers(invoices: List<Invoice>, language: String): List<InvoiceView> {
-		val (supplierNames, contactNames) = suppliers.names(invoices.map { it.supplierId }, invoices.mapNotNull { it.contactId })
+		val (supplierNames, _) = suppliers.names(invoices.map { it.supplierId }, emptyList())
 		val warehouseCodes = warehouses.codes(invoices.map { it.warehouseId })
 		val statuses = catalogs.itemViews(invoices.map { it.statusId }, language)
 		return invoices.map { invoice ->
@@ -72,7 +71,6 @@ class InvoiceViews(
 				id = invoice.id!!,
 				number = invoice.number,
 				supplier = Ref(invoice.supplierId, supplierNames[invoice.supplierId]?.first, supplierNames[invoice.supplierId]?.second),
-				contact = invoice.contactId?.let { Ref(it, null, contactNames[it]) },
 				invoiceDate = invoice.invoiceDate,
 				warehouse = Ref(invoice.warehouseId, warehouseCodes[invoice.warehouseId], null),
 				status = statuses[invoice.statusId].let { CodeLabel(it?.code ?: "", it?.label) },

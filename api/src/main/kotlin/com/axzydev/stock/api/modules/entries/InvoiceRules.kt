@@ -20,7 +20,6 @@ object InvoiceRules {
 			else -> null
 		}
 
-	fun date(value: LocalDate, today: LocalDate): ErrorCode? = if (value.isAfter(today)) ErrorCode.DATE_IN_FUTURE else null
 
 	// The expected quantities of a line add up to the line quantity (material-entry.md section 6).
 	fun sharesAddUp(line: BigDecimal, shares: List<BigDecimal>): Boolean =
@@ -41,6 +40,16 @@ object InvoiceRules {
 	// by the same difference, so the line still equals the sum of its assignments. Gives (expected, line) after it.
 	fun adjust(line: BigDecimal, expected: BigDecimal, counted: BigDecimal): Pair<BigDecimal, BigDecimal> =
 		counted to line + difference(expected, counted)
+
+	// Whether an invoice can be closed by hand (F8): only while nothing has been counted yet, because from there on the
+	// operators' work decides when it closes, and only if it has something to close.
+	fun canClose(status: Status, lines: Long, countedShares: Long): ErrorCode? =
+		when {
+			status == Status.CLOSED -> ErrorCode.INVOICE_STATUS_INVALID
+			countedShares > 0 -> ErrorCode.INVOICE_STATUS_INVALID
+			lines == 0L -> ErrorCode.INVOICE_WITHOUT_LINES
+			else -> null
+		}
 
 	// Each status moves only to the next: OPEN, PENDING, IN_ASSIGNMENT, CLOSED.
 	fun canMove(from: Status, to: Status): Boolean = to.ordinal == from.ordinal + 1

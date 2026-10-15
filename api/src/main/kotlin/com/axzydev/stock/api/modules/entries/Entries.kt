@@ -112,6 +112,9 @@ interface InvoiceRepository : JpaRepository<Invoice, UUID>, JpaSpecificationExec
 }
 
 interface InvoiceLineRepository : JpaRepository<InvoiceLine, UUID> {
+	// How many materials the invoice asks for: an invoice without lines cannot be closed by hand (F8-03).
+	fun countByInvoiceId(invoiceId: UUID): Long
+
 	fun findByInvoiceId(invoiceId: UUID): List<InvoiceLine>
 }
 
@@ -119,6 +122,10 @@ interface ReceiptAssignmentRepository : JpaRepository<ReceiptAssignment, UUID> {
 	fun findByLineIdIn(lineIds: Collection<UUID>): List<ReceiptAssignment>
 
 	fun findByOperatorId(operatorId: UUID): List<ReceiptAssignment>
+
+	// How many shares of an invoice were counted: from there on the invoice closes itself, never by hand (F8-03).
+	@Query("select count(a) from ReceiptAssignment a where a.lineId in (select l.id from InvoiceLine l where l.invoiceId = :invoiceId) and a.countedQuantity is not null")
+	fun countCountedOfInvoice(invoiceId: UUID): Long
 
 	// The invoice of an assignment, as a value: nothing is loaded before the invoice is locked.
 	@Query("select l.invoiceId from InvoiceLine l where l.id = (select a.lineId from ReceiptAssignment a where a.id = :assignmentId)")

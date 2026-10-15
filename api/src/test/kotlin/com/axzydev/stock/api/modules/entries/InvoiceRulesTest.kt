@@ -8,7 +8,6 @@ import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
-import java.time.LocalDate
 
 // F4-07, F4-13 to F4-17 · unit: the invoice number and date, the shares of a line, counts and adjustments, the status
 // machine, and how much a placement may take.
@@ -17,13 +16,10 @@ class InvoiceRulesTest {
 	private fun d(value: Int) = BigDecimal(value)
 
 	@Test
-	fun `an invoice number is 1 to 30 letters, digits, hyphens or slashes, and its date is not in the future`() {
+	fun `an invoice number is 1 to 30 letters, digits, hyphens or slashes`() {
 		assertNull(InvoiceRules.number("FAC-2024/0012"))
 		assertEquals(ErrorCode.FORMAT_INVALID, InvoiceRules.number("FAC 12"))
 		assertEquals(ErrorCode.FIELD_TOO_LONG, InvoiceRules.number("A".repeat(31)))
-		val today = LocalDate.of(2026, 10, 14)
-		assertNull(InvoiceRules.date(today, today))
-		assertEquals(ErrorCode.DATE_IN_FUTURE, InvoiceRules.date(today.plusDays(1), today))
 	}
 
 	@Test
