@@ -112,6 +112,7 @@
     "receipt_assignment": "Assignment",
     "label_template": "Label template",
     "printer": "Printer",
-    "order": "Order"
+    "order": "Order",
+    "report": "Report"
   }
 }

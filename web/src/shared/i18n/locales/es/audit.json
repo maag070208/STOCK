@@ -112,6 +112,7 @@
     "receipt_assignment": "Asignación",
     "label_template": "Plantilla de etiqueta",
     "printer": "Impresora",
-    "order": "Orden"
+    "order": "Orden",
+    "report": "Reporte"
   }
 }
