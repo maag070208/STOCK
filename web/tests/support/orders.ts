@@ -15,6 +15,7 @@ export interface OrderJson {
 }
 
 export interface OrdersFixture {
+	supplier: { id: string; code: string; name: string };
 	token: string;
 	warehouse: { id: string; code: string };
 	locations: { id: string; code: string }[];
@@ -115,5 +116,5 @@ export async function ordersFixture(): Promise<OrdersFixture> {
 
 	const view = async (orderId: string) => (await call("GET", `/orders/${orderId}`, { token })).json as OrderJson;
 
-	return { token, warehouse, locations, operators, customer: client, product, stock, order, pick, view };
+	return { supplier: supplierPartner, token, warehouse, locations, operators, customer: client, product, stock, order, pick, view };
 }

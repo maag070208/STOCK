@@ -22,6 +22,11 @@ import { OrdersPage } from "@pages/orders/OrdersPage";
 import { LabelTemplatePage } from "@pages/labels/LabelTemplatePage";
 import { LabelTemplatesPage } from "@pages/labels/LabelTemplatesPage";
 import { PrintersPage } from "@pages/printers/PrintersPage";
+import { InvoicesReportPage } from "@pages/reports/InvoicesReportPage";
+import { KardexPage } from "@pages/reports/KardexPage";
+import { MovementsReportPage } from "@pages/reports/MovementsReportPage";
+import { OrdersReportPage } from "@pages/reports/OrdersReportPage";
+import { StockReportPage } from "@pages/reports/StockReportPage";
 import { OpeningInventoryPage } from "@pages/stock/OpeningInventoryPage";
 import { StockPage } from "@pages/stock/StockPage";
 import { UsersPage } from "@pages/users/UsersPage";
@@ -67,6 +72,13 @@ export function App() {
 						<Route path="/discrepancies" element={guarded("discrepancies", <DiscrepanciesPage />)} />
 						<Route path="/stock" element={guarded("stock", <StockPage />)} />
 						<Route path="/stock/opening" element={<RequirePermission anyOf={["stock.opening"]}><OpeningInventoryPage /></RequirePermission>} />
+						{/* The reports: one address per report, so a link points at one of them (reports.md section 3). */}
+						<Route path="/reports" element={guarded("reports", <Navigate to="/reports/stock" replace />)} />
+						<Route path="/reports/stock" element={guarded("reports", <StockReportPage />)} />
+						<Route path="/reports/kardex" element={guarded("reports", <KardexPage />)} />
+						<Route path="/reports/movements" element={guarded("reports", <MovementsReportPage />)} />
+						<Route path="/reports/orders" element={guarded("reports", <OrdersReportPage />)} />
+						<Route path="/reports/invoices" element={guarded("reports", <InvoicesReportPage />)} />
 						{(["suppliers", "customers"] as const).map((kind) => [
 							<Route key={kind} path={`/${kind}`} element={guarded(kind, <PartnersPage key={kind} kind={kind} />)} />,
 							// Creating and editing need the manage permission: without it the form answers with the 403 page.

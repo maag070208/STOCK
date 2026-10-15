@@ -134,5 +134,8 @@ class SalesReportTest : ApiTest() {
 		assertEquals(1, invoicesReport(mapOf("warehouseId" to f.warehouse, "status" to listOf(row.get("status").asString()))).get("total").asInt())
 		assertEquals(0, invoicesReport(mapOf("warehouseId" to f.warehouse, "status" to "CLOSED")).get("total").asInt())
 		assertEquals(1, invoicesReport(mapOf("warehouseId" to f.warehouse, "supplierId" to f.supplier)).get("total").asInt())
+		// The scope is the same as every other report: another manager's warehouse answers 404, not an empty list.
+		val stranger = api.newUser("WAREHOUSE_MANAGER").also { api.put("/users/${it.id}/warehouses", api.adminToken(), mapOf("warehouseIds" to listOf(api.createWarehouse()))) }
+		assertEquals(404, api.post("/reports/invoices", stranger.token, mapOf("filters" to mapOf("warehouseId" to f.warehouse))).status)
 	}
 }

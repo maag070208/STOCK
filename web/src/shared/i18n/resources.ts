@@ -11,6 +11,7 @@ import esStock from "./locales/es/stock.json" with { type: "json" };
 import esInvoices from "./locales/es/invoices.json" with { type: "json" };
 import esOrders from "./locales/es/orders.json" with { type: "json" };
 import esLabels from "./locales/es/labels.json" with { type: "json" };
+import esReports from "./locales/es/reports.json" with { type: "json" };
 import enCommon from "./locales/en/common.json" with { type: "json" };
 import enAuth from "./locales/en/auth.json" with { type: "json" };
 import enUsers from "./locales/en/users.json" with { type: "json" };
@@ -24,15 +25,16 @@ import enStock from "./locales/en/stock.json" with { type: "json" };
 import enInvoices from "./locales/en/invoices.json" with { type: "json" };
 import enOrders from "./locales/en/orders.json" with { type: "json" };
 import enLabels from "./locales/en/labels.json" with { type: "json" };
+import enReports from "./locales/en/reports.json" with { type: "json" };
 
 export const defaultLocale = "es" as const;
 export const supportedLocales = ["es", "en"] as const;
 export type Locale = (typeof supportedLocales)[number];
 
 // One namespace per domain (web.md section 6). Both locales have every key: a unit test fails otherwise.
-export const namespaces = ["common", "auth", "users", "access", "catalogs", "audit", "warehouses", "products", "partners", "stock", "invoices", "orders", "labels"] as const;
+export const namespaces = ["common", "auth", "users", "access", "catalogs", "audit", "warehouses", "products", "partners", "stock", "invoices", "orders", "labels", "reports"] as const;
 
 export const resources = {
-	es: { common: esCommon, auth: esAuth, users: esUsers, access: esAccess, catalogs: esCatalogs, audit: esAudit, warehouses: esWarehouses, products: esProducts, partners: esPartners, stock: esStock, invoices: esInvoices, orders: esOrders, labels: esLabels },
-	en: { common: enCommon, auth: enAuth, users: enUsers, access: enAccess, catalogs: enCatalogs, audit: enAudit, warehouses: enWarehouses, products: enProducts, partners: enPartners, stock: enStock, invoices: enInvoices, orders: enOrders, labels: enLabels },
+	es: { common: esCommon, auth: esAuth, users: esUsers, access: esAccess, catalogs: esCatalogs, audit: esAudit, warehouses: esWarehouses, products: esProducts, partners: esPartners, stock: esStock, invoices: esInvoices, orders: esOrders, labels: esLabels, reports: esReports },
+	en: { common: enCommon, auth: enAuth, users: enUsers, access: enAccess, catalogs: enCatalogs, audit: enAudit, warehouses: enWarehouses, products: enProducts, partners: enPartners, stock: enStock, invoices: enInvoices, orders: enOrders, labels: enLabels, reports: enReports },
 } as const;

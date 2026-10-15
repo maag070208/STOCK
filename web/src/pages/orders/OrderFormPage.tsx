@@ -6,7 +6,7 @@ import { availableOf, lineError, orderApi, type AvailabilityItem, type OrderInpu
 import { partnerApi, type Partner } from "@entities/partner";
 import { ProductPicker, type Product } from "@entities/product";
 import { dyn } from "@shared/i18n";
-import { formatQuantity, isoDate } from "@shared/lib/format";
+import { businessToday, formatQuantity, isoDate } from "@shared/lib/format";
 import { newId } from "@shared/lib/newId";
 import { useSubmit } from "@shared/ui/useSubmit";
 
@@ -31,7 +31,8 @@ export function OrderFormPage() {
 	const [warehouseId, setWarehouseId] = useState("");
 	const [customerId, setCustomerId] = useState("");
 	const [contactId, setContactId] = useState("");
-	const [dueDate, setDueDate] = useState(new Date());
+	// The day the business is in, not the browser's: the API refuses a due date before its own today.
+	const [dueDate, setDueDate] = useState(businessToday());
 	const [lines, setLines] = useState<LineState[]>([]);
 	const [warehouses, setWarehouses] = useState<Ref[]>([]);
 	const [customers, setCustomers] = useState<Partner[]>([]);
@@ -120,7 +121,7 @@ export function OrderFormPage() {
 							name="dueDate"
 							label={t("form.dueDate")}
 							value={dueDate}
-							minDate={new Date()}
+							minDate={businessToday()}
 							onChange={(e) => e.target.value instanceof Date && setDueDate(e.target.value)}
 							error={submit.fieldErrors.dueDate}
 							touched={!!submit.fieldErrors.dueDate}

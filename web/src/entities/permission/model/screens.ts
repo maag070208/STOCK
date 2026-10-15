@@ -4,7 +4,7 @@ import type { PermissionMap } from "@entities/user";
 // and the access console's "what each role sees" (web.md section 4). A new screen is added here.
 export interface AppScreen {
 	readonly id: string;
-	readonly labelKey: "nav.home" | "nav.warehouses" | "nav.products" | "nav.suppliers" | "nav.customers" | "nav.stock" | "nav.invoices" | "nav.orders" | "nav.discrepancies" | "nav.labels" | "nav.printers" | "nav.users" | "nav.roles" | "nav.catalogs" | "nav.audit";
+	readonly labelKey: "nav.home" | "nav.warehouses" | "nav.products" | "nav.suppliers" | "nav.customers" | "nav.stock" | "nav.invoices" | "nav.orders" | "nav.discrepancies" | "nav.labels" | "nav.printers" | "nav.users" | "nav.roles" | "nav.catalogs" | "nav.audit" | "nav.reports";
 	readonly path: string;
 	readonly match?: "exact" | "prefix";
 	// The screen shows when the person holds any of these. Absent: any signed-in person.
@@ -19,6 +19,7 @@ export const APP_SCREENS: readonly AppScreen[] = [
 	{ id: "orders", labelKey: "nav.orders", path: "/orders", anyOf: ["orders.view"] },
 	{ id: "discrepancies", labelKey: "nav.discrepancies", path: "/discrepancies", anyOf: ["discrepancies.resolve"] },
 	{ id: "stock", labelKey: "nav.stock", path: "/stock", anyOf: ["stock.view"] },
+	{ id: "reports", labelKey: "nav.reports", path: "/reports", match: "prefix", anyOf: ["reports.view"] },
 	{ id: "suppliers", labelKey: "nav.suppliers", path: "/suppliers", anyOf: ["suppliers.view"] },
 	{ id: "customers", labelKey: "nav.customers", path: "/customers", anyOf: ["customers.view"] },
 	{ id: "labels", labelKey: "nav.labels", path: "/labels", anyOf: ["labels.view"] },

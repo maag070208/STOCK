@@ -26,6 +26,18 @@ export function formatDate(value: string | null | undefined, locale: string): st
 	return new Intl.DateTimeFormat(numberLocale(locale), { dateStyle: "medium" }).format(new Date(year, month - 1, day));
 }
 
+// The business day of the API (America/Mexico_City). The due date of an order is checked against it, and the browser's
+// own calendar can be a day behind (or ahead) of it, so a screen that needs the business day takes this one.
+const BUSINESS_ZONE = "America/Mexico_City";
+
+export function businessToday(): Date {
+	const [year, month, day] = new Intl.DateTimeFormat("en-CA", { timeZone: BUSINESS_ZONE, year: "numeric", month: "2-digit", day: "2-digit" })
+		.format(new Date())
+		.split("-")
+		.map(Number);
+	return new Date(year, month - 1, day);
+}
+
 // A day as the API takes it: YYYY-MM-DD in the person's own calendar.
 export function isoDate(date: Date): string {
 	return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;

@@ -1,0 +1,113 @@
+{
+ "title": "Reports",
+ "description": "The stock as it is, how each material got there, and the file to take it away.",
+ "tabs": {
+  "label": "Reports",
+  "stock": "Stock",
+  "kardex": "Kardex",
+  "movements": "Movements",
+  "orders": "Orders",
+  "invoices": "Invoices"
+ },
+ "stock": {
+  "title": "Current stock",
+  "description": "Every balance by warehouse, location and material, with its totals."
+ },
+ "kardex": {
+  "title": "Kardex",
+  "description": "The movements of one material in one warehouse, in order, with its running balance."
+ },
+ "movements": {
+  "title": "Movements",
+  "description": "What came in and what went out, by period, type and warehouse."
+ },
+ "orders": {
+  "title": "Orders",
+  "description": "What was asked and what was picked, by period, customer and status."
+ },
+ "invoices": {
+  "title": "Invoices and entries",
+  "description": "What was expected, counted and placed, by period and supplier."
+ },
+ "filters": {
+  "warehouse": "Warehouse",
+  "allWarehouses": "All warehouses",
+  "from": "From",
+  "to": "To",
+  "belowMinimum": "Only what is below its minimum",
+  "product": "Material",
+  "chooseProduct": "Choose a material to see its kardex.",
+  "supplier": "Supplier",
+  "customer": "Customer",
+  "allPartners": "All"
+ },
+ "columns": {
+  "warehouse": "Warehouse",
+  "aisle": "Aisle",
+  "rack": "Rack",
+  "location": "Location",
+  "product": "Material",
+  "unit": "Unit",
+  "quantity": "Stock",
+  "minimum": "Minimum",
+  "shortfall": "Shortfall",
+  "date": "Date",
+  "type": "Type",
+  "direction": "Direction",
+  "incoming": "In",
+  "outgoing": "Out",
+  "runningLocation": "Location balance",
+  "runningWarehouse": "Warehouse balance",
+  "user": "User",
+  "reason": "Reason",
+  "order": "Order",
+  "customer": "Customer",
+  "status": "Status",
+  "dueDate": "Due date",
+  "asked": "Asked",
+  "picked": "Picked",
+  "movedOut": "Moved out",
+  "movedIn": "Moved in",
+  "createdAt": "Created",
+  "validatedAt": "Validated",
+  "invoice": "Invoice",
+  "supplier": "Supplier",
+  "expected": "Expected",
+  "counted": "Counted",
+  "difference": "Difference",
+  "placed": "Placed"
+ },
+ "totals": {
+  "label": "Totals",
+  "quantity": "Stock",
+  "warehouses": "By warehouse",
+  "groups": "By aisle and rack",
+  "incoming": "In",
+  "outgoing": "Out",
+  "types": "By type",
+  "asked": "Asked",
+  "picked": "Picked",
+  "movedOut": "Moved out",
+  "movedIn": "Moved in",
+  "statuses": "By status",
+  "expected": "Expected",
+  "counted": "Counted",
+  "difference": "Difference",
+  "placed": "Placed",
+  "closing": "Closing balance"
+ },
+ "directions": {
+  "in": "In",
+  "out": "Out"
+ },
+ "export": {
+  "label": "Export",
+  "xlsx": "XLSX",
+  "pdf": "PDF",
+  "busy": "Building…",
+  "error": "The file could not be built."
+ },
+ "kardexOf": "Kardex of {{product}} in {{warehouse}}",
+ "rows": "{{count}} rows",
+ "empty": "There is nothing to show."
+}

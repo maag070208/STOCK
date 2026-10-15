@@ -1,5 +1,6 @@
 import axios, { AxiosError, type InternalAxiosRequestConfig } from "axios";
 import i18n from "@shared/i18n";
+import { fileNameOf } from "@shared/lib/fileName";
 import { API_URL, CHANNEL, CHANNEL_HEADER } from "./config";
 import { endCurrentSession, sessionRefreshToken, sessionToken, updateSessionTokens } from "./session";
 
@@ -95,3 +96,11 @@ export const patch = <T>(path: string, body?: unknown) => http.patch<T>(path, bo
 export const del = <T>(path: string) => http.delete<T>(path).then((r) => r.data);
 // A private file the API answers, such as the receipt of an order: the bytes, with the session and the language.
 export const download = (path: string) => http.get<Blob>(path, { responseType: "blob" }).then((r) => r.data);
+
+// A private file the API answers to a POST, such as the export of a report: the bytes, and the name the API gave them
+// in the response (reports.md section 4). The browser never builds the file.
+export const downloadPost = (path: string, body?: unknown): Promise<{ blob: Blob; fileName: string }> =>
+	http.post<Blob>(path, body, { responseType: "blob" }).then((response) => ({
+		blob: response.data,
+		fileName: fileNameOf(response.headers["content-disposition"] as string | undefined),
+	}));

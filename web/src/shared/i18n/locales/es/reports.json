@@ -1,0 +1,113 @@
+{
+ "title": "Reportes",
+ "description": "Las existencias como están, cómo llegó ahí cada material, y el archivo para llevárselos.",
+ "tabs": {
+  "label": "Reportes",
+  "stock": "Existencias",
+  "kardex": "Kardex",
+  "movements": "Movimientos",
+  "orders": "Órdenes",
+  "invoices": "Facturas"
+ },
+ "stock": {
+  "title": "Existencias actuales",
+  "description": "Cada saldo por almacén, ubicación y material, con sus totales."
+ },
+ "kardex": {
+  "title": "Kardex",
+  "description": "Los movimientos de un material en un almacén, en orden, con su saldo corrido."
+ },
+ "movements": {
+  "title": "Movimientos",
+  "description": "Lo que entró y lo que salió, por periodo, tipo y almacén."
+ },
+ "orders": {
+  "title": "Órdenes",
+  "description": "Lo pedido y lo surtido, por periodo, cliente y estado."
+ },
+ "invoices": {
+  "title": "Facturas y entradas",
+  "description": "Lo esperado, lo contado y lo ubicado, por periodo y proveedor."
+ },
+ "filters": {
+  "warehouse": "Almacén",
+  "allWarehouses": "Todos los almacenes",
+  "from": "Desde",
+  "to": "Hasta",
+  "belowMinimum": "Solo lo que está bajo mínimo",
+  "product": "Material",
+  "chooseProduct": "Elige un material para ver su kardex.",
+  "supplier": "Proveedor",
+  "customer": "Cliente",
+  "allPartners": "Todos"
+ },
+ "columns": {
+  "warehouse": "Almacén",
+  "aisle": "Pasillo",
+  "rack": "Rack",
+  "location": "Ubicación",
+  "product": "Material",
+  "unit": "Unidad",
+  "quantity": "Existencia",
+  "minimum": "Mínimo",
+  "shortfall": "Faltante",
+  "date": "Fecha",
+  "type": "Tipo",
+  "direction": "Sentido",
+  "incoming": "Entrada",
+  "outgoing": "Salida",
+  "runningLocation": "Saldo en la ubicación",
+  "runningWarehouse": "Saldo en el almacén",
+  "user": "Usuario",
+  "reason": "Motivo",
+  "order": "Orden",
+  "customer": "Cliente",
+  "status": "Estado",
+  "dueDate": "Entrega",
+  "asked": "Pedido",
+  "picked": "Surtido",
+  "movedOut": "Traspasado",
+  "movedIn": "Recibido",
+  "createdAt": "Creada",
+  "validatedAt": "Validada",
+  "invoice": "Factura",
+  "supplier": "Proveedor",
+  "expected": "Esperado",
+  "counted": "Contado",
+  "difference": "Diferencia",
+  "placed": "Ubicado"
+ },
+ "totals": {
+  "label": "Totales",
+  "quantity": "Existencia",
+  "warehouses": "Por almacén",
+  "groups": "Por pasillo y rack",
+  "incoming": "Entradas",
+  "outgoing": "Salidas",
+  "types": "Por tipo",
+  "asked": "Pedido",
+  "picked": "Surtido",
+  "movedOut": "Traspasado",
+  "movedIn": "Recibido",
+  "statuses": "Por estado",
+  "expected": "Esperado",
+  "counted": "Contado",
+  "difference": "Diferencia",
+  "placed": "Ubicado",
+  "closing": "Saldo final"
+ },
+ "directions": {
+  "in": "Entrada",
+  "out": "Salida"
+ },
+ "export": {
+  "label": "Exportar",
+  "xlsx": "XLSX",
+  "pdf": "PDF",
+  "busy": "Generando…",
+  "error": "No se pudo generar el archivo."
+ },
+ "kardexOf": "Kardex de {{product}} en {{warehouse}}",
+ "rows": "{{count}} filas",
+ "empty": "No hay nada que mostrar."
+}
