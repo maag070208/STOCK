@@ -12,12 +12,14 @@ F0 Foundations
            └── F4 Stock and material entry
                 ├── F5 Orders (exit)
                 └── F6 Reports and kardex
-                     └── F7 Hardening and deployment
+                     ├── F7 Hardening and deployment
+                     └── F8 Fast invoice capture
 ```
 
 - F3 and F4 can run in parallel once F2 is done.
 - F5 and F6 can run in parallel once F4 is done.
 - F7 starts only after F5 and F6 are done.
+- F8 redesigns the invoice screens of F4 and is done before F7, so the hardening covers the screens that ship.
 
 ## Phases
 
@@ -31,6 +33,7 @@ F0 Foundations
 | [F5](F5-orders.md) | Orders | Orders, reservations, picks, validation, cancellation, reassignment, PDF |
 | [F6](F6-reports.md) | Reports and kardex | Stock reports, kardex, movement and order reports |
 | [F7](F7-hardening-and-deployment.md) | Hardening and deployment | Backups, restore drill, security review, production deployment |
+| [F8](F8-fast-invoice-capture.md) | Fast invoice capture | The invoice screens of F4 with a modal, a quick capture bar and one search box |
 
 ## Tasks
 
