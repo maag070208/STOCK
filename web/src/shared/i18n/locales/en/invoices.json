@@ -87,7 +87,7 @@
     "supplier": "Supplier",
     "adjust": "Adjust",
     "noLines": "The invoice has no materials yet.",
-    "reception": "Receipt by operator"
+    "notAssigned": "Not assigned"
   },
   "assignDialog": {
     "title": "Assign {{product}}",

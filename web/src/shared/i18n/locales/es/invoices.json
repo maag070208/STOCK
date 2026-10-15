@@ -87,7 +87,7 @@
     "supplier": "Proveedor",
     "adjust": "Ajustar",
     "noLines": "La factura aún no tiene materiales.",
-    "reception": "Recepción por operador"
+    "notAssigned": "Sin asignar"
   },
   "assignDialog": {
     "title": "Asignar {{product}}",

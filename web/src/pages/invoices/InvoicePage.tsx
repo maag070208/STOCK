@@ -2,7 +2,7 @@ import { type Column, ITAlert, ITBadget, ITButton, ITCard, ITEmptyState, ITFlex,
 import { trail } from "@shared/lib/breadcrumbs";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { FaBalanceScale, FaExchangeAlt, FaTrash } from "react-icons/fa";
+import { FaBalanceScale, FaTrash, FaUserEdit, FaUserPlus } from "react-icons/fa";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { toast } from "@app/store";
 import { captureSummary, invoiceApi, staffApi, type Assignment, type Invoice, type InvoiceLine, type StaffMember } from "@entities/invoice";
@@ -90,63 +90,54 @@ export function InvoicePage() {
 		}
 	}
 
-	// The lines, and the reception of each one: what each operator has to receive, what they counted, and what they placed.
-	const lineColumns: Column<InvoiceLine>[] = [
-		{ key: "product", label: t("form.product"), type: "string", render: (line) => `${line.product.code ?? ""} · ${line.product.name ?? ""}` },
-		{ key: "quantity", label: t("form.quantity"), type: "string", render: (line) => `${quantity(line.quantity, line)} ${line.unit?.label ?? ""}` },
-		{
-			key: "actions",
-			label: t("columns.actions"),
-			type: "actions",
-			actions: (line) => (
-				<ITFlex gap={2} justify="end">
-					{open && can.assign && !line.assignments.some((assignment) => assignment.countedQuantity !== null) && (
-						<IconButton
-							icon={<FaExchangeAlt aria-hidden />}
-							label={line.assignments.length ? t("detail.reassign") : t("detail.assign")}
-							variant="outlined"
-							onClick={() => setAssigning(line)}
-						/>
-					)}
-					{open && can.create && <IconButton icon={<FaTrash aria-hidden />} label={t("common:actions.remove")} color="danger" onClick={() => void removeLine(line)} />}
-				</ITFlex>
-			),
-		},
-	];
+	// One table for the whole invoice: a row for each share of a line (what its operator has to receive, counted and
+	// placed), and one row for a line nobody has been given yet. The work happens in the row that shows it.
+	type Row = { key: string; line: InvoiceLine; assignment: Assignment | null };
+	const rows: Row[] = lines.flatMap((line): Row[] =>
+		line.assignments.length === 0
+			? [{ key: line.id, line, assignment: null }]
+			: line.assignments.map((assignment): Row => ({ key: assignment.id, line, assignment })),
+	);
 
-	const received = lines.flatMap((line) => line.assignments.map((assignment) => ({ line, assignment })));
-	const receptionColumns: Column<{ line: InvoiceLine; assignment: Assignment }>[] = [
-		{ key: "operator", label: t("form.operator"), type: "string", render: (row) => row.assignment.operator.name ?? row.assignment.operator.code ?? "" },
-		{ key: "material", label: t("form.product"), type: "string", render: (row) => row.line.product.code ?? "" },
-		{ key: "expected", label: t("detail.expected"), type: "string", render: (row) => quantity(row.assignment.expectedQuantity, row.line) },
-		{ key: "counted", label: t("detail.counted"), type: "string", render: (row) => quantity(row.assignment.countedQuantity, row.line) },
+	const columns: Column<Row>[] = [
+		{ key: "product", label: t("form.product"), type: "string", render: (row) => `${row.line.product.code ?? ""} · ${row.line.product.name ?? ""}` },
+		{ key: "quantity", label: t("form.quantity"), type: "string", render: (row) => `${quantity(row.line.quantity, row.line)} ${row.line.unit?.label ?? ""}` },
+		{ key: "operator", label: t("form.operator"), type: "string", render: (row) => row.assignment?.operator.name ?? row.assignment?.operator.code ?? t("detail.notAssigned") },
+		{ key: "expected", label: t("detail.expected"), type: "string", render: (row) => (row.assignment ? quantity(row.assignment.expectedQuantity, row.line) : "") },
+		{ key: "counted", label: t("detail.counted"), type: "string", render: (row) => (row.assignment ? quantity(row.assignment.countedQuantity, row.line) : "") },
 		{
 			key: "outcome",
 			label: t("columns.status"),
 			type: "string",
 			render: (row) =>
-				row.assignment.outcome === null ? (
-					<ITBadget color="gray" label={t("detail.notCounted")} />
+				!row.assignment || row.assignment.outcome === null ? (
+					row.assignment ? <ITBadget color="gray" label={t("detail.notCounted")} /> : ""
 				) : row.assignment.outcome === "MATCH" ? (
 					<ITBadget color="success" label={t("detail.match")} />
 				) : (
 					<ITBadget color="danger" label={`${t("detail.discrepancy")} ${row.assignment.difference! > 0 ? "+" : ""}${quantity(row.assignment.difference, row.line)}`} />
 				),
 		},
-		{ key: "placed", label: t("detail.placed"), type: "string", render: (row) => quantity(row.assignment.placedQuantity, row.line) },
+		{ key: "placed", label: t("detail.placed"), type: "string", render: (row) => (row.assignment ? quantity(row.assignment.placedQuantity, row.line) : "") },
 		{
 			key: "actions",
 			label: t("columns.actions"),
 			type: "actions",
-			// The material is assigned to a person, and a difference is settled, from the row that shows it.
 			actions: (row) => (
 				<ITFlex gap={2} justify="end">
-					{open && can.assign && row.assignment.countedQuantity === null && (
-						<IconButton icon={<FaExchangeAlt aria-hidden />} label={t("detail.reassign")} variant="outlined" onClick={() => setAssigning(row.line)} />
+					{/* A person: the material is given to one, or moved to another. */}
+					{open && can.assign && row.assignment?.countedQuantity == null && (
+						<IconButton
+							icon={row.assignment ? <FaUserEdit aria-hidden /> : <FaUserPlus aria-hidden />}
+							label={row.assignment ? t("detail.reassign") : t("detail.assign")}
+							variant="outlined"
+							onClick={() => setAssigning(row.line)}
+						/>
 					)}
-					{can.resolve && row.assignment.outcome === "DISCREPANCY" && invoice?.status.code === "PENDING" && (
-						<IconButton icon={<FaBalanceScale aria-hidden />} label={t("detail.adjust")} onClick={() => setAdjusting({ line: row.line, assignment: row.assignment })} />
+					{can.resolve && row.assignment?.outcome === "DISCREPANCY" && invoice?.status.code === "PENDING" && row.assignment && (
+						<IconButton icon={<FaBalanceScale aria-hidden />} label={t("detail.adjust")} onClick={() => setAdjusting({ line: row.line, assignment: row.assignment! })} />
 					)}
+					{open && can.create && <IconButton icon={<FaTrash aria-hidden />} label={t("common:actions.remove")} color="danger" onClick={() => void removeLine(row.line)} />}
 				</ITFlex>
 			),
 		},
@@ -200,19 +191,10 @@ export function InvoicePage() {
 							<ITText muted>{`${t("capture.summaryLines", { count: summary.lines })} · ${t("capture.summaryPieces", { count: summary.pieces })}`}</ITText>
 						</ITFlex>
 
-						{lines.length === 0 ? (
+						{rows.length === 0 ? (
 							<ITEmptyState title={open ? t("capture.empty") : t("detail.noLines")} />
 						) : (
-							<PlainTable<InvoiceLine>columns={lineColumns} data={lines} size="sm" />
-						)}
-
-						{received.length > 0 && (
-							<ITStack spacing={3}>
-								<ITText as="h2" className="sf:text-title-lg">
-									{t("detail.reception")}
-								</ITText>
-								<PlainTable<{ line: InvoiceLine; assignment: Assignment }>columns={receptionColumns} data={received} size="sm" />
-							</ITStack>
+							<PlainTable<Row> columns={columns} data={rows} size="sm" />
 						)}
 
 						{refusal && (
