@@ -11,6 +11,7 @@ Index of the project documentation. If a decision is not written here, it is not
 | [rules/](rules/) | Business rules and non-negotiable conventions |
 | [phases/](phases/) | Phase plan, deliverables, acceptance criteria |
 | [modules/](modules/) | Specification of each functional module |
+| [axzy/](axzy/) | The AI context pack of the Axzy UI System: guide, component catalog and editor templates |
 
 ## Architecture
 
