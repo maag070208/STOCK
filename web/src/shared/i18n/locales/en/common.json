@@ -21,7 +21,8 @@
     "orders": "Orders",
     "discrepancies": "Discrepancies",
     "labels": "Labels",
-    "printers": "Printers"
+    "printers": "Printers",
+    "reports": "Reports"
   },
   "language": {
     "label": "Language",
@@ -145,7 +146,11 @@
       "reassign": "Reassign orders",
       "accept_difference": "Accept a difference"
     }
-  },
+  ,
+    "reports": {
+      "view": "Read reports",
+      "export": "Export reports"
+    }},
   "validation": {
     "required": "This field is required."
   },

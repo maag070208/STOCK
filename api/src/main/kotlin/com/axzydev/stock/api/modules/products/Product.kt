@@ -22,6 +22,10 @@ class Product(
 	var createdAt: Instant,
 	var updatedAt: Instant,
 ) {
+	// The minimum stock of the material, in its unit: below it, it shows up in the report of what to buy (reports.md
+	// section 5). Zero means no minimum was set.
+	var minimum: java.math.BigDecimal = java.math.BigDecimal.ZERO
+
 	@Id
 	@GeneratedValue(strategy = GenerationType.UUID)
 	var id: UUID? = null

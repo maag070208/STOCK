@@ -194,6 +194,16 @@ object PermissionCatalog {
 			"orders.accept_difference", listOf(Scope.AREA, Scope.ALL), sensitive = true,
 			grants = mapOf(SeedRoles.ADMIN to Scope.ALL, SeedRoles.WAREHOUSE_MANAGER to Scope.AREA),
 		),
+		// F6: reports (reports.md section 2). The owner and the office read every warehouse; the manager reads its own.
+		// Reports read only: exporting is its own permission, because a file leaves the system.
+		PermissionDef(
+			"reports.view", listOf(Scope.AREA, Scope.ALL),
+			grants = mapOf(SeedRoles.ADMIN to Scope.ALL, SeedRoles.OFFICE to Scope.ALL, SeedRoles.WAREHOUSE_MANAGER to Scope.AREA),
+		),
+		PermissionDef(
+			"reports.export", listOf(Scope.AREA, Scope.ALL),
+			grants = mapOf(SeedRoles.ADMIN to Scope.ALL, SeedRoles.OFFICE to Scope.ALL, SeedRoles.WAREHOUSE_MANAGER to Scope.AREA),
+		),
 	)
 
 	val keys: Set<String> = all.map { it.key }.toSet()

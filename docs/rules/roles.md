@@ -44,6 +44,7 @@ Scopes: **ALL** every record · **AREA** the user's assigned warehouses · **OWN
 | Orders: read / fulfill | ALL / ALL | — | — | AREA / AREA | — |
 | Orders: validate / cancel / reassign | ALL | ALL | AREA | — | — |
 | Orders: accept a difference | ALL | — | AREA | — | — |
+| Reports: read / export | ALL / ALL | ALL / ALL | AREA / AREA | — / — | — / — |
 | Labels: print / manage | ALL / ALL | ALL / — | AREA / — | AREA / — | — |
 | Staff templates: manage | ALL | — | AREA | — | — |
 | Web access | ALL | ALL | ALL | — | — |

@@ -21,7 +21,8 @@
     "orders": "Órdenes",
     "discrepancies": "Diferencias",
     "labels": "Etiquetas",
-    "printers": "Impresoras"
+    "printers": "Impresoras",
+    "reports": "Reportes"
   },
   "language": {
     "label": "Idioma",
@@ -145,7 +146,11 @@
       "reassign": "Reasignar órdenes",
       "accept_difference": "Aceptar una diferencia"
     }
-  },
+  ,
+    "reports": {
+      "view": "Ver reportes",
+      "export": "Exportar reportes"
+    }},
   "validation": {
     "required": "Este campo es obligatorio."
   },

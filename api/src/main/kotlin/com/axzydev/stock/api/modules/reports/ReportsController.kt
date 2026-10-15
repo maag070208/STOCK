@@ -1,0 +1,23 @@
+package com.axzydev.stock.api.modules.reports
+
+import com.axzydev.stock.api.core.db.TableRequest
+import com.axzydev.stock.api.core.security.CurrentUser
+import com.axzydev.stock.api.core.security.RequiresPermission
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RestController
+import java.util.Locale
+
+// The reports (docs/modules/reports.md). They read only. Every report takes the table contract, so its screen and its
+// export share the filters and the order.
+@RestController
+@RequestMapping("/api/v1/reports")
+class ReportsController(private val reports: ReportsService) {
+
+	// The current stock: one row per balance, with the totals by warehouse, by aisle and rack, and the grand total.
+	@PostMapping("/stock")
+	@RequiresPermission(ReportsService.VIEW)
+	fun stock(@RequestBody request: TableRequest, user: CurrentUser, locale: Locale): StockReportPage =
+		reports.stock(user, request, locale.language)
+}

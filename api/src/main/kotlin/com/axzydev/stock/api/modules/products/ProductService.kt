@@ -17,15 +17,16 @@ import com.axzydev.stock.api.modules.catalogs.CatalogService
 import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.math.BigDecimal
 import java.time.Clock
 import java.time.Instant
 import java.util.UUID
 
 // `unit` is the code of a UNIT_OF_MEASURE value. Without a barcode, the code is the barcode.
-data class CreateProductRequest(val code: String? = null, val name: String? = null, val unit: String? = null, val barcode: String? = null)
+data class CreateProductRequest(val code: String? = null, val name: String? = null, val unit: String? = null, val barcode: String? = null, val minimum: BigDecimal? = null)
 
 // The code is not here: it cannot change. A blank barcode goes back to the code.
-data class UpdateProductRequest(val name: String? = null, val unit: String? = null, val barcode: String? = null)
+data class UpdateProductRequest(val name: String? = null, val unit: String? = null, val barcode: String? = null, val minimum: BigDecimal? = null)
 
 data class UnitView(val code: String, val label: String?, val decimalPlaces: Int?)
 
@@ -41,6 +42,7 @@ data class ProductView(
 	val legacyId: Int?,
 	val active: Boolean,
 	val createdAt: Instant,
+	val minimum: BigDecimal,
 )
 
 @Service
@@ -87,6 +89,8 @@ class ProductService(
 		val name = check.required("name", request.name, ProductRules::name, ProductRules::normalizeName)
 		val unitId = unit(check, request.unit, required = true)
 		val barcode = if (code.isEmpty()) "" else ProductRules.barcodeOrCode(request.barcode, code).also { value -> ProductRules.barcode(value)?.let { check.reject("barcode", it) } }
+		val minimum = request.minimum ?: BigDecimal.ZERO
+		ProductRules.minimum(minimum)?.let { check.reject("minimum", it) }
 		check.check()
 		val duplicates = buildList {
 			if (products.findByCode(code) != null) add(FieldError("code", ErrorCode.DUPLICATE_VALUE))
@@ -95,7 +99,7 @@ class ProductService(
 		if (duplicates.isNotEmpty()) throw ValidationException(duplicates)
 
 		val now = clock.instant()
-		val product = products.save(Product(code, name, unitId!!, barcode, null, actor.id, now, now))
+		val product = products.save(Product(code, name, unitId!!, barcode, null, actor.id, now, now).also { it.minimum = minimum })
 		audit.record(actor.actor, "PRODUCT_CREATED", "product", product.id.toString(), after = snapshot(product))
 		return view(product, language)
 	}
@@ -109,6 +113,7 @@ class ProductService(
 		val name = request.name?.let { check.required("name", it, ProductRules::name, ProductRules::normalizeName) }
 		val unitId = request.unit?.let { unit(check, it, required = true) }
 		val barcode = request.barcode?.let { ProductRules.barcodeOrCode(it, product.code) }?.also { value -> ProductRules.barcode(value)?.let { check.reject("barcode", it) } }
+		request.minimum?.let { ProductRules.minimum(it)?.let { code -> check.reject("minimum", code) } }
 		check.check()
 		if (barcode != null && product.active && products.existsByBarcodeAndActiveTrueAndIdNot(barcode, id)) {
 			throw ValidationException(listOf(FieldError("barcode", ErrorCode.DUPLICATE_VALUE)))
@@ -116,6 +121,7 @@ class ProductService(
 		name?.let { product.name = it }
 		unitId?.let { product.unitId = it }
 		barcode?.let { product.barcode = it }
+		request.minimum?.let { product.minimum = it }
 		product.updatedAt = clock.instant()
 		audit.record(actor.actor, "PRODUCT_UPDATED", "product", id.toString(), before, snapshot(product))
 		return view(product, language)
@@ -176,6 +182,11 @@ class ProductService(
 		}
 	}
 
+	// For the reports: the minimum stock of each material, in its unit (reports.md section 5).
+	@Transactional(readOnly = true)
+	fun minimums(ids: Collection<UUID>): Map<UUID, BigDecimal> =
+		products.findAllById(ids.toSet()).associate { it.id!! to it.minimum }
+
 	private fun find(id: UUID): Product = products.findById(id).orElseThrow { ApiException(ErrorCode.NOT_FOUND) }
 
 	private fun view(product: Product, language: String) = view(product, catalogs.itemViews(listOf(product.unitId), language)[product.unitId])
@@ -189,8 +200,9 @@ class ProductService(
 		legacyId = product.legacyId,
 		active = product.active,
 		createdAt = product.createdAt,
+		minimum = product.minimum,
 	)
 
 	private fun snapshot(product: Product): Map<String, Any?> =
-		mapOf("code" to product.code, "name" to product.name, "barcode" to product.barcode, "unitId" to product.unitId.toString(), "active" to product.active)
+		mapOf("code" to product.code, "name" to product.name, "barcode" to product.barcode, "unitId" to product.unitId.toString(), "active" to product.active, "minimum" to product.minimum)
 }

@@ -2,6 +2,7 @@ package com.axzydev.stock.api.modules.products
 
 import com.axzydev.stock.api.core.errors.ErrorCode
 import com.axzydev.stock.api.core.validation.Rules
+import java.math.BigDecimal
 
 // The field rules of a material (products.md section 3, validation.md section 3).
 object ProductRules {
@@ -13,6 +14,14 @@ object ProductRules {
 	private val NAME = Regex("^[\\p{L}\\p{Nd} \"/\\-.,()&'°#¨]+$")
 	private val BARCODE = Regex("^[A-Z0-9-]{6,20}$")
 	private val SPACES = Regex(" {2,}")
+
+	// The minimum stock: zero or more, with no more decimals than the column keeps (reports.md section 5).
+	fun minimum(value: BigDecimal): ErrorCode? =
+		when {
+			value.signum() < 0 -> ErrorCode.QUANTITY_INVALID
+			value.stripTrailingZeros().scale() > 6 -> ErrorCode.QUANTITY_INVALID
+			else -> null
+		}
 
 	// Trimmed, with doubled spaces collapsed. The case is kept as written.
 	fun normalizeName(value: String): String = value.trim().replace(SPACES, " ")

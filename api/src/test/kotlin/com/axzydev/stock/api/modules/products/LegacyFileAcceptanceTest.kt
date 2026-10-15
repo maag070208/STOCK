@@ -46,5 +46,10 @@ class LegacyFileAcceptanceTest : ApiTest() {
 		assertEquals(opening.json.get("withStock").asInt(), loaded.json.get("movements").asInt())
 		val again = api.upload("/stock/opening", api.adminToken(), file, mapOf("warehouseId" to warehouse, "checksum" to checksum))
 		assertEquals(0, again.json.get("movements").asInt())
+
+		// F6 criterion 1: the current stock report totals what the opening inventory loaded.
+		val stockReport = api.post("/reports/stock", api.adminToken(), mapOf("filters" to mapOf("warehouseId" to warehouse), "limit" to 200))
+		assertEquals(200, stockReport.status, stockReport.body)
+		assertEquals(0, java.math.BigDecimal(10_914_130).compareTo(stockReport.json.get("quantity").decimalValue()), stockReport.body)
 	}
 }

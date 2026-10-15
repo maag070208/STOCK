@@ -89,6 +89,8 @@ class PermissionCatalogTest {
 			"orders.cancel" to listOf(all, all, area, none, none),
 			"orders.reassign" to listOf(all, all, area, none, none),
 			"orders.accept_difference" to listOf(all, none, area, none, none),
+			"reports.view" to listOf(all, all, area, none, none),
+			"reports.export" to listOf(all, all, area, none, none),
 		)
 		val roles = listOf(SeedRoles.ADMIN, SeedRoles.OFFICE, SeedRoles.WAREHOUSE_MANAGER, SeedRoles.WAREHOUSE_OPERATOR, SeedRoles.APP_USER)
 		assertEquals(expected.keys, PermissionCatalog.keys)
