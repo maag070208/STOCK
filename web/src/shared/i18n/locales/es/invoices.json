@@ -20,7 +20,6 @@
     "created": "Factura {{number}} creada",
     "addMaterials": "Agregar materiales",
     "network": "No se pudo guardar. Intenta de nuevo.",
-    "close": "Cerrar el formulario",
     "supplierSearch": "Busca por código o nombre del proveedor"
   },
   "capture": {

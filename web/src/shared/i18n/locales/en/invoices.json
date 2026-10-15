@@ -20,7 +20,6 @@
     "created": "Invoice {{number}} created",
     "addMaterials": "Add materials",
     "network": "Could not save. Try again.",
-    "close": "Close the form",
     "supplierSearch": "Search by the supplier's code or name"
   },
   "capture": {
