@@ -1,4 +1,4 @@
-import { ITCheckbox, ITInput, ITSelect } from "@axzydev/axzy_ui_system";
+import { ITCheckbox, ITInput, ITSelect, ITText } from "@axzydev/axzy_ui_system";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { isIpAddress, printerApi, type Printer } from "@entities/label";
@@ -82,7 +82,9 @@ export function PrinterDialog(props: { printer: Printer | null; warehouses: Ware
 				touched={!!errors.ipAddress}
 				required
 			/>
-			<p className="sf:text-body-sm sf:text-on-surface-muted">{t("printers.form.port")}</p>
+			<ITText className="sf:text-body-sm" muted>
+				{t("printers.form.port")}
+			</ITText>
 			{props.printer && <ITCheckbox name="active" label={t("printers.form.active")} checked={active} onChange={setActive} />}
 		</FormDialog>
 	);

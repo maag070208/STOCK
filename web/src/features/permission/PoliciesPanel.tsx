@@ -1,4 +1,4 @@
-import { ITBadget, ITButton, ITConfirmDialog, ITInput, ITMultiSelect, ITSelect } from "@axzydev/axzy_ui_system";
+import { ITBadget, ITButton, ITCheckbox, ITConfirmDialog, ITFlex, ITGrid, ITInput, ITMultiSelect, ITSelect, ITStack, ITText, type Column } from "@axzydev/axzy_ui_system";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { accessApi, formatPolicyValue, parsePolicyValue, roleLabel, type Policy, type PolicyAction, type Role } from "@entities/permission";
@@ -6,6 +6,7 @@ import { ApiError } from "@shared/api/client";
 import { dyn } from "@shared/i18n";
 import { FormDialog } from "@shared/ui/FormDialog";
 import { useSubmit } from "@shared/ui/useSubmit";
+import { PlainTable } from "@shared/ui/PlainTable";
 
 const OPERATORS = ["eq", "neq", "in", "not_in", "contains", "not_contains", "gt", "gte", "lt", "lte", "exists"];
 
@@ -19,10 +20,14 @@ interface Draft {
 	roles: string[];
 }
 
+// One row of the table: the policy, and the key the kit uses to tell the rows apart.
+type PolicyRow = Record<string, unknown> & { id: string; policy: Policy };
+
 const emptyDraft = (actions: PolicyAction[]): Draft => ({ key: "", priority: "10", effect: "DENY", action: actions[0]?.key ?? "", active: true, conditions: [], roles: [] });
 
 // Policies: they deny or allow an action under some conditions, after RBAC allowed it. Only registered actions,
-// and only the fields each action exposes, can be used: the API rejects anything else.
+// and only the fields each action exposes, can be used: the API rejects anything else. The list is the kit's table and
+// the form is the kit's fields (web.md section 8).
 export function PoliciesPanel(props: { policies: Policy[]; actions: PolicyAction[]; roles: Role[]; onChanged: () => void; onError: (message: string) => void }) {
 	const { t } = useTranslation(["access", "common"]);
 	const [editing, setEditing] = useState<{ draft: Draft; existing: boolean } | null>(null);
@@ -79,50 +84,59 @@ export function PoliciesPanel(props: { policies: Policy[]; actions: PolicyAction
 		}
 	}
 
+	const rows: PolicyRow[] = props.policies.map((policy) => ({ id: policy.key, policy }));
+
+	const columns: Column<PolicyRow>[] = [
+		{ key: "priority", label: t("policies.priority"), type: "string", className: "sf:text-right", render: (row) => String(row.policy.priority) },
+		{ key: "key", label: t("policies.key"), type: "string", render: (row) => <ITText className="sf:text-code-sm" muted={!row.policy.active}>{row.policy.key}</ITText> },
+		{ key: "action", label: t("policies.action"), type: "string", render: (row) => <ITText className="sf:text-code-sm" muted={!row.policy.active}>{row.policy.action}</ITText> },
+		{
+			key: "effect",
+			label: t("policies.effect"),
+			type: "string",
+			render: (row) => <ITBadget color={row.policy.effect === "DENY" ? "danger" : "success"} label={t(dyn(`policies.effects.${row.policy.effect}`))} />,
+		},
+		{
+			key: "conditions",
+			label: t("policies.conditions"),
+			type: "string",
+			render: (row) => row.policy.conditions.map((c) => `${c.field} ${t(dyn(`policies.operators.${c.operator}`))} ${formatPolicyValue(c.value)}`).join(" · "),
+		},
+		{
+			key: "roles",
+			label: t("policies.roles"),
+			type: "string",
+			render: (row) => (row.policy.roles.length ? row.policy.roles.map((key) => roleLabel(key, props.roles.find((r) => r.key === key)?.name)).join(", ") : t("policies.allRoles")),
+		},
+		{
+			key: "actions",
+			label: "",
+			type: "actions",
+			actions: (row) => (
+				<ITFlex justify="end" gap={1}>
+					<ITButton size="sm" variant="text" label={t("common:actions.edit")} onClick={() => open(row.policy)} />
+					<ITButton size="sm" variant="text" color="danger" label={t("common:actions.delete")} onClick={() => setDeleting(row.policy)} />
+				</ITFlex>
+			),
+		},
+	];
+
 	return (
-		<div className="sf:flex sf:flex-col sf:gap-4">
-			<div className="sf:flex sf:items-start sf:justify-between sf:gap-4">
-				<p className="sf:max-w-3xl sf:text-body-md sf:text-on-surface-muted">{t("policies.description")}</p>
+		<ITStack spacing={4}>
+			<ITFlex align="start" justify="between" gap={4}>
+				<ITText muted className="sf:max-w-3xl">
+					{t("policies.description")}
+				</ITText>
 				<ITButton label={t("policies.new")} onClick={() => open()} />
-			</div>
+			</ITFlex>
 			{props.policies.length === 0 ? (
-				<p className="sf:text-body-md sf:text-on-surface-muted">{t("policies.none")}</p>
+				<ITText muted>{t("policies.none")}</ITText>
 			) : (
-				<table className="sf:w-full sf:text-body-md" data-testid="policies-table">
-					<thead className="sf:bg-surface sf:text-label-sm sf:uppercase sf:text-on-surface-muted">
-						<tr>
-							<th className="sf:p-3 sf:text-right">{t("policies.priority")}</th>
-							<th className="sf:p-3 sf:text-left">{t("policies.key")}</th>
-							<th className="sf:p-3 sf:text-left">{t("policies.action")}</th>
-							<th className="sf:p-3 sf:text-left">{t("policies.effect")}</th>
-							<th className="sf:p-3 sf:text-left">{t("policies.conditions")}</th>
-							<th className="sf:p-3 sf:text-left">{t("policies.roles")}</th>
-							<th className="sf:p-3" />
-						</tr>
-					</thead>
-					<tbody>
-						{props.policies.map((policy) => (
-							<tr key={policy.key} className={`sf:border-t sf:border-outline ${policy.active ? "" : "sf:text-on-surface-muted"}`}>
-								<td className="sf:p-3 sf:text-right">{policy.priority}</td>
-								<td className="sf:p-3 sf:text-code-sm">{policy.key}</td>
-								<td className="sf:p-3 sf:text-code-sm">{policy.action}</td>
-								<td className="sf:p-3">
-									<ITBadget color={policy.effect === "DENY" ? "danger" : "success"} label={t(dyn(`policies.effects.${policy.effect}`))} />
-								</td>
-								<td className="sf:p-3">
-									{policy.conditions.map((c) => `${c.field} ${t(dyn(`policies.operators.${c.operator}`))} ${formatPolicyValue(c.value)}`).join(" · ")}
-								</td>
-								<td className="sf:p-3">{policy.roles.length ? policy.roles.map((key) => roleLabel(key, props.roles.find((r) => r.key === key)?.name)).join(", ") : t("policies.allRoles")}</td>
-								<td className="sf:p-3 sf:text-right">
-									<div className="sf:flex sf:justify-end sf:gap-1">
-										<ITButton size="sm" variant="text" label={t("common:actions.edit")} onClick={() => open(policy)} />
-										<ITButton size="sm" variant="text" color="danger" label={t("common:actions.delete")} onClick={() => setDeleting(policy)} />
-									</div>
-								</td>
-							</tr>
-						))}
-					</tbody>
-				</table>
+				<PlainTable<PolicyRow>
+					columns={columns}
+					data={rows}
+					size="sm"
+				/>
 			)}
 
 			<FormDialog
@@ -134,32 +148,84 @@ export function PoliciesPanel(props: { policies: Policy[]; actions: PolicyAction
 				error={submit.error}
 			>
 				{editing && (
-					<div className="sf:flex sf:min-w-[32rem] sf:flex-col sf:gap-4">
-						<div className="sf:grid sf:grid-cols-2 sf:gap-3">
-							<ITInput name="key" label={t("policies.key")} value={editing.draft.key} disabled={editing.existing} onChange={(e) => update({ key: e.target.value.toUpperCase() })} error={submit.fieldErrors.key} touched={!!submit.fieldErrors.key} required />
-							<ITInput name="priority" type="number" label={t("policies.priority")} value={editing.draft.priority} onChange={(e) => update({ priority: e.target.value })} error={submit.fieldErrors.priority} touched={!!submit.fieldErrors.priority} required />
-							<ITSelect name="action" label={t("policies.action")} value={editing.draft.action} onChange={(e) => update({ action: e.target.value, conditions: [] })} options={props.actions.map((a) => ({ value: a.key, label: a.key }))} valueField="value" labelField="label" error={submit.fieldErrors.action} />
-							<ITSelect name="effect" label={t("policies.effect")} value={editing.draft.effect} onChange={(e) => update({ effect: e.target.value as Draft["effect"] })} options={["DENY", "ALLOW"].map((e) => ({ value: e, label: t(dyn(`policies.effects.${e}`)) }))} valueField="value" labelField="label" />
-						</div>
-						<div className="sf:flex sf:flex-col sf:gap-2">
-							<span className="sf:text-label-md">{t("policies.conditions")}</span>
+					<ITStack spacing={4} className="sf:min-w-[32rem]">
+						<ITGrid container spacing={3}>
+							<ITGrid item xs={12} sm={6}>
+								<ITInput name="key" label={t("policies.key")} value={editing.draft.key} disabled={editing.existing} onChange={(e) => update({ key: e.target.value.toUpperCase() })} error={submit.fieldErrors.key} touched={!!submit.fieldErrors.key} required />
+							</ITGrid>
+							<ITGrid item xs={12} sm={6}>
+								<ITInput name="priority" type="number" label={t("policies.priority")} value={editing.draft.priority} onChange={(e) => update({ priority: e.target.value })} error={submit.fieldErrors.priority} touched={!!submit.fieldErrors.priority} required />
+							</ITGrid>
+							<ITGrid item xs={12} sm={6}>
+								<ITSelect
+									name="action"
+									label={t("policies.action")}
+									value={editing.draft.action}
+									onChange={(e) => update({ action: e.target.value, conditions: [] })}
+									options={props.actions.map((a) => ({ value: a.key, label: a.key }))}
+									valueField="value"
+									labelField="label"
+									error={submit.fieldErrors.action}
+								/>
+							</ITGrid>
+							<ITGrid item xs={12} sm={6}>
+								<ITSelect
+									name="effect"
+									label={t("policies.effect")}
+									value={editing.draft.effect}
+									onChange={(e) => update({ effect: e.target.value as Draft["effect"] })}
+									options={["DENY", "ALLOW"].map((e) => ({ value: e, label: t(dyn(`policies.effects.${e}`)) }))}
+									valueField="value"
+									labelField="label"
+								/>
+							</ITGrid>
+						</ITGrid>
+						<ITStack spacing={2}>
+							<ITText className="sf:text-label-md">{t("policies.conditions")}</ITText>
 							{editing.draft.conditions.map((condition, index) => {
 								const set = (changes: Partial<Draft["conditions"][number]>) =>
 									update({ conditions: editing.draft.conditions.map((c, i) => (i === index ? { ...c, ...changes } : c)) });
 								return (
-									<div key={index} className="sf:grid sf:grid-cols-[1fr_1fr_1fr_auto] sf:items-end sf:gap-2" data-condition={index}>
-										<ITSelect name={`field-${index}`} label={t("policies.field")} value={condition.field} onChange={(e) => set({ field: e.target.value })} options={[{ value: "", label: "—" }, ...fields.map((f) => ({ value: f, label: f }))]} valueField="value" labelField="label" error={submit.fieldErrors[`conditions[${index}].field`]} />
-										<ITSelect name={`operator-${index}`} label={t("policies.operator")} value={condition.operator} onChange={(e) => set({ operator: e.target.value })} options={OPERATORS.map((o) => ({ value: o, label: t(dyn(`policies.operators.${o}`)) }))} valueField="value" labelField="label" />
-										<ITInput name={`value-${index}`} label={t("policies.value")} value={condition.value} onChange={(e) => set({ value: e.target.value })} error={submit.fieldErrors[`conditions[${index}].value`]} touched={!!submit.fieldErrors[`conditions[${index}].value`]} />
-										<ITButton variant="text" label={t("common:actions.remove")} onClick={() => update({ conditions: editing.draft.conditions.filter((_, i) => i !== index) })} />
-									</div>
+									<ITGrid key={index} container spacing={2}>
+										<ITGrid item xs={12} sm={6} md={3}>
+											<ITSelect
+												name={`field-${index}`}
+												label={t("policies.field")}
+												value={condition.field}
+												onChange={(e) => set({ field: e.target.value })}
+												options={[{ value: "", label: "—" }, ...fields.map((f) => ({ value: f, label: f }))]}
+												valueField="value"
+												labelField="label"
+												error={submit.fieldErrors[`conditions[${index}].field`]}
+											/>
+										</ITGrid>
+										<ITGrid item xs={12} sm={6} md={3}>
+											<ITSelect
+												name={`operator-${index}`}
+												label={t("policies.operator")}
+												value={condition.operator}
+												onChange={(e) => set({ operator: e.target.value })}
+												options={OPERATORS.map((o) => ({ value: o, label: t(dyn(`policies.operators.${o}`)) }))}
+												valueField="value"
+												labelField="label"
+											/>
+										</ITGrid>
+										<ITGrid item xs={12} sm={6} md={3}>
+											<ITInput name={`value-${index}`} label={t("policies.value")} value={condition.value} onChange={(e) => set({ value: e.target.value })} error={submit.fieldErrors[`conditions[${index}].value`]} touched={!!submit.fieldErrors[`conditions[${index}].value`]} />
+										</ITGrid>
+										<ITGrid item xs={12} sm={6} md={3}>
+											<ITButton variant="text" label={t("common:actions.remove")} onClick={() => update({ conditions: editing.draft.conditions.filter((_, i) => i !== index) })} />
+										</ITGrid>
+									</ITGrid>
 								);
 							})}
-							<p className="sf:text-body-sm sf:text-on-surface-muted">{t("policies.valueHint")}</p>
-							<div>
+							<ITText muted className="sf:text-body-sm">
+								{t("policies.valueHint")}
+							</ITText>
+							<ITFlex>
 								<ITButton variant="outlined" label={t("policies.addCondition")} onClick={() => update({ conditions: [...editing.draft.conditions, { field: fields[0] ?? "", operator: "eq", value: "" }] })} />
-							</div>
-						</div>
+							</ITFlex>
+						</ITStack>
 						<ITMultiSelect
 							name="roles"
 							label={t("policies.roles")}
@@ -168,11 +234,8 @@ export function PoliciesPanel(props: { policies: Policy[]; actions: PolicyAction
 							options={props.roles.map((role) => ({ value: role.key, label: roleLabel(role.key, role.name) }))}
 							onChange={(selected) => update({ roles: selected.map(String) })}
 						/>
-						<label className="sf:flex sf:items-center sf:gap-2 sf:text-body-md">
-							<input type="checkbox" checked={editing.draft.active} onChange={(e) => update({ active: e.target.checked })} />
-							{t("policies.active")}
-						</label>
-					</div>
+						<ITCheckbox name="active" label={t("policies.active")} checked={editing.draft.active} onChange={(on) => update({ active: on })} />
+					</ITStack>
 				)}
 			</FormDialog>
 			<ITConfirmDialog
@@ -185,6 +248,6 @@ export function PoliciesPanel(props: { policies: Policy[]; actions: PolicyAction
 				cancelLabel={t("common:actions.cancel")}
 				variant="danger"
 			/>
-		</div>
+		</ITStack>
 	);
 }

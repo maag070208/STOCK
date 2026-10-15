@@ -8,7 +8,7 @@ test("the seed catalogs are there, read-only for an office user", async ({ page 
 	await signInAs(page, office);
 	await page.goto("/#/catalogs");
 	await page.locator('select[name="catalog"]').selectOption("INVOICE_STATUS");
-	const items = page.getByTestId("catalog-items");
+	const items = page.getByRole("table");
 	await expect(items.getByText("Abierta")).toBeVisible();
 	await expect(items.getByText("Cerrada")).toBeVisible();
 	await expect(page.getByRole("button", { name: "Nuevo valor" })).toHaveCount(0);
@@ -34,16 +34,17 @@ test("an administrator creates a catalog and a value, and a deactivated value hi
 	await dialog.getByLabel("Nombre en inglés", { exact: true }).fill("Kilogram");
 	await dialog.getByLabel("Decimales permitidos", { exact: true }).fill("3");
 	await dialog.getByRole("button", { name: "Guardar" }).click();
-	const row = page.locator('[data-item="KG"]');
+	const row = page.getByRole("row").filter({ hasText: "KG" });
 	await expect(row).toContainText("Kilogramo");
 	await expect(row).toContainText("Decimales: 3");
 
 	await row.getByRole("button", { name: "Editar" }).click();
 	dialog = page.getByRole("dialog");
 	await expect(dialog.getByLabel(/^Código/)).toBeDisabled();
-	await dialog.locator('input[name="active"]').uncheck();
+	// The kit's checkbox keeps its input hidden: the label around it is what a person clicks.
+	await dialog.locator('label:has(input[name="active"])').click();
 	await dialog.getByRole("button", { name: "Guardar" }).click();
-	await expect(row).toHaveCount(0);
+	await expect(page.getByRole("row").filter({ hasText: "KG" })).toHaveCount(0);
 	await page.getByText("Mostrar inactivos").click();
 	await expect(row).toContainText("Inactivo");
 });

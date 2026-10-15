@@ -1,13 +1,18 @@
-import { ITAlert, ITBadget, ITButton } from "@axzydev/axzy_ui_system";
+import { ITAlert, ITBadget, ITButton, ITField, ITFlex, ITSelect, ITStack, ITText, type Column } from "@axzydev/axzy_ui_system";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { accessApi, matrixRows, roleLabel, type MatrixCell, type PermissionDefinition, type Role } from "@entities/permission";
 import type { Scope } from "@entities/user";
 import { dyn } from "@shared/i18n";
 import { useSubmit } from "@shared/ui/useSubmit";
+import { PlainTable } from "@shared/ui/PlainTable";
+
+// One row of the matrix: a permission and the scope it has in each of the active roles.
+type MatrixRow = Record<string, unknown> & { id: string; permission: PermissionDefinition; scopes: Scope[] };
 
 // The role matrix: one row per permission, one column per role, the scope in each cell.
 // Changes are kept until saved together. The API rejects a change that would leave nobody able to manage access.
+// The table is the kit's, and each cell is one of its selects, labelled for who cannot see the header (web.md section 8).
 export function MatrixPanel(props: { permissions: PermissionDefinition[]; roles: Role[]; cells: MatrixCell[]; onSaved: () => void }) {
 	const { t } = useTranslation(["access", "common"]);
 	const [changes, setChanges] = useState<Record<string, Scope>>({});
@@ -36,62 +41,63 @@ export function MatrixPanel(props: { permissions: PermissionDefinition[]; roles:
 		}
 	}
 
+	const data: MatrixRow[] = rows.map(({ permission, scopes }) => ({ id: permission.key, permission, scopes }));
+
+	const columns: Column<MatrixRow>[] = [
+		{
+			key: "permission",
+			label: t("matrix.permission"),
+			type: "string",
+			render: (row) => (
+				<ITStack spacing={1}>
+					<ITFlex align="center" gap={2}>
+						<ITText>{t(dyn(`common:${row.permission.nameKey}`), { defaultValue: row.permission.key })}</ITText>
+						{row.permission.sensitive && <ITBadget color="warning" label={t("matrix.sensitive")} />}
+					</ITFlex>
+					<ITText muted className="sf:text-code-sm">
+						{row.permission.key}
+					</ITText>
+				</ITStack>
+			),
+		},
+		...roles.map((role, index) => ({
+			key: role.key,
+			label: roleLabel(role.key, role.name),
+			type: "string" as const,
+			render: (row: MatrixRow) => {
+				const cell = id(role.key, row.permission.key);
+				const original = row.scopes[index];
+				const value = changes[cell] ?? original;
+				return (
+					// The label of the select is the pair it changes: a screen reader reads it, and the table stays dense.
+					<ITField label={`${roleLabel(role.key, role.name)} · ${row.permission.key}`} htmlFor={cell} labelClassName="sf:sr-only">
+						<ITSelect
+							name={cell}
+							value={value}
+							onChange={(event) => change(role.key, row.permission.key, event.target.value as Scope, original)}
+							options={(["NONE", ...row.permission.scopes] as Scope[]).map((scope) => ({ value: scope, label: t(dyn(`common:scope.${scope}`)) }))}
+							valueField="value"
+							labelField="label"
+						/>
+					</ITField>
+				);
+			},
+		})),
+	];
+
 	const pending = Object.keys(changes).length;
 	return (
-		<div className="sf:flex sf:flex-col sf:gap-4">
-			<div className="sf:flex sf:items-center sf:justify-end sf:gap-3">
-				{pending > 0 && <span className="sf:text-body-md sf:text-on-surface-muted">{t("matrix.pending", { count: pending })}</span>}
+		<ITStack spacing={4}>
+			<ITFlex justify="end" align="center" gap={3}>
+				{pending > 0 && <ITText muted>{t("matrix.pending", { count: pending })}</ITText>}
 				<ITButton label={t("matrix.save")} onClick={() => void save()} disabled={pending === 0 || submit.submitting} />
-			</div>
+			</ITFlex>
 			{submit.error && <ITAlert variant="error">{submit.error}</ITAlert>}
-			<div className="sf:overflow-x-auto">
-				<table className="sf:w-full sf:text-body-md" data-testid="matrix">
-					<thead className="sf:bg-surface sf:text-label-sm sf:uppercase sf:text-on-surface-muted">
-						<tr>
-							<th className="sf:p-3 sf:text-left">{t("matrix.permission")}</th>
-							{roles.map((role) => (
-								<th key={role.key} className="sf:p-3 sf:text-left">{roleLabel(role.key, role.name)}</th>
-							))}
-						</tr>
-					</thead>
-					<tbody>
-						{rows.map(({ permission, scopes }) => (
-							<tr key={permission.key} className="sf:border-t sf:border-outline">
-								<td className="sf:p-3">
-									<div className="sf:flex sf:items-center sf:gap-2">
-										<span>{t(dyn(`common:${permission.nameKey}`), { defaultValue: permission.key })}</span>
-										{permission.sensitive && <ITBadget color="warning" label={t("matrix.sensitive")} />}
-									</div>
-									<span className="sf:text-code-sm sf:text-on-surface-muted">{permission.key}</span>
-								</td>
-								{roles.map((role, index) => {
-									const original = scopes[index];
-									const value = changes[id(role.key, permission.key)] ?? original;
-									return (
-										<td key={role.key} className="sf:p-2">
-											<select
-												aria-label={`${role.key} ${permission.key}`}
-												data-cell={id(role.key, permission.key)}
-												value={value}
-												onChange={(event) => change(role.key, permission.key, event.target.value as Scope, original)}
-												className={`sf:h-9 sf:w-full sf:rounded-sm sf:border sf:px-2 sf:text-body-md sf:focus:outline-2 sf:focus:outline-primary-focus ${
-													value !== original ? "sf:border-primary sf:bg-primary-warm/20" : "sf:border-outline-strong sf:bg-surface-elevated"
-												}`}
-											>
-												{(["NONE", ...permission.scopes] as Scope[]).map((scope) => (
-													<option key={scope} value={scope}>
-														{t(dyn(`common:scope.${scope}`))}
-													</option>
-												))}
-											</select>
-										</td>
-									);
-								})}
-							</tr>
-						))}
-					</tbody>
-				</table>
-			</div>
-		</div>
+			<PlainTable<MatrixRow>
+				columns={columns}
+				data={data}
+				size="sm"
+			/>
+		</ITStack>
 	);
 }

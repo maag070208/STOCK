@@ -1,4 +1,4 @@
-import { ITButton } from "@axzydev/axzy_ui_system";
+import { ITButton, ITText } from "@axzydev/axzy_ui_system";
 import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate } from "react-router-dom";
 import type { ReportKind } from "@entities/report";
@@ -17,7 +17,7 @@ export function ReportTabs() {
 	const navigate = useNavigate();
 	const { pathname } = useLocation();
 	return (
-		<nav aria-label={t("tabs.label")} className="sf:mb-4 sf:flex sf:flex-wrap sf:gap-2">
+		<ITText as="nav" aria-label={t("tabs.label")} className="sf:mb-4 sf:flex sf:flex-wrap sf:gap-2">
 			{TABS.map((tab) => (
 				<ITButton
 					key={tab.id}
@@ -27,6 +27,6 @@ export function ReportTabs() {
 					onClick={() => navigate(tab.path)}
 				/>
 			))}
-		</nav>
+		</ITText>
 	);
 }

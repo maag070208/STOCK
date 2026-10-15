@@ -1,4 +1,4 @@
-import { ITAlert, ITBadget, ITButton, ITCard, ITEmptyState, ITFlex, ITGrid, ITPage, ITStack, ITStatCard, ITTable, ITText, type Column } from "@axzydev/axzy_ui_system";
+import { ITAlert, ITBadget, ITButton, ITCard, ITEmptyState, ITFlex, ITGrid, ITPage, ITStack, ITStatCard, ITText, type Column } from "@axzydev/axzy_ui_system";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
@@ -10,6 +10,7 @@ import { QuickCapture } from "@features/invoice/QuickCapture";
 import { ApiError } from "@shared/api/client";
 import { formatDate, formatQuantity } from "@shared/lib/format";
 import { STATUS_COLOR } from "./InvoicesPage";
+import { PlainTable } from "@shared/ui/PlainTable";
 
 // One invoice: its header, its quick capture bar and its lines with the reception of each operator (F8-07). While
 // nothing has been counted the invoice is open: materials are captured above the table and it can be closed by hand;
@@ -177,7 +178,7 @@ export function InvoicePage() {
 						{lines.length === 0 ? (
 							<ITEmptyState title={open ? t("capture.empty") : t("detail.noLines")} />
 						) : (
-							<ITTable<InvoiceLine> columns={lineColumns} data={lines} size="sm" />
+							<PlainTable<InvoiceLine>columns={lineColumns} data={lines} size="sm" />
 						)}
 
 						{received.length > 0 && (
@@ -185,7 +186,7 @@ export function InvoicePage() {
 								<ITText as="h2" className="sf:text-title-lg">
 									{t("detail.reception")}
 								</ITText>
-								<ITTable<{ line: InvoiceLine; assignment: Assignment }> columns={receptionColumns} data={received} size="sm" />
+								<PlainTable<{ line: InvoiceLine; assignment: Assignment }>columns={receptionColumns} data={received} size="sm" />
 							</ITStack>
 						)}
 

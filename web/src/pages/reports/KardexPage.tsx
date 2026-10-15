@@ -1,4 +1,4 @@
-import { ITDataTable, ITPage, ITText, type Column, type ColumnFilters } from "@axzydev/axzy_ui_system";
+import { ITDataTable, ITGrid, ITPage, ITText, type Column, type ColumnFilters } from "@axzydev/axzy_ui_system";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ProductPicker, type Product } from "@entities/product";
@@ -61,13 +61,21 @@ export function KardexPage() {
 			key: "runningLocation",
 			label: t("columns.runningLocation"),
 			type: "string",
-			render: (row) => <span data-running={row.runningLocation ?? ""}>{number(row.runningLocation)}</span>,
+			render: (row) => (
+					<ITText as="span" data-running={row.runningLocation ?? ""}>
+						{number(row.runningLocation)}
+					</ITText>
+				),
 		},
 		{
 			key: "runningWarehouse",
 			label: t("columns.runningWarehouse"),
 			type: "string",
-			render: (row) => <span data-running={row.runningWarehouse ?? ""}>{number(row.runningWarehouse)}</span>,
+			render: (row) => (
+					<ITText as="span" data-running={row.runningWarehouse ?? ""}>
+						{number(row.runningWarehouse)}
+					</ITText>
+				),
 		},
 		{ key: "user", label: t("columns.user"), type: "string" },
 		{ key: "reason", label: t("columns.reason"), type: "string" },
@@ -78,11 +86,17 @@ export function KardexPage() {
 	return (
 		<ITPage title={t("kardex.title")} description={t("kardex.description")} noPadding actions={<ExportButtons kind="kardex" filters={filters} />}>
 			<ReportTabs />
-			<div className="sf:mb-4 sf:grid sf:grid-cols-1 sf:items-end sf:gap-3 sf:md:grid-cols-4">
-				<ProductPicker name="productId" label={t("filters.product")} value={product?.id ?? ""} onChange={setProduct} required />
-				<WarehouseFilter options={warehouses} value={warehouseId} onChange={setWarehouseId} required />
-				<DateRangeFilter from={from} to={to} onFrom={setFrom} onTo={setTo} />
-			</div>
+			<ITGrid container spacing={3} className="sf:mb-4 sf:items-end">
+				<ITGrid item xs={12} md={4}>
+					<ProductPicker name="productId" label={t("filters.product")} value={product?.id ?? ""} onChange={setProduct} required />
+				</ITGrid>
+				<ITGrid item xs={12} md={4}>
+					<WarehouseFilter options={warehouses} value={warehouseId} onChange={setWarehouseId} required />
+				</ITGrid>
+				<ITGrid item xs={12} md={4}>
+					<DateRangeFilter from={from} to={to} onFrom={setFrom} onTo={setTo} />
+				</ITGrid>
+			</ITGrid>
 			<ReportError message={error} />
 			{(!product || !warehouseId) && <ITText className="sf:mb-4">{t("filters.chooseProduct")}</ITText>}
 			{product && answer?.product && (
@@ -99,7 +113,7 @@ export function KardexPage() {
 					]}
 				/>
 			)}
-			<section data-testid="kardex-report">
+			<ITText as="section" data-testid="kardex-report">
 				<ITDataTable<KardexRow>
 					columns={columns}
 					fetchData={(params) => {
@@ -126,7 +140,7 @@ export function KardexPage() {
 					reloadTrigger={reload}
 					layout="fixed"
 				/>
-			</section>
+			</ITText>
 		</ITPage>
 	);
 }

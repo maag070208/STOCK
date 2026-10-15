@@ -31,7 +31,6 @@
     "reactivateLocation": "Reactivate location {{code}}?"
   },
   "detail": {
-    "back": "Back to warehouses",
     "locations": "Locations",
     "groups": "Aisles and racks",
     "noGroups": "This warehouse has no racks yet.",

@@ -1,4 +1,4 @@
-import { ITAlert, ITBadget, ITButton, ITCheckbox, ITInput, ITPage, ITTextarea } from "@axzydev/axzy_ui_system";
+import { ITAccordion, ITAlert, ITBadget, ITButton, ITCard, ITCheckbox, ITChip, ITFlex, ITGrid, ITInput, ITPage, ITText, ITTextarea } from "@axzydev/axzy_ui_system";
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
@@ -12,7 +12,8 @@ import { toast } from "@app/store";
 const CHECK_DELAY_MS = 300;
 
 // One template: its names, its ZPL with the report of its problems next to it as the person types, and its versions.
-// /labels/new creates one; its key never changes after (labels.md sections 2 to 4).
+// /labels/new creates one; its key never changes after (labels.md sections 2 to 4). The screen is built with the
+// components of the UI kit only (web.md section 8), and the way back to the list is its breadcrumbs.
 export function LabelTemplatePage() {
 	const { t, i18n } = useTranslation(["labels", "common"]);
 	const { id } = useParams();
@@ -106,85 +107,109 @@ export function LabelTemplatePage() {
 		}
 	}
 
-	const back = <ITButton variant="outlined" label={t("editor.back")} onClick={() => navigate("/labels")} />;
+	const title = creating ? t("editor.newTitle") : template ? `${template.key} · ${template.name}` : t("templates.title");
+	const crumbs = [{ label: t("common:nav.labels"), onClick: () => navigate("/labels") }, { label: title }];
+
 	if (missing) {
 		return (
-			<ITPage title={t("templates.title")} noPadding>
-				<p className="sf:text-body-md">{t("common:errors.notFound")}</p>
-				{back}
+			<ITPage title={t("templates.title")} breadcrumbs={crumbs} noPadding>
+				<ITAlert variant="error">{t("common:errors.notFound")}</ITAlert>
 			</ITPage>
 		);
 	}
 
 	const placeholders = template?.placeholders ?? ["copies"];
-	const lineLabel = (lines: number[]) => (lines.length === 1 ? t("editor.line", { line: lines[0] }) : t("editor.lines", { lines: lines.join(", ") }));
+	const lineLabel = (lines: number[]) => (lines.length === 1 ? t("editor.line", { line: lines[0] }) : t("editor.lines", { line: lines.join(", ") }));
 
 	return (
-		<ITPage title={creating ? t("editor.newTitle") : template ? `${template.key} · ${template.name}` : t("templates.title")} noPadding loading={!creating && !template} actions={back}>
+		<ITPage title={title} breadcrumbs={crumbs} noPadding loading={!creating && !template}>
 			<form onSubmit={(event) => void save(event)} noValidate className="sf:flex sf:flex-col sf:gap-6">
-				<div className="sf:grid sf:gap-4 sf:md:grid-cols-3">
-					<ITInput
-						name="key"
-						label={t("editor.key")}
-						value={key}
-						disabled={!creating || !canManage}
-						onChange={(e) => setKey(e.target.value.toUpperCase())}
-						error={errors.key ?? (creating ? t("editor.keyHint") : undefined)}
-						touched={!!errors.key}
-						required
-					/>
-					<ITInput name="nameEs" label={t("editor.nameEs")} value={nameEs} disabled={!canManage} onChange={(e) => setNameEs(e.target.value)} error={errors.nameEs} touched={!!errors.nameEs} required />
-					<ITInput name="nameEn" label={t("editor.nameEn")} value={nameEn} disabled={!canManage} onChange={(e) => setNameEn(e.target.value)} error={errors.nameEn} touched={!!errors.nameEn} required />
-				</div>
-				<div className="sf:grid sf:gap-4 sf:lg:grid-cols-[1fr_22rem]">
-					<ITTextarea name="zpl" label={t("editor.zpl")} value={zpl} rows={16} disabled={!canManage} onChange={setZpl} error={errors.zpl} resize="vertical" className="sf:[&_textarea]:font-mono sf:[&_textarea]:text-code-sm" />
-					<aside className="sf:flex sf:flex-col sf:gap-3" aria-live="polite" data-testid="zpl-report">
-						<h2 className="sf:text-label-md">{t("editor.report")}</h2>
-						{checking && <p className="sf:text-body-sm sf:text-on-surface-muted">{t("editor.checking")}</p>}
-						{!checking && problems?.length === 0 && <ITAlert variant="success">{t("editor.valid")}</ITAlert>}
-						{problems?.map((problem, index) => {
-							const lines = problemLines(zpl, problem.token);
-							return (
-								<ITAlert key={`${problem.code}-${problem.token ?? index}`} variant="error">
-									<span className="sf:block">{problem.message}</span>
-									{(problem.token || lines.length > 0) && (
-										<span className="sf:block sf:text-code-sm">
-											{[problem.token, lines.length > 0 ? lineLabel(lines) : null].filter(Boolean).join(" · ")}
-										</span>
-									)}
-								</ITAlert>
-							);
-						})}
-						<h2 className="sf:text-label-md">{t("editor.placeholders")}</h2>
-						<ul className="sf:flex sf:flex-wrap sf:gap-2">
-							{placeholders.map((name) => (
-								<li key={name} className="sf:rounded sf:bg-surface sf:px-2 sf:py-1 sf:text-code-sm">{`{{${name}}}`}</li>
-							))}
-						</ul>
-					</aside>
-				</div>
+				<ITGrid container spacing={4}>
+					<ITGrid item xs={12} md={4}>
+						<ITInput
+							name="key"
+							label={t("editor.key")}
+							value={key}
+							disabled={!creating || !canManage}
+							onChange={(e) => setKey(e.target.value.toUpperCase())}
+							error={errors.key ?? (creating ? t("editor.keyHint") : undefined)}
+							touched={!!errors.key}
+							required
+						/>
+					</ITGrid>
+					<ITGrid item xs={12} md={4}>
+						<ITInput name="nameEs" label={t("editor.nameEs")} value={nameEs} disabled={!canManage} onChange={(e) => setNameEs(e.target.value)} error={errors.nameEs} touched={!!errors.nameEs} required />
+					</ITGrid>
+					<ITGrid item xs={12} md={4}>
+						<ITInput name="nameEn" label={t("editor.nameEn")} value={nameEn} disabled={!canManage} onChange={(e) => setNameEn(e.target.value)} error={errors.nameEn} touched={!!errors.nameEn} required />
+					</ITGrid>
+				</ITGrid>
+				<ITGrid container spacing={4}>
+					<ITGrid item xs={12} lg={8}>
+						<ITTextarea name="zpl" label={t("editor.zpl")} value={zpl} rows={16} disabled={!canManage} onChange={setZpl} error={errors.zpl} resize="vertical" className="sf:[&_textarea]:font-mono sf:[&_textarea]:text-code-sm" />
+					</ITGrid>
+					<ITGrid item xs={12} lg={4}>
+						<ITCard title={t("editor.report")}>
+							<ITText as="aside" aria-live="polite" data-testid="zpl-report" className="sf:flex sf:flex-col sf:gap-3">
+								{checking && <ITText muted>{t("editor.checking")}</ITText>}
+								{!checking && problems?.length === 0 && <ITAlert variant="success">{t("editor.valid")}</ITAlert>}
+								{problems?.map((problem, index) => {
+									const lines = problemLines(zpl, problem.token);
+									return (
+										<ITAlert key={`${problem.code}-${problem.token ?? index}`} variant="error">
+											<ITText as="span" className="sf:block">
+												{problem.message}
+											</ITText>
+											{(problem.token || lines.length > 0) && (
+												<ITText as="span" className="sf:block sf:text-code-sm">
+													{[problem.token, lines.length > 0 ? lineLabel(lines) : null].filter(Boolean).join(" · ")}
+												</ITText>
+											)}
+										</ITAlert>
+									);
+								})}
+								<ITText as="h2" className="sf:text-label-md">
+									{t("editor.placeholders")}
+								</ITText>
+								<ITFlex wrap="wrap" gap={2}>
+									{placeholders.map((name) => (
+										<ITChip key={name} label={`{{${name}}}`} variant="soft" />
+									))}
+								</ITFlex>
+							</ITText>
+						</ITCard>
+					</ITGrid>
+				</ITGrid>
 				{!creating && canManage && <ITCheckbox name="active" label={t("editor.active")} checked={active} onChange={setActive} />}
 				{submit.error && <ITAlert variant="error">{submit.error}</ITAlert>}
-				{canManage && (
-					<div>
-						<ITButton type="submit" label={t("editor.save")} disabled={submit.submitting} />
-					</div>
-				)}
+				{canManage && <ITButton type="submit" label={t("editor.save")} disabled={submit.submitting} />}
 			</form>
 			{versions.length > 0 && (
-				<section className="sf:mt-8 sf:flex sf:flex-col sf:gap-2" data-testid="template-versions">
-					<h2 className="sf:text-title-md">{t("editor.versions")}</h2>
-					{versions.map((version) => (
-						<details key={version.version} className="sf:rounded sf:border sf:border-outline sf:p-3" data-version={version.version}>
-							<summary className="sf:flex sf:cursor-pointer sf:items-center sf:gap-3 sf:text-body-md">
-								<span>{t("editor.version", { version: version.version })}</span>
-								<span className="sf:text-on-surface-muted">{formatDateTime(version.createdAt, i18n.language)}</span>
-								{version.version === template?.version && <ITBadget color="success" label={t("editor.current")} />}
-							</summary>
-							<pre className="sf:mt-2 sf:overflow-x-auto sf:font-mono sf:text-code-sm">{version.zpl}</pre>
-						</details>
-					))}
-				</section>
+				<ITText as="section" data-testid="template-versions" className="sf:mt-8 sf:flex sf:flex-col sf:gap-2">
+					<ITText as="h2" className="sf:text-title-md">
+						{t("editor.versions")}
+					</ITText>
+					<ITAccordion
+						variant="bordered"
+						items={versions.map((version) => ({
+							id: String(version.version),
+							title: (
+								<ITText as="span" data-version={version.version} className="sf:flex sf:items-center sf:gap-3">
+									<ITText as="span">{t("editor.version", { version: version.version })}</ITText>
+									<ITText as="span" muted>
+										{formatDateTime(version.createdAt, i18n.language)}
+									</ITText>
+									{version.version === template?.version && <ITBadget color="success" label={t("editor.current")} />}
+								</ITText>
+							),
+							content: (
+								<ITText as="pre" className="sf:overflow-x-auto sf:font-mono sf:text-code-sm">
+									{version.zpl}
+								</ITText>
+							),
+						}))}
+					/>
+				</ITText>
 			)}
 		</ITPage>
 	);

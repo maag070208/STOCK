@@ -1,3 +1,4 @@
+import { ITFlex, ITText } from "@axzydev/axzy_ui_system";
 import { useEffect, useState } from "react";
 import { Lottie, LottieSubscription } from "lottie-react";
 import { animationPath } from "../../shared/brand/animations";
@@ -41,22 +42,21 @@ export function BrandIntro() {
 	if (done) return null;
 
 	return (
-		<div
-			data-testid="brand-intro"
-			data-motion={reduced ? "reduced" : "full"}
-			style={{ position: "fixed", inset: 0, zIndex: 50, display: "flex", alignItems: "center", justifyContent: "center" }}
-		>
-			{data ? (
-				<Lottie
-					src={data}
-					loop={false}
-					autoplay={!reduced}
-					subscriptions={{ [LottieSubscription.complete]: finish }}
-					className="sf:size-60"
-				/>
-			) : (
-				<BrandLoader />
-			)}
-		</div>
+		// The kit builds the whole-screen overlay, and the animation sits centred inside it.
+		<ITText as="div" data-testid="brand-intro" data-motion={reduced ? "reduced" : "full"} style={{ position: "fixed", inset: 0, zIndex: 50 }}>
+			<ITFlex align="center" justify="center" style={{ height: "100%" }}>
+				{data ? (
+					<Lottie
+						src={data}
+						loop={false}
+						autoplay={!reduced}
+						subscriptions={{ [LottieSubscription.complete]: finish }}
+						className="sf:size-60"
+					/>
+				) : (
+					<BrandLoader />
+				)}
+			</ITFlex>
+		</ITText>
 	);
 }

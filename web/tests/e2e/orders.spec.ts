@@ -6,8 +6,8 @@ import { newUser, signInAs, uniqueName } from "../support/api";
 import { ordersFixture } from "../support/orders";
 
 async function pickProduct(page: Page, index: number, product: { code: string; name: string }) {
-	const line = page.locator(`[data-line="${index}"]`);
-	await line.getByPlaceholder("Busca por código o nombre").fill(product.code);
+	// The material of a line: the picker is reached by the name the screen gives it, one per line.
+	await page.locator(`input[name="product-${index}"]`).fill(product.code);
 	await page.getByText(`${product.code} · ${product.name}`).first().click();
 }
 
@@ -32,7 +32,7 @@ test("office creates an order with two lines, assigns it and sees it in the list
 	// The first line shows what the warehouse has, and a quantity above it never reaches the API.
 	await page.getByRole("button", { name: "Agregar material" }).click();
 	await pickProduct(page, 0, screws);
-	await expect(page.locator('[data-available="0"]')).toContainText("Disponible: 100");
+	await expect(page.getByText("Disponible: 100")).toBeVisible();
 	await page.locator('input[name="quantity-0"]').fill("150");
 	await page.getByRole("button", { name: "Guardar orden" }).click();
 	await expect(page.getByText("No hay esa cantidad disponible en el almacén.")).toBeVisible();
@@ -42,21 +42,20 @@ test("office creates an order with two lines, assigns it and sees it in the list
 	// The second line, with its own availability.
 	await page.getByRole("button", { name: "Agregar material" }).click();
 	await pickProduct(page, 1, nails);
-	await expect(page.locator('[data-available="1"]')).toContainText("Disponible: 50");
+	await expect(page.getByText("Disponible: 50")).toBeVisible();
 	await page.locator('input[name="quantity-1"]').fill("20");
 	await page.getByRole("button", { name: "Guardar orden" }).click();
 
-	// The order was created with its two lines, and is assigned from its detail.
-	const header = page.getByTestId("order-header");
-	await expect(header).toContainText("Creada");
-	const lines = page.getByTestId("order-lines");
-	await expect(lines.locator(`[data-line="${screws.code}"]`)).toContainText("60");
-	await expect(lines.locator(`[data-line="${nails.code}"]`)).toContainText("20");
+	// The order was created with its two lines, and is assigned from its detail: the state is its badge, and the lines
+	// are the rows of the table.
+	await expect(page.getByText("Creada", { exact: true })).toBeVisible();
+	await expect(page.getByRole("row").filter({ hasText: screws.code })).toContainText("60");
+	await expect(page.getByRole("row").filter({ hasText: nails.code })).toContainText("20");
 	await page.getByRole("button", { name: "Asignar" }).click();
 	const dialog = page.getByRole("dialog");
 	await dialog.locator('select[name="operatorId"]').selectOption(operator.id);
 	await dialog.getByRole("button", { name: "Guardar" }).click();
-	await expect(page.getByTestId("order-operator")).toContainText(operator.name);
+	await expect(page.getByText(operator.name).first()).toBeVisible();
 
 	// The list has it, and so it can be found by its number.
 	await page.goto("/#/orders");
@@ -97,10 +96,10 @@ test("a validated order keeps only its receipt, and picked material moves or the
 
 	// Validating: the order is checked, its receipt is stored, and every other action disappears.
 	await page.goto(`/#/orders/${closed.id}`);
-	await expect(page.getByTestId("order-header")).toContainText("Surtida");
+	await expect(page.getByText("Surtida", { exact: true })).toBeVisible();
 	await page.getByRole("button", { name: "Validar" }).click();
 	await page.getByRole("dialog").getByRole("button", { name: "Validar" }).click();
-	await expect(page.getByTestId("order-header")).toContainText("Validada");
+	await expect(page.getByText("Validada", { exact: true })).toBeVisible();
 	await expect(page.getByRole("button", { name: "Validar" })).toHaveCount(0);
 	await expect(page.getByRole("button", { name: "Cancelar orden" })).toHaveCount(0);
 	await expect(page.getByRole("button", { name: "Pasar a otra orden" })).toHaveCount(0);
@@ -126,13 +125,14 @@ test("a validated order keeps only its receipt, and picked material moves or the
 	await transfer.locator('textarea[name="note"]').fill("El cliente cambió de orden");
 	await transfer.getByRole("button", { name: "Pasar" }).click();
 	// The detail reloads with the picked material gone from the source line, and then the API tells where it went.
-	await expect(page.getByTestId("order-lines").locator(`[data-picked="${screws.code}"]`)).toHaveText("0");
+	// The picked quantity is the third column of the line.
+	await expect(page.getByRole("row").filter({ hasText: screws.code }).getByRole("cell").nth(2)).toHaveText("0");
 	expect((await f.view(source.id)).lines![0].pickedQuantity).toBe(0);
 	expect((await f.view(target.id)).lines![0].pickedQuantity).toBe(20);
 
 	// With nothing picked, the source order can be cancelled; cancelling releases its reservation.
 	await page.getByRole("button", { name: "Cancelar orden" }).click();
 	await page.getByRole("dialog").getByRole("button", { name: "Cancelar orden" }).click();
-	await expect(page.getByTestId("order-header")).toContainText("Cancelada");
+	await expect(page.getByText("Cancelada", { exact: true })).toBeVisible();
 	expect((await f.view(source.id)).status.code).toBe("CANCELLED");
 });

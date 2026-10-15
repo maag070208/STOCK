@@ -1,4 +1,4 @@
-import { ITAlert, ITButton, ITCheckbox, ITDatePicker, ITSelect, type ColumnFilters } from "@axzydev/axzy_ui_system";
+import { ITAlert, ITButton, ITCheckbox, ITDatePicker, ITFlex, ITSelect, ITText, type ColumnFilters } from "@axzydev/axzy_ui_system";
 import { useEffect, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { partnerApi, type PartnerKind } from "@entities/partner";
@@ -84,14 +84,16 @@ export const periodOf = (from: Date | null, to: Date | null): ColumnFilters => (
 // A group of totals: what the rows of the report add up to, by warehouse, by aisle and rack, by status or by type.
 export function ReportTotals({ label, entries, testId }: { label: string; entries: { key: string; label: string; value: string }[]; testId?: string }) {
 	return (
-		<section aria-label={label} data-testid={testId} className="sf:mb-4 sf:flex sf:flex-wrap sf:gap-x-6 sf:gap-y-2">
+		<ITText as="section" aria-label={label} data-testid={testId} className="sf:mb-4 sf:flex sf:flex-wrap sf:gap-x-6 sf:gap-y-2">
 			{entries.map((entry) => (
-				<p key={entry.key} className="sf:text-body-md sf:text-on-surface">
-					<span className="sf:text-on-surface-muted">{entry.label}: </span>
+				<ITText key={entry.key} className="sf:text-body-md sf:text-on-surface">
+					<ITText as="span" muted>
+						{entry.label}:{" "}
+					</ITText>
 					{entry.value}
-				</p>
+				</ITText>
 			))}
-		</section>
+		</ITText>
 	);
 }
 
@@ -123,11 +125,11 @@ export function ExportButtons({ kind, filters }: { kind: ReportKind; filters: Co
 	}
 
 	return (
-		<div className="sf:flex sf:items-center sf:justify-end sf:gap-2">
+		<ITFlex align="center" justify="end" gap={2}>
 			{error && <ITAlert variant="error">{error}</ITAlert>}
 			<ITButton size="sm" variant="outlined" label={t("export.xlsx")} disabled={busy} onClick={() => void take("XLSX")} />
 			<ITButton size="sm" variant="outlined" label={t("export.pdf")} disabled={busy} onClick={() => void take("PDF")} />
-		</div>
+		</ITFlex>
 	);
 }
 
@@ -135,7 +137,9 @@ export function ExportButtons({ kind, filters }: { kind: ReportKind; filters: Co
 export function ReportError({ message }: { message: string | null }): ReactNode {
 	return message ? (
 		<ITAlert variant="error">
-			<span data-testid="report-error">{message}</span>
+			<ITText as="span" data-testid="report-error">
+				{message}
+			</ITText>
 		</ITAlert>
 	) : null;
 }

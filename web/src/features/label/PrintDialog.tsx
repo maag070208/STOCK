@@ -1,4 +1,4 @@
-import { ITInput, ITSelect } from "@axzydev/axzy_ui_system";
+import { ITInput, ITSelect, ITText } from "@axzydev/axzy_ui_system";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { copiesError, printApi, type PrintablePrinter } from "@entities/label";
@@ -68,12 +68,14 @@ export function PrintDialog(props: { target: PrintTarget | null; onClose: () => 
 	const empty = printers !== null && printers.length === 0;
 	return (
 		<FormDialog isOpen={!!target} title={t("print.title")} onClose={props.onClose} onSubmit={() => void print()} submitting={submit.submitting || printers === null || empty} error={submit.error} submitLabel={t("print.submit")}>
-			<p className="sf:text-body-md">
-				<span className="sf:text-on-surface-muted">{target?.kind === "LOCATION" ? t("print.location") : t("print.product")}: </span>
+			<ITText>
+				<ITText as="span" muted>
+					{target?.kind === "LOCATION" ? t("print.location") : t("print.product")}:{" "}
+				</ITText>
 				{target?.title}
-			</p>
+			</ITText>
 			{empty ? (
-				<p className="sf:text-body-md sf:text-on-surface-muted">{target?.kind === "LOCATION" ? t("print.noPrintersHere") : t("print.noPrinters")}</p>
+				<ITText muted>{target?.kind === "LOCATION" ? t("print.noPrintersHere") : t("print.noPrinters")}</ITText>
 			) : (
 				<ITSelect
 					name="printerId"

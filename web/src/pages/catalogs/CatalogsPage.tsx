@@ -1,4 +1,4 @@
-import { ITBadget, ITButton, ITInput, ITPage, ITSelect } from "@axzydev/axzy_ui_system";
+import { ITBadget, ITButton, ITCheckbox, ITFlex, ITGrid, ITInput, ITPage, ITSelect, ITStack, ITText, type Column } from "@axzydev/axzy_ui_system";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { catalogApi, type Catalog, type CatalogItem } from "@entities/catalog";
@@ -7,8 +7,13 @@ import { CatalogItemDialog } from "@features/catalog/CatalogItemDialog";
 import { FormDialog } from "@shared/ui/FormDialog";
 import { useSubmit } from "@shared/ui/useSubmit";
 import { toast } from "@app/store";
+import { PlainTable } from "@shared/ui/PlainTable";
+
+// One row of the table: the catalog item, which the kit tells apart by its code.
+type CatalogRow = Record<string, unknown> & { id: string; item: CatalogItem };
 
 // The value catalogs: statuses, units and the ones an administrator adds. Codes never change; values are deactivated, not deleted.
+// The selector, the table and the dialog are the kit's (web.md section 8).
 export function CatalogsPage() {
 	const { t } = useTranslation(["catalogs", "common"]);
 	const canManage = useCan("catalogs.manage");
@@ -53,6 +58,29 @@ export function CatalogsPage() {
 			.filter(Boolean)
 			.join(" · ");
 
+	const rows: CatalogRow[] = items.map((item) => ({ id: item.code, item }));
+
+	const columns: Column<CatalogRow>[] = [
+		{ key: "sortOrder", label: t("columns.sortOrder"), type: "string", className: "sf:text-right", render: (row) => String(row.item.sortOrder) },
+		{ key: "code", label: t("columns.code"), type: "string", render: (row) => <ITText className="sf:text-code-sm">{row.item.code}</ITText> },
+		{ key: "labelEs", label: t("columns.labelEs"), type: "string", render: (row) => row.item.labels.es?.label ?? "" },
+		{ key: "labelEn", label: t("columns.labelEn"), type: "string", render: (row) => row.item.labels.en?.label ?? "" },
+		{ key: "attributes", label: t("columns.attributes"), type: "string", render: (row) => <ITText muted>{attributes(row.item)}</ITText> },
+		{
+			key: "status",
+			label: t("columns.status"),
+			type: "string",
+			render: (row) => <ITBadget color={row.item.active ? "success" : "gray"} label={row.item.active ? t("common:status.active") : t("common:status.inactive")} />,
+		},
+		{
+			key: "actions",
+			label: "",
+			type: "actions",
+			className: "sf:text-right",
+			actions: (row) => (canManage ? <ITButton size="sm" variant="text" label={t("common:actions.edit")} onClick={() => setEditing({ item: row.item })} /> : null),
+		},
+	];
+
 	return (
 		<ITPage
 			title={t("title")}
@@ -60,16 +88,16 @@ export function CatalogsPage() {
 			noPadding
 			actions={
 				canManage ? (
-					<div className="sf:flex sf:gap-2">
+					<ITFlex gap={2}>
 						<ITButton variant="outlined" label={t("new")} onClick={() => { submit.reset(); setCreatingCatalog(true); }} />
 						<ITButton label={t("newItem")} onClick={() => setEditing({ item: null })} disabled={!selected} />
-					</div>
+					</ITFlex>
 				) : undefined
 			}
 		>
-			<div className="sf:flex sf:flex-col sf:gap-4">
-				<div className="sf:flex sf:flex-wrap sf:items-end sf:gap-4">
-					<div className="sf:w-72">
+			<ITStack spacing={4}>
+				<ITGrid container spacing={4}>
+					<ITGrid item xs={12} sm={6} md={4}>
 						<ITSelect
 							name="catalog"
 							label={t("catalog")}
@@ -79,41 +107,17 @@ export function CatalogsPage() {
 							valueField="value"
 							labelField="label"
 						/>
-					</div>
-					<label className="sf:flex sf:items-center sf:gap-2 sf:pb-2 sf:text-body-md">
-						<input type="checkbox" checked={showInactive} onChange={(e) => setShowInactive(e.target.checked)} />
-						{t("showInactive")}
-					</label>
-				</div>
-				<table className="sf:w-full sf:text-body-md" data-testid="catalog-items">
-					<thead className="sf:bg-surface sf:text-label-sm sf:uppercase sf:text-on-surface-muted">
-						<tr>
-							<th className="sf:p-3 sf:text-right">{t("columns.sortOrder")}</th>
-							<th className="sf:p-3 sf:text-left">{t("columns.code")}</th>
-							<th className="sf:p-3 sf:text-left">{t("columns.labelEs")}</th>
-							<th className="sf:p-3 sf:text-left">{t("columns.labelEn")}</th>
-							<th className="sf:p-3 sf:text-left">{t("columns.attributes")}</th>
-							<th className="sf:p-3 sf:text-left">{t("columns.status")}</th>
-							<th className="sf:p-3" />
-						</tr>
-					</thead>
-					<tbody>
-						{items.map((item) => (
-							<tr key={item.code} className="sf:border-t sf:border-outline" data-item={item.code}>
-								<td className="sf:p-3 sf:text-right">{item.sortOrder}</td>
-								<td className="sf:p-3 sf:text-code-sm">{item.code}</td>
-								<td className="sf:p-3">{item.labels.es?.label}</td>
-								<td className="sf:p-3">{item.labels.en?.label}</td>
-								<td className="sf:p-3 sf:text-on-surface-muted">{attributes(item)}</td>
-								<td className="sf:p-3">
-									<ITBadget color={item.active ? "success" : "gray"} label={item.active ? t("common:status.active") : t("common:status.inactive")} />
-								</td>
-								<td className="sf:p-3 sf:text-right">{canManage && <ITButton size="sm" variant="text" label={t("common:actions.edit")} onClick={() => setEditing({ item })} />}</td>
-							</tr>
-						))}
-					</tbody>
-				</table>
-			</div>
+					</ITGrid>
+					<ITGrid item xs={12} sm={6} md={4}>
+						<ITCheckbox name="showInactive" label={t("showInactive")} checked={showInactive} onChange={setShowInactive} />
+					</ITGrid>
+				</ITGrid>
+				<PlainTable<CatalogRow>
+					columns={columns}
+					data={rows}
+					size="sm"
+				/>
+			</ITStack>
 
 			<CatalogItemDialog
 				catalog={selected}

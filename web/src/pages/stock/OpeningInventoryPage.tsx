@@ -1,4 +1,4 @@
-import { ITAlert, ITBadget, ITButton, ITPage, ITSelect, ITStatCard } from "@axzydev/axzy_ui_system";
+import { ITAlert, ITBadget, ITButton, ITFlex, ITGrid, ITPage, ITSelect, ITStack, ITStatCard, ITText } from "@axzydev/axzy_ui_system";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
@@ -10,7 +10,8 @@ import { useSubmit } from "@shared/ui/useSubmit";
 const none = (value: unknown) => value === null || value === undefined;
 
 // The opening inventory (stock.md section 3): the legacy file's stock into the warehouse's temporary location.
-// The file is reviewed first and nothing is written; the same file is then confirmed, once per warehouse.
+// The file is reviewed first and nothing is written; the same file is then confirmed, once per warehouse. The screen is
+// built with the components of the UI kit only (web.md section 8), with one exception: the file picker (see below).
 export function OpeningInventoryPage() {
 	const { t, i18n } = useTranslation(["stock", "common"]);
 	const navigate = useNavigate();
@@ -54,61 +55,85 @@ export function OpeningInventoryPage() {
 	const confirmed = report && !none(report.movements);
 
 	return (
-		<ITPage title={t("opening.title")} description={t("opening.description")} noPadding actions={<ITButton variant="outlined" label={t("common:actions.close")} onClick={() => navigate("/stock")} />}>
-			<div className="sf:flex sf:max-w-4xl sf:flex-col sf:gap-6">
-				<div className="sf:grid sf:grid-cols-1 sf:items-end sf:gap-3 sf:md:grid-cols-2">
-					<ITSelect
-						name="warehouseId"
-						label={t("opening.warehouse")}
-						value={warehouseId}
-						onChange={(e) => {
-							setWarehouseId(e.target.value);
-							reset();
-						}}
-						options={warehouses.map((w) => ({ value: w.id, label: `${w.code} · ${w.name}` }))}
-						valueField="value"
-						labelField="label"
-					/>
-					<div className="sf:flex sf:flex-col sf:gap-1">
-						<span className="sf:text-label-md" id="opening-file-label">{t("opening.file")}</span>
-						<div className="sf:flex sf:flex-wrap sf:items-center sf:gap-3">
-							<input
-								ref={picker}
-								type="file"
-								name="file"
-								aria-labelledby="opening-file-label"
-								accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-								className="sf:sr-only"
-								onChange={(e) => {
-									setFile(e.target.files?.[0] ?? null);
-									reset();
-								}}
-							/>
-							<ITButton variant="outlined" label={t("opening.choose")} onClick={() => picker.current?.click()} />
-							<span className="sf:text-body-md sf:text-on-surface-muted">{file?.name ?? t("opening.noFile")}</span>
-						</div>
-					</div>
-				</div>
-				<div>
+		<ITPage
+			title={t("opening.title")}
+			description={t("opening.description")}
+			breadcrumbs={[{ label: t("common:nav.stock"), onClick: () => navigate("/stock") }, { label: t("opening.title") }]}
+			noPadding
+		>
+			<ITStack spacing={6} className="sf:max-w-4xl">
+				<ITGrid container spacing={3}>
+					<ITGrid item xs={12} sm={6}>
+						<ITSelect
+							name="warehouseId"
+							label={t("opening.warehouse")}
+							value={warehouseId}
+							onChange={(e) => {
+								setWarehouseId(e.target.value);
+								reset();
+							}}
+							options={warehouses.map((w) => ({ value: w.id, label: `${w.code} · ${w.name}` }))}
+							valueField="value"
+							labelField="label"
+						/>
+					</ITGrid>
+					<ITGrid item xs={12} sm={6}>
+						<ITStack spacing={1}>
+							<ITText as="label" htmlFor="opening-file" className="sf:text-label-md">
+								{t("opening.file")}
+							</ITText>
+							<ITFlex wrap="wrap" align="center" gap={3}>
+								{/* The kit has no file picker: its ITDropfile takes a drop (no input to choose a file) and carries its
+								    own untranslated labels, so the one control the browser gives for this stays here, hidden behind
+								    the kit's button. */}
+								<input
+									ref={picker}
+									id="opening-file"
+									type="file"
+									name="file"
+									accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+									className="sf:sr-only"
+									onChange={(e) => {
+										setFile(e.target.files?.[0] ?? null);
+										reset();
+									}}
+								/>
+								<ITButton variant="outlined" label={t("opening.choose")} onClick={() => picker.current?.click()} />
+								<ITText muted>{file?.name ?? t("opening.noFile")}</ITText>
+							</ITFlex>
+						</ITStack>
+					</ITGrid>
+				</ITGrid>
+				<ITStack>
 					<ITButton label={review.submitting ? t("opening.reviewing") : t("opening.review")} onClick={() => void runReview()} disabled={!file || !warehouseId || review.submitting} />
-				</div>
+				</ITStack>
 				{review.error && <ITAlert variant="error">{review.error}</ITAlert>}
 
 				{report && (
-					<section aria-label={t("opening.report")} className="sf:flex sf:flex-col sf:gap-4" data-testid="opening-report">
-						<h2 className="sf:text-title-md">{t("opening.report")}</h2>
-						<div className="sf:grid sf:grid-cols-1 sf:gap-3 sf:md:grid-cols-3">
-							<ITStatCard label={t("opening.products")} value={number(report.products)} />
-							<ITStatCard label={t("opening.withStock")} value={number(report.withStock)} />
-							<ITStatCard label={t("opening.total")} value={number(report.total)} />
-						</div>
-						<div className="sf:flex sf:items-center sf:gap-3">
-							<span className="sf:text-label-md">{t("opening.control.label")}</span>
+					<ITText as="section" aria-label={t("opening.report")} data-testid="opening-report" className="sf:flex sf:flex-col sf:gap-4">
+						<ITText as="h2" className="sf:text-title-md">
+							{t("opening.report")}
+						</ITText>
+						<ITGrid container spacing={3}>
+							<ITGrid item xs={12} md={4}>
+									<ITStatCard label={t("opening.products")} value={number(report.products)} />
+							</ITGrid>
+							<ITGrid item xs={12} md={4}>
+									<ITStatCard label={t("opening.withStock")} value={number(report.withStock)} />
+							</ITGrid>
+							<ITGrid item xs={12} md={4}>
+									<ITStatCard label={t("opening.total")} value={number(report.total)} />
+							</ITGrid>
+						</ITGrid>
+						<ITFlex align="center" gap={3}>
+							<ITText as="span" className="sf:text-label-md">
+								{t("opening.control.label")}
+							</ITText>
 							<ITBadget
 								color={control === "mismatch" ? "danger" : control === "matches" ? "success" : "gray"}
 								label={t(`opening.control.${control ?? "none"}`, { total: number(report.total), control: number(report.controlTotal) })}
 							/>
-						</div>
+						</ITFlex>
 						{report.missing.length > 0 && (
 							<ITAlert variant="warning">
 								{t("opening.missing")} {report.missing.map((m) => `${t("opening.row")} ${m.row}: ${m.code}`).join(" · ")}
@@ -118,18 +143,18 @@ export function OpeningInventoryPage() {
 						{confirmed ? (
 							<ITAlert variant="success">{report.movements! > 0 ? t("opening.done", { count: report.movements! }) : t("opening.nothing")}</ITAlert>
 						) : (
-							<div className="sf:flex sf:justify-end">
+							<ITFlex justify="end">
 								<ITButton
 									label={confirm.submitting ? t("opening.confirming") : t("opening.confirm", { count: report.withStock })}
 									onClick={() => void runConfirm()}
 									disabled={report.controlMatches === false || confirm.submitting}
 								/>
-							</div>
+							</ITFlex>
 						)}
 						{confirm.error && <ITAlert variant="error">{confirm.error}</ITAlert>}
-					</section>
+					</ITText>
 				)}
-			</div>
+			</ITStack>
 		</ITPage>
 	);
 }

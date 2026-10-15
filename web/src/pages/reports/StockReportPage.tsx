@@ -1,4 +1,4 @@
-import { ITDataTable, ITPage, type Column, type ColumnFilters } from "@axzydev/axzy_ui_system";
+import { ITDataTable, ITFlex, ITPage, ITText, type Column, type ColumnFilters } from "@axzydev/axzy_ui_system";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { reportApi, warehouseOptionsOf, type ReportRef, type StockReportPage as StockPage, type StockReportRow } from "@entities/report";
@@ -42,10 +42,10 @@ export function StockReportPage() {
 	return (
 		<ITPage title={t("stock.title")} description={t("stock.description")} noPadding actions={<ExportButtons kind="stock" filters={filters} />}>
 			<ReportTabs />
-			<div className="sf:mb-4 sf:flex sf:flex-wrap sf:items-end sf:gap-3">
+			<ITFlex wrap="wrap" align="end" gap={3} className="sf:mb-4">
 				<WarehouseFilter options={warehouses} value={warehouseId} onChange={setWarehouseId} />
 				<BelowMinimumFilter value={belowMinimum} onChange={setBelowMinimum} />
-			</div>
+			</ITFlex>
 			<ReportError message={error} />
 			{page && (
 				<ReportTotals
@@ -57,7 +57,7 @@ export function StockReportPage() {
 					]}
 				/>
 			)}
-			<section data-testid="stock-report">
+			<ITText as="section" data-testid="stock-report">
 				<ITDataTable<StockReportRow>
 					columns={columns}
 					// The filters this screen manages travel as external filters: the table merges them with its own
@@ -81,7 +81,7 @@ export function StockReportPage() {
 					reloadTrigger={reload}
 					layout="fixed"
 				/>
-			</section>
+			</ITText>
 		</ITPage>
 	);
 }

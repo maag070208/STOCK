@@ -34,7 +34,6 @@
   "closing": {
     "button": "Close invoice",
     "done": "Invoice closed",
-    "refused": "The invoice could not be closed.",
     "readOnly": "The invoice is closed: read only."
   },
   "columns": {
@@ -80,12 +79,9 @@
     "lines": "Lines",
     "assign": "Assign",
     "reassign": "Change assignment",
-    "addLine": "Add material",
     "expected": "Expected",
     "counted": "Counted",
-    "difference": "Difference",
     "placed": "Placed",
-    "notAssigned": "Not assigned",
     "notCounted": "Not counted",
     "match": "Match",
     "discrepancy": "Discrepancy",

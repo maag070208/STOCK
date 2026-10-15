@@ -31,7 +31,6 @@
     "reactivateLocation": "¿Reactivar la ubicación {{code}}?"
   },
   "detail": {
-    "back": "Volver a almacenes",
     "locations": "Ubicaciones",
     "groups": "Pasillos y racks",
     "noGroups": "Este almacén aún no tiene racks.",

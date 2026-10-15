@@ -3,15 +3,13 @@
     "title": "Suppliers",
     "description": "The companies that send invoices, with their address, payment terms and contacts.",
     "new": "New supplier",
-    "edit": "Edit supplier",
-    "back": "Back to suppliers"
+    "edit": "Edit supplier"
   },
   "customers": {
     "title": "Customers",
     "description": "Who the orders go to, with their address, payment terms and contacts.",
     "new": "New customer",
-    "edit": "Edit customer",
-    "back": "Back to customers"
+    "edit": "Edit customer"
   },
   "columns": {
     "code": "Code",

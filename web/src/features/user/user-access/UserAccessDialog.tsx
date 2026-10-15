@@ -1,13 +1,18 @@
-import { ITAlert, ITButton, ITDialog, ITInput, ITMultiSelect, ITSelect } from "@axzydev/axzy_ui_system";
+import { ITAlert, ITButton, ITDialog, ITFlex, ITGrid, ITInput, ITMultiSelect, ITSelect, ITStack, ITText, type Column } from "@axzydev/axzy_ui_system";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { roleLabel, type PermissionDefinition, type Role } from "@entities/permission";
 import { userApi, type PermissionExceptionView, type Scope, type User } from "@entities/user";
 import { dyn } from "@shared/i18n";
 import { useSubmit } from "@shared/ui/useSubmit";
+import { PlainTable } from "@shared/ui/PlainTable";
+
+// One row of the exceptions: the exception, and the key the kit tells the rows apart by.
+type ExceptionRow = Record<string, unknown> & { id: string; exception: PermissionExceptionView };
 
 // The access of one person: their roles, and their exceptions with reason and expiry.
-// Nobody changes their own access: the API refuses it, and the screen says why.
+// Nobody changes their own access: the API refuses it, and the screen says why. The dialog is the kit's, and the two
+// blocks inside are the kit's stacks, table and fields (web.md section 8).
 export function UserAccessDialog(props: { user: User | null; roles: Role[]; permissions: PermissionDefinition[]; onClose: () => void; onSaved: () => void }) {
 	const { t } = useTranslation(["users", "common"]);
 	const [roles, setRoles] = useState<string[]>([]);
@@ -48,11 +53,36 @@ export function UserAccessDialog(props: { user: User | null; roles: Role[]; perm
 		if ((await exceptionSubmit.run(() => userApi.removeException(user!.id, permission))) !== undefined) setExceptions(await userApi.exceptions(user!.id));
 	}
 
+	const rows: ExceptionRow[] = exceptions.map((exception) => ({ id: exception.permission, exception }));
+
+	const columns: Column<ExceptionRow>[] = [
+		{ key: "permission", label: t("access.permission"), type: "string", render: (row) => permissionName(row.exception.permission) },
+		{ key: "scope", label: t("access.scope"), type: "string", render: (row) => t(dyn(`common:scope.${row.exception.scope}`)) },
+		{ key: "reason", label: t("access.reason"), type: "string", render: (row) => row.exception.reason },
+		{ key: "expiresAt", label: t("access.expiresAt"), type: "string", render: (row) => (row.exception.expiresAt ? new Date(row.exception.expiresAt).toLocaleString() : t("access.never")) },
+		{
+			key: "actions",
+			label: "",
+			type: "actions",
+			className: "sf:text-right",
+			actions: (row) => <ITButton variant="text" label={t("common:actions.remove")} onClick={() => void removeException(row.exception.permission)} />,
+		},
+	];
+
 	return (
 		<ITDialog isOpen onClose={props.onClose} title={t("access.title", { name: user.name })}>
-			<div role="dialog" aria-modal="true" aria-label={t("access.title", { name: user.name })} className="sf:flex sf:min-w-[36rem] sf:max-w-3xl sf:flex-col sf:gap-6">
-				<section className="sf:flex sf:flex-col sf:gap-3">
-					<h3 className="sf:text-title-md">{t("access.roles")}</h3>
+			{/* The kit's dialog does not name itself as one: the role and the label are set here (web.md section 8). */}
+			<ITText
+				as="div"
+				role="dialog"
+				aria-modal="true"
+				aria-label={t("access.title", { name: user.name })}
+				className="sf:flex sf:min-w-[36rem] sf:max-w-3xl sf:flex-col sf:gap-6"
+			>
+				<ITStack spacing={3}>
+					<ITText as="h3" className="sf:text-title-md">
+						{t("access.roles")}
+					</ITText>
 					<ITMultiSelect
 						name="roles"
 						value={roles}
@@ -60,76 +90,80 @@ export function UserAccessDialog(props: { user: User | null; roles: Role[]; perm
 						onChange={(selected) => setRoles(selected.map(String))}
 					/>
 					{rolesSubmit.error && <ITAlert variant="error">{rolesSubmit.error}</ITAlert>}
-					<div>
+					<ITFlex>
 						<ITButton label={t("access.saveRoles")} onClick={() => void saveRoles()} disabled={rolesSubmit.submitting} />
-					</div>
-				</section>
+					</ITFlex>
+				</ITStack>
 
-				<section className="sf:flex sf:flex-col sf:gap-3">
-					<h3 className="sf:text-title-md">{t("access.exceptions")}</h3>
-					<p className="sf:text-body-md sf:text-on-surface-muted">{t("access.exceptionsDescription")}</p>
+				<ITStack spacing={3}>
+					<ITText as="h3" className="sf:text-title-md">
+						{t("access.exceptions")}
+					</ITText>
+					<ITText muted>{t("access.exceptionsDescription")}</ITText>
 					{exceptions.length === 0 ? (
-						<p className="sf:text-body-md sf:text-on-surface-muted">{t("access.none")}</p>
+						<ITText muted>{t("access.none")}</ITText>
 					) : (
-						<table className="sf:w-full sf:text-body-md" data-testid="exceptions">
-							<thead className="sf:text-label-sm sf:uppercase sf:text-on-surface-muted">
-								<tr>
-									<th className="sf:p-2 sf:text-left">{t("access.permission")}</th>
-									<th className="sf:p-2 sf:text-left">{t("access.scope")}</th>
-									<th className="sf:p-2 sf:text-left">{t("access.reason")}</th>
-									<th className="sf:p-2 sf:text-left">{t("access.expiresAt")}</th>
-									<th />
-								</tr>
-							</thead>
-							<tbody>
-								{exceptions.map((exception) => (
-									<tr key={exception.permission} className="sf:border-t sf:border-outline">
-										<td className="sf:p-2">{permissionName(exception.permission)}</td>
-										<td className="sf:p-2">{t(dyn(`common:scope.${exception.scope}`))}</td>
-										<td className="sf:p-2">{exception.reason}</td>
-										<td className="sf:p-2">{exception.expiresAt ? new Date(exception.expiresAt).toLocaleString() : t("access.never")}</td>
-										<td className="sf:p-2 sf:text-right">
-											<ITButton variant="text" label={t("common:actions.remove")} onClick={() => void removeException(exception.permission)} />
-										</td>
-									</tr>
-								))}
-							</tbody>
-						</table>
+						<PlainTable<ExceptionRow>
+							columns={columns}
+							data={rows}
+							size="sm"
+						/>
 					)}
-					<div className="sf:grid sf:grid-cols-1 sf:gap-3 sf:md:grid-cols-2">
-						<ITSelect
-							name="permission"
-							label={t("access.permission")}
-							value={draft.permission}
-							onChange={(e) => setDraft((d) => ({ ...d, permission: e.target.value, scope: "ALL" }))}
-							options={[{ value: "", label: "—" }, ...props.permissions.map((p) => ({ value: p.key, label: permissionName(p.key) }))]}
-							valueField="value"
-							labelField="label"
-							error={exceptionSubmit.fieldErrors.permission}
-						/>
-						<ITSelect
-							name="scope"
-							label={t("access.scope")}
-							value={draft.scope}
-							onChange={(e) => setDraft((d) => ({ ...d, scope: e.target.value as Scope }))}
-							options={(draft.permission ? scopesOf(draft.permission) : ["NONE", "ALL"]).map((scope) => ({ value: scope, label: t(dyn(`common:scope.${scope}`)) }))}
-							valueField="value"
-							labelField="label"
-							error={exceptionSubmit.fieldErrors.scope}
-						/>
-						<ITInput name="reason" label={t("access.reason")} value={draft.reason} onChange={(e) => setDraft((d) => ({ ...d, reason: e.target.value }))} error={exceptionSubmit.fieldErrors.reason} touched={!!exceptionSubmit.fieldErrors.reason} />
-						<div className="sf:flex sf:flex-col sf:gap-1">
-							<label htmlFor="expiresAt" className="sf:text-label-md">{t("access.expiresAt")}</label>
-							<input id="expiresAt" type="datetime-local" value={draft.expiresAt} onChange={(e) => setDraft((d) => ({ ...d, expiresAt: e.target.value }))} className="sf:h-10 sf:rounded-sm sf:border sf:border-outline-strong sf:bg-surface-elevated sf:px-3 sf:text-body-md" />
-							{exceptionSubmit.fieldErrors.expiresAt && <span className="sf:text-body-md sf:text-danger">{exceptionSubmit.fieldErrors.expiresAt}</span>}
-						</div>
-					</div>
+					<ITGrid container spacing={3}>
+						<ITGrid item xs={12} sm={6}>
+							<ITSelect
+								name="permission"
+								label={t("access.permission")}
+								value={draft.permission}
+								onChange={(e) => setDraft((d) => ({ ...d, permission: e.target.value, scope: "ALL" }))}
+								options={[{ value: "", label: "—" }, ...props.permissions.map((p) => ({ value: p.key, label: permissionName(p.key) }))]}
+								valueField="value"
+								labelField="label"
+								error={exceptionSubmit.fieldErrors.permission}
+							/>
+						</ITGrid>
+						<ITGrid item xs={12} sm={6}>
+							<ITSelect
+								name="scope"
+								label={t("access.scope")}
+								value={draft.scope}
+								onChange={(e) => setDraft((d) => ({ ...d, scope: e.target.value as Scope }))}
+								options={(draft.permission ? scopesOf(draft.permission) : ["NONE", "ALL"]).map((scope) => ({ value: scope, label: t(dyn(`common:scope.${scope}`)) }))}
+								valueField="value"
+								labelField="label"
+								error={exceptionSubmit.fieldErrors.scope}
+							/>
+						</ITGrid>
+						<ITGrid item xs={12} sm={6}>
+							<ITInput name="reason" label={t("access.reason")} value={draft.reason} onChange={(e) => setDraft((d) => ({ ...d, reason: e.target.value }))} error={exceptionSubmit.fieldErrors.reason} touched={!!exceptionSubmit.fieldErrors.reason} />
+						</ITGrid>
+						<ITGrid item xs={12} sm={6}>
+							<ITStack spacing={1}>
+								<ITText as="label" htmlFor="expiresAt" className="sf:text-label-md">
+									{t("access.expiresAt")}
+								</ITText>
+								{/*
+									The kit has a date and a time picker, and no single field for both. Splitting it would change the
+									field and the value the API receives, so this stays a native `datetime-local`.
+								*/}
+								<input
+									id="expiresAt"
+									name="expiresAt"
+									type="datetime-local"
+									value={draft.expiresAt}
+									onChange={(e) => setDraft((d) => ({ ...d, expiresAt: e.target.value }))}
+									className="sf:h-10 sf:rounded-sm sf:border sf:border-outline-strong sf:bg-surface-elevated sf:px-3 sf:text-body-md"
+								/>
+								{exceptionSubmit.fieldErrors.expiresAt && <ITText className="sf:text-danger">{exceptionSubmit.fieldErrors.expiresAt}</ITText>}
+							</ITStack>
+						</ITGrid>
+					</ITGrid>
 					{exceptionSubmit.error && <ITAlert variant="error">{exceptionSubmit.error}</ITAlert>}
-					<div>
+					<ITFlex>
 						<ITButton label={t("access.add")} onClick={() => void addException()} disabled={!draft.permission || exceptionSubmit.submitting} />
-					</div>
-				</section>
-			</div>
+					</ITFlex>
+				</ITStack>
+			</ITText>
 		</ITDialog>
 	);
 }

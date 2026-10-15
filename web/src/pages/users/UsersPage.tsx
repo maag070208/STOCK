@@ -1,4 +1,4 @@
-import { ITBadget, ITButton, ITConfirmDialog, ITDataTable, ITDialog, ITDropdownMenu, ITPage, type Column, type ITDropdownMenuItem } from "@axzydev/axzy_ui_system";
+import { ITBadget, ITButton, ITConfirmDialog, ITDataTable, ITDialog, ITDropdownMenu, ITFlex, ITPage, ITText, type Column, type ITDropdownMenuItem } from "@axzydev/axzy_ui_system";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { accessApi, roleLabel, type PermissionDefinition, type Role } from "@entities/permission";
@@ -132,13 +132,13 @@ export function UsersPage() {
 			/>
 			<ITDialog isOpen={!!secret} onClose={() => setSecret(null)} title={secret?.title}>
 				{secret && (
-					<div role="dialog" aria-modal="true" aria-label={secret.title} className="sf:flex sf:max-w-lg sf:flex-col sf:gap-4" data-testid="temporary-password">
-						<p className="sf:text-body-md">{secret.description}</p>
+					<ITText as="div" role="dialog" aria-modal="true" aria-label={secret.title} className="sf:flex sf:max-w-lg sf:flex-col sf:gap-4" data-testid="temporary-password">
+						<ITText>{secret.description}</ITText>
 						<SecretValue label={t("created.password")} value={secret.password} />
-						<div className="sf:flex sf:justify-end">
+						<ITFlex justify="end">
 							<ITButton label={t("common:actions.close")} onClick={() => setSecret(null)} />
-						</div>
-					</div>
+						</ITFlex>
+					</ITText>
 				)}
 			</ITDialog>
 		</ITPage>

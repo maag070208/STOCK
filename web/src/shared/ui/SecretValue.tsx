@@ -1,4 +1,4 @@
-import { ITButton } from "@axzydev/axzy_ui_system";
+import { ITButton, ITFlex, ITStack, ITText } from "@axzydev/axzy_ui_system";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -15,14 +15,14 @@ export function SecretValue({ label, value }: { label: string; value: string }) 
 		}
 	}
 	return (
-		<div className="sf:flex sf:flex-col sf:gap-2">
-			<span className="sf:text-label-md">{label}</span>
-			<div className="sf:flex sf:items-center sf:gap-3">
+		<ITStack spacing={2}>
+			<ITText className="sf:text-label-md">{label}</ITText>
+			<ITFlex align="center" gap={3}>
 				<code data-testid="secret-value" className="sf:flex-1 sf:select-all sf:rounded-sm sf:border sf:border-outline-strong sf:bg-surface sf:px-3 sf:py-2 sf:text-code-sm">
 					{value}
 				</code>
 				<ITButton variant="outlined" label={copied ? t("actions.copied") : t("actions.copy")} onClick={() => void copy()} />
-			</div>
-		</div>
+			</ITFlex>
+		</ITStack>
 	);
 }

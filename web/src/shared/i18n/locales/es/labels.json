@@ -13,7 +13,6 @@
   },
   "editor": {
     "newTitle": "Nueva plantilla",
-    "back": "Volver a etiquetas",
     "key": "Clave",
     "keyHint": "MAYÚSCULAS_CON_GUION_BAJO, como PRODUCT. No cambia después.",
     "nameEs": "Nombre en español",

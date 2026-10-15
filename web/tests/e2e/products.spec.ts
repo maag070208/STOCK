@@ -25,11 +25,10 @@ test("an administrator reviews the inventory file, imports it, and a second impo
 	await page.locator('input[name="file"]').setInputFiles(file);
 	await page.getByRole("button", { name: "Revisar archivo" }).click();
 
-	const report = page.getByTestId("import-report");
-	await expect(report.getByText("Materiales nuevos", { exact: true })).toBeVisible();
-	await expect(report.getByText("La suma de existencias (60) coincide con el total de control (60).")).toBeVisible();
+	await expect(page.getByText("Materiales nuevos", { exact: true })).toBeVisible();
+	await expect(page.getByText("La suma de existencias (60) coincide con el total de control (60).")).toBeVisible();
 	// The two rows of the note have no code: they are listed with the API's reason.
-	await expect(page.getByTestId("rejected-rows").getByRole("row").filter({ hasText: "Este campo es obligatorio." })).toHaveCount(2);
+	await expect(page.getByRole("row").filter({ hasText: "Este campo es obligatorio." })).toHaveCount(2);
 	await page.getByRole("button", { name: "Importar 3 materiales nuevos" }).click();
 	await expect(page.getByText("Se importaron 3 materiales nuevos. 0 ya existían.")).toBeVisible();
 
@@ -64,9 +63,9 @@ test("an administrator creates a material, and its code is its barcode", async (
 	const row = page.getByRole("row").filter({ hasText: code });
 	await expect(row).toContainText("Codo 90° galvanizado");
 	await row.getByText("Codo 90° galvanizado").click();
-	const detail = page.getByTestId("product-detail");
-	await expect(detail).toContainText("Código de barras");
-	await expect(detail.getByText(code)).toHaveCount(2);
+	await expect(page.getByText("Código de barras", { exact: false }).first()).toBeVisible();
+	// The code is the value of its card, and the barcode is the same code: two exact values on the screen.
+	await expect(page.getByText(code, { exact: true })).toHaveCount(2);
 });
 
 test("an office user sees the materials, and cannot create them or open the import", async ({ page }) => {

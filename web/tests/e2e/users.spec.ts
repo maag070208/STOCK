@@ -75,7 +75,7 @@ test("an administrator gives a person an exception with a reason, and changes th
 	await dialog.locator('select[name="permission"]').selectOption("audit.view");
 	await dialog.getByLabel("Motivo", { exact: true }).fill("Revisión mensual");
 	await dialog.getByRole("button", { name: "Agregar excepción" }).click();
-	await expect(dialog.getByTestId("exceptions").getByText("Revisión mensual")).toBeVisible();
+	await expect(dialog.getByRole("row").filter({ hasText: "Revisión mensual" })).toBeVisible();
 	const exceptions = await call("GET", `/users/${user.id}/permissions`, { token: await adminToken() });
 	expect(exceptions.json.map((e: { permission: string }) => e.permission)).toEqual(["audit.view"]);
 });

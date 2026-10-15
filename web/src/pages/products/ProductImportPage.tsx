@@ -1,13 +1,18 @@
-import { ITAlert, ITBadget, ITButton, ITPage, ITStatCard } from "@axzydev/axzy_ui_system";
+import { ITAlert, ITBadget, ITButton, ITFlex, ITGrid, ITPage, ITStack, ITStatCard, ITText, type Column } from "@axzydev/axzy_ui_system";
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { canConfirm, importSummary, productApi, type ImportReport } from "@entities/product";
 import { formatNumber } from "@shared/lib/format";
 import { useSubmit } from "@shared/ui/useSubmit";
+import { PlainTable } from "@shared/ui/PlainTable";
+
+// One rejected row of the file, which the kit tells apart by its row and field.
+type RejectedRow = Record<string, unknown> & { id: string; row: number; field: string; message: string };
 
 // The import of the legacy inventory file (products.md section 6): the file is reviewed first and nothing is written;
-// the report shows what would be imported and what not, and only then can the same file be confirmed.
+// the report shows what would be imported and what not, and only then can the same file be confirmed. Everything but
+// the file input — the kit has no component that keeps this flow of choosing a file — is a component of the kit.
 export function ProductImportPage() {
 	const { t, i18n } = useTranslation(["products", "common"]);
 	const navigate = useNavigate();
@@ -33,23 +38,33 @@ export function ProductImportPage() {
 		if (result) setReport(result);
 	}
 
+	const rejected: RejectedRow[] = (report?.rejected ?? []).map((row) => ({ id: `${row.row}-${row.field}`, row: row.row, field: row.field, message: row.message }));
+
+	const columns: Column<RejectedRow>[] = [
+		{ key: "row", label: t("importPage.row"), type: "string", render: (row) => String(row.row) },
+		{ key: "field", label: t("importPage.field"), type: "string", render: (row) => t(`importPage.fields.${row.field}` as "importPage.fields.code", { defaultValue: row.field }) },
+		{ key: "message", label: t("importPage.reason"), type: "string", render: (row) => row.message },
+	];
+
 	return (
 		<ITPage
 			title={t("importPage.title")}
 			description={t("importPage.description")}
+			breadcrumbs={[{ label: t("title"), onClick: () => navigate("/products") }, { label: t("importPage.title") }]}
 			noPadding
-			actions={<ITButton variant="outlined" label={t("detail.back")} onClick={() => navigate("/products")} />}
 		>
-			<div className="sf:flex sf:max-w-4xl sf:flex-col sf:gap-6">
-				<div className="sf:flex sf:flex-col sf:gap-2">
-					<span className="sf:text-label-md" id="import-file-label">{t("importPage.file")}</span>
-					<div className="sf:flex sf:flex-wrap sf:items-center sf:gap-3">
+			<ITStack spacing={6} className="sf:max-w-4xl">
+				<ITStack spacing={2}>
+					<ITText as="label" htmlFor="import-file" className="sf:text-label-md">
+						{t("importPage.file")}
+					</ITText>
+					<ITFlex wrap="wrap" align="center" gap={3}>
 						{/* The browser's own file button speaks the browser's language: it is hidden, and this one opens it. */}
 						<input
 							ref={picker}
+							id="import-file"
 							type="file"
 							name="file"
-							aria-labelledby="import-file-label"
 							accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 							className="sf:sr-only"
 							onChange={(e) => {
@@ -60,51 +75,52 @@ export function ProductImportPage() {
 							}}
 						/>
 						<ITButton variant="outlined" label={t("importPage.choose")} onClick={() => picker.current?.click()} />
-						<span className="sf:text-body-md sf:text-on-surface-muted" data-testid="import-file-name">{file?.name ?? t("importPage.noFile")}</span>
+						<ITText muted data-testid="import-file-name">
+							{file?.name ?? t("importPage.noFile")}
+						</ITText>
 						<ITButton label={review.submitting ? t("importPage.reviewing") : t("importPage.review")} onClick={() => void runReview()} disabled={!file || review.submitting} />
-					</div>
-				</div>
+					</ITFlex>
+				</ITStack>
 				{review.error && <ITAlert variant="error">{review.error}</ITAlert>}
 
 				{report && summary && (
-					<section aria-label={t("importPage.report")} className="sf:flex sf:flex-col sf:gap-4" data-testid="import-report">
-						<h2 className="sf:text-title-md">{t("importPage.report")}</h2>
-						<div className="sf:grid sf:grid-cols-2 sf:gap-3 sf:md:grid-cols-4">
-							<ITStatCard label={t("importPage.accepted")} value={number(summary.accepted)} />
-							<ITStatCard label={t("importPage.newProducts")} value={number(summary.newProducts)} />
-							<ITStatCard label={t("importPage.existingProducts")} value={number(summary.existingProducts)} />
-							<ITStatCard label={t("importPage.rejected")} value={number(summary.rejected)} />
-						</div>
-						<div className="sf:flex sf:items-center sf:gap-3">
-							<span className="sf:text-label-md">{t("importPage.control.label")}</span>
+					<ITStack spacing={4}>
+						<ITText as="h2" className="sf:text-title-md">
+							{t("importPage.report")}
+						</ITText>
+						<ITGrid container spacing={3}>
+							<ITGrid item xs={12} sm={6} md={3}>
+								<ITStatCard label={t("importPage.accepted")} value={number(summary.accepted)} />
+							</ITGrid>
+							<ITGrid item xs={12} sm={6} md={3}>
+								<ITStatCard label={t("importPage.newProducts")} value={number(summary.newProducts)} />
+							</ITGrid>
+							<ITGrid item xs={12} sm={6} md={3}>
+								<ITStatCard label={t("importPage.existingProducts")} value={number(summary.existingProducts)} />
+							</ITGrid>
+							<ITGrid item xs={12} sm={6} md={3}>
+								<ITStatCard label={t("importPage.rejected")} value={number(summary.rejected)} />
+							</ITGrid>
+						</ITGrid>
+						<ITFlex align="center" gap={3}>
+							<ITText className="sf:text-label-md">{t("importPage.control.label")}</ITText>
 							<ITBadget
 								color={summary.control === "mismatch" ? "danger" : summary.control === "matches" ? "success" : "gray"}
 								label={t(`importPage.control.${summary.control}`, { stock: number(report.stockTotal), control: number(report.controlTotal) })}
 							/>
-						</div>
+						</ITFlex>
 
 						{report.rejected.length > 0 && (
-							<div className="sf:flex sf:flex-col sf:gap-2">
-								<h3 className="sf:text-title-sm">{t("importPage.rejectedTitle")}</h3>
-								<table className="sf:w-full sf:text-left sf:text-body-md" data-testid="rejected-rows">
-									<thead>
-										<tr className="sf:text-label-md sf:text-on-surface-muted">
-											<th className="sf:py-2">{t("importPage.row")}</th>
-											<th className="sf:py-2">{t("importPage.field")}</th>
-											<th className="sf:py-2">{t("importPage.reason")}</th>
-										</tr>
-									</thead>
-									<tbody>
-										{report.rejected.map((row) => (
-											<tr key={`${row.row}-${row.field}`} className="sf:border-t sf:border-outline-variant">
-												<td className="sf:py-2">{row.row}</td>
-												<td className="sf:py-2">{t(`importPage.fields.${row.field}` as "importPage.fields.code", { defaultValue: row.field })}</td>
-												<td className="sf:py-2">{row.message}</td>
-											</tr>
-										))}
-									</tbody>
-								</table>
-							</div>
+							<ITStack spacing={2}>
+								<ITText as="h3" className="sf:text-title-sm">
+									{t("importPage.rejectedTitle")}
+								</ITText>
+								<PlainTable<RejectedRow>
+									columns={columns}
+									data={rejected}
+									size="sm"
+								/>
+							</ITStack>
 						)}
 
 						{report.created !== null && report.created !== undefined ? (
@@ -112,18 +128,18 @@ export function ProductImportPage() {
 								{report.created > 0 ? t("importPage.done", { created: number(report.created), existing: number(report.existingProducts) }) : t("importPage.nothingNew")}
 							</ITAlert>
 						) : (
-							<div className="sf:flex sf:justify-end">
+							<ITFlex justify="end">
 								<ITButton
 									label={confirm.submitting ? t("importPage.confirming") : t("importPage.confirm", { count: report.newProducts })}
 									onClick={() => void runConfirm()}
 									disabled={!canConfirm(report) || confirm.submitting}
 								/>
-							</div>
+							</ITFlex>
 						)}
 						{confirm.error && <ITAlert variant="error">{confirm.error}</ITAlert>}
-					</section>
+					</ITStack>
 				)}
-			</div>
+			</ITStack>
 		</ITPage>
 	);
 }

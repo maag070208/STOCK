@@ -21,7 +21,6 @@
     "barcodeHint": "Si lo dejas vacío, se usa el código del material."
   },
   "detail": {
-    "back": "Volver a materiales",
     "legacyId": "Id del archivo anterior",
     "createdAt": "Alta",
     "none": "—"

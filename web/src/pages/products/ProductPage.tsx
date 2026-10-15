@@ -1,4 +1,4 @@
-import { ITBadget, ITButton, ITPage } from "@axzydev/axzy_ui_system";
+import { ITBadget, ITButton, ITFlex, ITGrid, ITPage, ITStack, ITStatCard, ITText } from "@axzydev/axzy_ui_system";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
@@ -10,7 +10,8 @@ import { ProductDialog } from "@features/product/ProductDialog";
 import { formatDateTime } from "@shared/lib/format";
 import { toast } from "@app/store";
 
-// One material: its fields, editing for who can manage, and its label for who prints.
+// One material: its fields, editing for who can manage, and its label for who prints. The way back is the breadcrumbs,
+// and the detail is the kit's grid and cards (web.md section 8).
 export function ProductPage() {
 	const { t, i18n } = useTranslation(["products", "common", "labels"]);
 	const { id = "" } = useParams();
@@ -36,51 +37,61 @@ export function ProductPage() {
 		void catalogApi.items("UNIT_OF_MEASURE").then(setUnits).catch(() => setUnits([]));
 	}, [load]);
 
-	const back = <ITButton variant="outlined" label={t("detail.back")} onClick={() => navigate("/products")} />;
+	const breadcrumbs = [{ label: t("title"), onClick: () => navigate("/products") }, { label: product ? `${product.code} · ${product.name}` : t("title") }];
+
 	if (missing) {
 		return (
-			<ITPage title={t("title")} noPadding>
-				<p className="sf:text-body-md">{t("common:errors.notFound")}</p>
-				{back}
+			<ITPage title={t("title")} breadcrumbs={breadcrumbs} noPadding>
+				<ITText>{t("common:errors.notFound")}</ITText>
 			</ITPage>
 		);
 	}
 
-	const fields: [string, React.ReactNode][] = product
+	const fields: { label: string; value: string }[] = product
 		? [
-				[t("columns.code"), product.code],
-				[t("columns.name"), product.name],
-				[t("columns.barcode"), product.barcode],
-				[t("columns.unit"), product.unit.label ?? product.unit.code],
-				[t("detail.legacyId"), product.legacyId ?? t("detail.none")],
-				[t("detail.createdAt"), formatDateTime(product.createdAt, i18n.language)],
-				[t("columns.status"), <ITBadget color={product.active ? "success" : "gray"} label={t(product.active ? "common:status.active" : "common:status.inactive")} />],
+				{ label: t("columns.code"), value: product.code },
+				{ label: t("columns.name"), value: product.name },
+				{ label: t("columns.barcode"), value: product.barcode },
+				{ label: t("columns.unit"), value: product.unit.label ?? product.unit.code },
+				{ label: t("detail.legacyId"), value: product.legacyId === null || product.legacyId === undefined ? t("detail.none") : String(product.legacyId) },
+				{ label: t("detail.createdAt"), value: formatDateTime(product.createdAt, i18n.language) },
 			]
 		: [];
 
 	return (
 		<ITPage
 			title={product ? `${product.code} · ${product.name}` : t("title")}
+			breadcrumbs={breadcrumbs}
 			noPadding
 			loading={!product}
 			actions={
-				<div className="sf:flex sf:gap-2">
-					{back}
-					{canPrint && product?.active && (
-						<ITButton variant="outlined" label={t("labels:print.button")} onClick={() => setPrinting({ kind: "PRODUCT", productId: product.id, title: `${product.code} · ${product.name}` })} />
-					)}
-					{canManage && <ITButton label={t("actions.edit")} onClick={() => setEditing(true)} disabled={units.length === 0} />}
-				</div>
+				product ? (
+					<ITFlex gap={2}>
+						{canPrint && product.active && (
+							<ITButton variant="outlined" label={t("labels:print.button")} onClick={() => setPrinting({ kind: "PRODUCT", productId: product.id, title: `${product.code} · ${product.name}` })} />
+						)}
+						{canManage && <ITButton label={t("actions.edit")} onClick={() => setEditing(true)} disabled={units.length === 0} />}
+					</ITFlex>
+				) : undefined
 			}
 		>
-			<dl className="sf:grid sf:max-w-2xl sf:grid-cols-[max-content_1fr] sf:gap-x-8 sf:gap-y-3" data-testid="product-detail">
-				{fields.map(([label, value]) => (
-					<div key={label} className="sf:contents">
-						<dt className="sf:text-label-md sf:text-on-surface-muted">{label}</dt>
-						<dd className="sf:text-body-md">{value}</dd>
-					</div>
+			<ITGrid container spacing={3} className="sf:max-w-2xl">
+				{fields.map((field) => (
+					<ITGrid key={field.label} item xs={12} sm={6}>
+						<ITStatCard label={field.label} value={field.value} />
+					</ITGrid>
 				))}
-			</dl>
+				{product && (
+					<ITGrid item xs={12} sm={6}>
+						<ITStack spacing={1}>
+							<ITText muted className="sf:text-label-md">
+								{t("columns.status")}
+							</ITText>
+							<ITBadget color={product.active ? "success" : "gray"} label={t(product.active ? "common:status.active" : "common:status.inactive")} />
+						</ITStack>
+					</ITGrid>
+				)}
+			</ITGrid>
 			{product && (
 				<ProductDialog
 					isOpen={editing}

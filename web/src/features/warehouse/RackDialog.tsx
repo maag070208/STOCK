@@ -1,4 +1,4 @@
-import { ITAlert, ITInput } from "@axzydev/axzy_ui_system";
+import { ITAlert, ITGrid, ITInput, ITText } from "@axzydev/axzy_ui_system";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { existingCodes, locationApi, rackCodes, rackErrors, type Location, type RackValues, type Warehouse } from "@entities/warehouse";
@@ -45,24 +45,25 @@ export function RackDialog(props: { warehouse: Warehouse; isOpen: boolean; onClo
 	return (
 		<FormDialog isOpen={props.isOpen} title={t("rack.new")} onClose={props.onClose} onSubmit={() => void save()} submitting={submit.submitting} error={submit.error} submitLabel={t("common:actions.create")}>
 			<ITInput name="warehouse" label={t("rack.warehouse")} value={`${props.warehouse.code} · ${props.warehouse.name}`} onChange={() => undefined} disabled />
-			<div className="sf:grid sf:grid-cols-3 sf:gap-3">
+			<ITGrid container spacing={3}>
 				{(["aisle", "rack", "levels"] as const).map((field) => (
-					<ITInput
-						key={field}
-						name={field}
-						label={t(`rack.${field}`)}
-						value={values[field]}
-						maxLength={field === "aisle" ? 1 : 2}
-						onChange={(e) => set(field)(field === "aisle" ? e.target.value.toUpperCase() : e.target.value)}
-						error={error(field) ?? hints[field]}
-						touched={!!error(field)}
-						required
-					/>
+					<ITGrid key={field} item xs={12} sm={4}>
+						<ITInput
+							name={field}
+							label={t(`rack.${field}`)}
+							value={values[field]}
+							maxLength={field === "aisle" ? 1 : 2}
+							onChange={(e) => set(field)(field === "aisle" ? e.target.value.toUpperCase() : e.target.value)}
+							error={error(field) ?? hints[field]}
+							touched={!!error(field)}
+							required
+						/>
+					</ITGrid>
 				))}
-			</div>
-			<p className="sf:text-body-md" data-testid="rack-preview" aria-live="polite">
+			</ITGrid>
+			<ITText data-testid="rack-preview" aria-live="polite">
 				{codes.length > 0 ? t("rack.preview", { codes: codes.join(", ") }) : t("rack.previewEmpty")}
-			</p>
+			</ITText>
 			{existing.length > 0 && <ITAlert variant="error">{t("rack.exists", { codes: existing.join(", ") })}</ITAlert>}
 		</FormDialog>
 	);

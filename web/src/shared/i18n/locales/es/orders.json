@@ -8,8 +8,7 @@
 		"warehouse": "Almacén",
 		"dueDate": "Entrega",
 		"status": "Estado",
-		"operator": "Operador",
-		"progress": "Surtido"
+		"operator": "Operador"
 	},
 	"status": {
 		"CREATED": "Creada",
@@ -38,7 +37,8 @@
 		"save": "Guardar orden",
 		"saving": "Guardando…",
 		"noLines": "Agrega al menos un material.",
-		"chooseWarehouse": "Elige primero el almacén que surte: la disponibilidad aparecerá aquí."
+		"chooseWarehouse": "Elige primero el almacén que surte: la disponibilidad aparecerá aquí.",
+		"line": "Línea {{index}}"
 	},
 	"lineErrors": {
 		"FIELD_REQUIRED": "Escribe la cantidad.",
@@ -71,7 +71,6 @@
 	},
 	"alerts": {
 		"title": "Alertas de entrega",
-		"empty": "Ninguna orden está por vencer.",
 		"BEFORE": "Vence mañana",
 		"DUE": "Vence hoy",
 		"OVERDUE": "Vencida"
@@ -105,8 +104,7 @@
 		"body": "Las líneas, lo surtido y lo reservado siguen con la orden.",
 		"operator": "Operador nuevo",
 		"note": "Nota",
-		"noteHint": "Por qué cambia de operador.",
-		"confirm": "Cambiar"
+		"noteHint": "Por qué cambia de operador."
 	},
 	"transferDialog": {
 		"title": "Pasar material surtido a otra orden",
@@ -117,7 +115,7 @@
 		"quantity": "Cantidad",
 		"note": "Nota",
 		"noteHint": "Por qué pasa a la otra orden.",
-				"abovePicked": "Es más de lo que se surtió de la línea.",
+		"abovePicked": "Es más de lo que se surtió de la línea.",
 		"aboveTarget": "La orden destino no necesita esa cantidad.",
 		"confirm": "Pasar"
 	},

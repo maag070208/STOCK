@@ -16,7 +16,7 @@ test("an administrator creates a warehouse and a rack, and the groups show the r
 	// The new warehouse opens, with its temporary location and no racks yet.
 	await expect(page.getByRole("heading", { name: `${code} · Almacén de prueba` })).toBeVisible();
 	await expect(page.getByText("Este almacén aún no tiene racks.")).toBeVisible();
-	await expect(page.getByTestId("locations").getByText("TEMPORARY · Temporal")).toBeVisible();
+	await expect(page.getByText("TEMPORARY · Temporal")).toBeVisible();
 
 	await page.getByRole("button", { name: "Nuevo rack" }).click();
 	dialog = page.getByRole("dialog");
@@ -31,7 +31,7 @@ test("an administrator creates a warehouse and a rack, and the groups show the r
 	const rack = page.getByRole("button", { name: "Rack K05: 3 ubicaciones" });
 	await expect(rack).toBeVisible();
 	await rack.click();
-	const rows = page.getByTestId("locations").getByRole("row");
+	const rows = page.getByRole("table").getByRole("row");
 	await expect(rows.filter({ hasText: /K05[ABC]/ })).toHaveCount(3);
 	await expect(rows.filter({ hasText: "TEMPORARY" })).toHaveCount(0);
 });

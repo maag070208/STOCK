@@ -1,4 +1,4 @@
-import { ITBadget, ITButton, ITConfirmDialog, ITDataTable, ITDropdownMenu, ITPage, type Column, type ColumnFilters, type ITDropdownMenuItem } from "@axzydev/axzy_ui_system";
+import { ITBadget, ITButton, ITConfirmDialog, ITDataTable, ITDropdownMenu, ITFlex, ITPage, ITStack, ITText, type Column, type ColumnFilters, type ITDropdownMenuItem } from "@axzydev/axzy_ui_system";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
@@ -15,7 +15,8 @@ type Group = { aisle: string; rack: string };
 type Confirm = { kind: "deactivateLocation" | "reactivateLocation"; location: Location };
 
 // One warehouse: its aisles and racks (the groups of locations.md section 3) and its locations.
-// A rack's chip filters the list to that rack. A new rack comes from the rack form.
+// A rack's chip filters the list to that rack. A new rack comes from the rack form. The way back is the breadcrumbs
+// and everything on the screen is a component of the kit (web.md section 8).
 export function WarehousePage() {
 	const { t } = useTranslation(["warehouses", "common", "labels"]);
 	const { id = "" } = useParams();
@@ -115,11 +116,12 @@ export function WarehousePage() {
 		}
 	}
 
+	const breadcrumbs = [{ label: t("title"), onClick: () => navigate("/warehouses") }, { label: warehouse ? `${warehouse.code} · ${warehouse.name}` : t("title") }];
+
 	if (missing) {
 		return (
-			<ITPage title={t("title")} noPadding>
-				<p className="sf:text-body-md">{t("common:errors.notFound")}</p>
-				<ITButton variant="outlined" label={t("detail.back")} onClick={() => navigate("/warehouses")} />
+			<ITPage title={t("title")} breadcrumbs={breadcrumbs} noPadding>
+				<ITText>{t("common:errors.notFound")}</ITText>
 			</ITPage>
 		);
 	}
@@ -128,22 +130,20 @@ export function WarehousePage() {
 		<ITPage
 			title={warehouse ? `${warehouse.code} · ${warehouse.name}` : t("title")}
 			description={t("description")}
+			breadcrumbs={breadcrumbs}
 			noPadding
 			loading={!warehouse}
-			actions={
-				<div className="sf:flex sf:gap-2">
-					<ITButton variant="outlined" label={t("detail.back")} onClick={() => navigate("/warehouses")} />
-					{canManage && warehouse?.active && <ITButton label={t("rack.new")} onClick={() => setCreating(true)} />}
-				</div>
-			}
+			actions={canManage && warehouse?.active ? <ITButton label={t("rack.new")} onClick={() => setCreating(true)} /> : undefined}
 		>
-			<div className="sf:flex sf:flex-col sf:gap-6">
-				<section aria-label={t("detail.groups")} className="sf:flex sf:flex-col sf:gap-3" data-testid="location-groups">
-					<h2 className="sf:text-title-md">{t("detail.groups")}</h2>
-					{groups.length === 0 && <p className="sf:text-body-md sf:text-on-surface-muted">{t("detail.noGroups")}</p>}
+			<ITStack spacing={6}>
+				<ITStack spacing={3}>
+					<ITText as="h2" className="sf:text-title-md">
+						{t("detail.groups")}
+					</ITText>
+					{groups.length === 0 && <ITText muted>{t("detail.noGroups")}</ITText>}
 					{groups.map((aisle) => (
-						<div key={aisle.aisle} className="sf:flex sf:flex-wrap sf:items-center sf:gap-2" data-aisle={aisle.aisle}>
-							<span className="sf:w-24 sf:text-label-md">{t("detail.aisle", { aisle: aisle.aisle })}</span>
+						<ITFlex key={aisle.aisle} wrap="wrap" align="center" gap={2}>
+							<ITText className="sf:w-24 sf:text-label-md">{t("detail.aisle", { aisle: aisle.aisle })}</ITText>
 							{aisle.racks.map((rack) => {
 								const code = `${aisle.aisle}${rack.rack}`;
 								const selected = group?.aisle === aisle.aisle && group.rack === rack.rack;
@@ -158,33 +158,27 @@ export function WarehousePage() {
 									/>
 								);
 							})}
-						</div>
+						</ITFlex>
 					))}
-				</section>
+				</ITStack>
 
 				{(canStaff || canAssign) && <StaffTemplate warehouseId={id} canManage={canStaff} onSaved={() => toast(t("common:saved"))} />}
 
-				<section aria-label={t("detail.locations")} className="sf:flex sf:flex-col sf:gap-3">
-					<div className="sf:flex sf:items-center sf:gap-3">
-						<h2 className="sf:text-title-md">{t("detail.locations")}</h2>
+				<ITStack spacing={3}>
+					<ITFlex align="center" gap={3}>
+						<ITText as="h2" className="sf:text-title-md">
+							{t("detail.locations")}
+						</ITText>
 						{group && (
 							<>
 								<ITBadget color="primary" label={t("detail.showing", { group: `${group.aisle}${group.rack}` })} />
 								<ITButton size="sm" variant="text" label={t("detail.showAll")} onClick={() => setGroup(null)} />
 							</>
 						)}
-					</div>
-					<div data-testid="locations">
-						<ITDataTable<Location>
-							columns={columns}
-							externalFilters={filters}
-							fetchData={(params) => locationApi.query(params as TableParams)}
-							reloadTrigger={reload}
-							layout="fixed"
-						/>
-					</div>
-				</section>
-			</div>
+					</ITFlex>
+					<ITDataTable<Location> columns={columns} externalFilters={filters} fetchData={(params) => locationApi.query(params as TableParams)} reloadTrigger={reload} layout="fixed" />
+				</ITStack>
+			</ITStack>
 
 			{warehouse && (
 				<RackDialog

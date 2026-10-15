@@ -1,4 +1,4 @@
-import { ITInput } from "@axzydev/axzy_ui_system";
+import { ITGrid, ITInput } from "@axzydev/axzy_ui_system";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { canSaveContact, contactErrors, partnerApi, type Contact, type ContactInput, type PartnerKind } from "@entities/partner";
@@ -48,13 +48,17 @@ export function ContactDialog(props: { kind: PartnerKind; partnerId: string; con
 			submitting={submit.submitting || !canSaveContact(values)}
 			error={submit.error}
 		>
-			<div className="sf:grid sf:min-w-[28rem] sf:grid-cols-2 sf:gap-3">
-				<div className="sf:col-span-2">
+			<ITGrid container spacing={3} className="sf:min-w-[28rem]">
+				<ITGrid item xs={12}>
 					<ITInput name="name" label={t("contacts.name")} value={values.name} onChange={(e) => set("name")(e.target.value)} error={message("name")} touched={!!message("name")} required />
-				</div>
-				<ITInput name="email" type="email" label={t("contacts.email")} value={values.email} onChange={(e) => set("email")(e.target.value)} error={message("email") ?? t("contacts.channelHint")} touched={!!message("email")} />
-				<ITInput name="phone" label={t("contacts.phone")} value={values.phone} onChange={(e) => set("phone")(e.target.value)} error={message("phone")} touched={!!message("phone")} />
-			</div>
+				</ITGrid>
+				<ITGrid item xs={12} sm={6}>
+					<ITInput name="email" type="email" label={t("contacts.email")} value={values.email} onChange={(e) => set("email")(e.target.value)} error={message("email") ?? t("contacts.channelHint")} touched={!!message("email")} />
+				</ITGrid>
+				<ITGrid item xs={12} sm={6}>
+					<ITInput name="phone" label={t("contacts.phone")} value={values.phone} onChange={(e) => set("phone")(e.target.value)} error={message("phone")} touched={!!message("phone")} />
+				</ITGrid>
+			</ITGrid>
 		</FormDialog>
 	);
 }

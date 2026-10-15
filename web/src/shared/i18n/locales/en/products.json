@@ -21,7 +21,6 @@
     "barcodeHint": "Left empty, the material's code is used."
   },
   "detail": {
-    "back": "Back to materials",
     "legacyId": "Id in the previous file",
     "createdAt": "Created",
     "none": "—"

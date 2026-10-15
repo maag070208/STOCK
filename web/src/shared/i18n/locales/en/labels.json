@@ -13,7 +13,6 @@
   },
   "editor": {
     "newTitle": "New template",
-    "back": "Back to labels",
     "key": "Key",
     "keyHint": "UPPER_SNAKE_CASE, such as PRODUCT. It cannot change later.",
     "nameEs": "Name in Spanish",

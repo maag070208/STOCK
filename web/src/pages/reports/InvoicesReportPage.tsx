@@ -1,4 +1,4 @@
-import { ITDataTable, ITPage, type Column, type ColumnFilters } from "@axzydev/axzy_ui_system";
+import { ITDataTable, ITGrid, ITPage, ITText, type Column, type ColumnFilters } from "@axzydev/axzy_ui_system";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { catalogApi, type CatalogItem } from "@entities/catalog";
@@ -53,11 +53,17 @@ export function InvoicesReportPage() {
 	return (
 		<ITPage title={t("invoices.title")} description={t("invoices.description")} noPadding actions={<ExportButtons kind="invoices" filters={filters} />}>
 			<ReportTabs />
-			<div className="sf:mb-4 sf:grid sf:grid-cols-1 sf:items-end sf:gap-3 sf:md:grid-cols-4">
-				<WarehouseFilter options={warehouses} value={warehouseId} onChange={setWarehouseId} />
-				<PartnerFilter kind="suppliers" value={supplierId} onChange={setSupplierId} />
-				<DateRangeFilter from={from} to={to} onFrom={setFrom} onTo={setTo} />
-			</div>
+			<ITGrid container spacing={3} className="sf:mb-4 sf:items-end">
+				<ITGrid item xs={12} md={4}>
+					<WarehouseFilter options={warehouses} value={warehouseId} onChange={setWarehouseId} />
+				</ITGrid>
+				<ITGrid item xs={12} md={4}>
+					<PartnerFilter kind="suppliers" value={supplierId} onChange={setSupplierId} />
+				</ITGrid>
+				<ITGrid item xs={12} md={4}>
+					<DateRangeFilter from={from} to={to} onFrom={setFrom} onTo={setTo} />
+				</ITGrid>
+			</ITGrid>
 			<ReportError message={error} />
 			{answer && (
 				<ReportTotals
@@ -72,7 +78,7 @@ export function InvoicesReportPage() {
 					]}
 				/>
 			)}
-			<section data-testid="invoices-report">
+			<ITText as="section" data-testid="invoices-report">
 				<ITDataTable<InvoiceReportRow>
 					columns={columns}
 					// The filters this screen manages travel as external filters: the table merges them with its own
@@ -96,7 +102,7 @@ export function InvoicesReportPage() {
 					reloadTrigger={reload}
 					layout="fixed"
 				/>
-			</section>
+			</ITText>
 		</ITPage>
 	);
 }

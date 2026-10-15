@@ -1,3 +1,4 @@
+import { ITText } from "@axzydev/axzy_ui_system";
 import { Lottie } from "lottie-react";
 import { useTranslation } from "react-i18next";
 import { animationPath } from "../../shared/brand/animations";
@@ -10,8 +11,8 @@ export function BrandLoader() {
 	const theme = useTheme();
 	const data = useAnimationData(animationPath("loader", theme));
 	return (
-		<div role="status" aria-label={t("brand.loading")}>
+		<ITText as="div" role="status" aria-label={t("brand.loading")}>
 			{data ? <Lottie src={data} loop autoplay className="sf:size-24" /> : null}
-		</div>
+		</ITText>
 	);
 }

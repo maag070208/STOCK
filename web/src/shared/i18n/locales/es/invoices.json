@@ -34,7 +34,6 @@
   "closing": {
     "button": "Cerrar factura",
     "done": "Factura cerrada",
-    "refused": "No se pudo cerrar la factura.",
     "readOnly": "La factura está cerrada: solo se consulta."
   },
   "columns": {
@@ -80,12 +79,9 @@
     "lines": "Líneas",
     "assign": "Asignar",
     "reassign": "Cambiar asignación",
-    "addLine": "Agregar material",
     "expected": "Esperado",
     "counted": "Contado",
-    "difference": "Diferencia",
     "placed": "Colocado",
-    "notAssigned": "Sin asignar",
     "notCounted": "Sin contar",
     "match": "Coincide",
     "discrepancy": "Diferencia",

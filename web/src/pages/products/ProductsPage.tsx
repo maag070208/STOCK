@@ -1,4 +1,4 @@
-import { ITBadget, ITButton, ITConfirmDialog, ITDataTable, ITDropdownMenu, ITPage, type Column, type ITDropdownMenuItem } from "@axzydev/axzy_ui_system";
+import { ITBadget, ITButton, ITConfirmDialog, ITDataTable, ITDropdownMenu, ITFlex, ITPage, type Column, type ITDropdownMenuItem } from "@axzydev/axzy_ui_system";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
@@ -84,10 +84,10 @@ export function ProductsPage() {
 			noPadding
 			actions={
 				canManage ? (
-					<div className="sf:flex sf:gap-2">
+					<ITFlex gap={2}>
 						<ITButton variant="outlined" label={t("import")} onClick={() => navigate("/products/import")} />
 						<ITButton label={t("new")} onClick={() => setEditing({ product: null })} disabled={units.length === 0} />
-					</div>
+					</ITFlex>
 				) : undefined
 			}
 		>

@@ -1,4 +1,4 @@
-import { ITInput, ITSelect } from "@axzydev/axzy_ui_system";
+import { ITGrid, ITInput, ITSelect } from "@axzydev/axzy_ui_system";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { CatalogItem } from "@entities/catalog";
@@ -52,33 +52,37 @@ export function ProductDialog(props: { product: Product | null; units: CatalogIt
 
 	return (
 		<FormDialog isOpen={props.isOpen} title={props.product ? t("edit") : t("new")} onClose={props.onClose} onSubmit={() => void save()} submitting={submit.submitting} error={submit.error}>
-			<div className="sf:grid sf:min-w-[28rem] sf:grid-cols-2 sf:gap-3">
-				<ITInput
-					name="code"
+			<ITGrid container spacing={3} className="sf:min-w-[28rem]">
+				<ITGrid item xs={12} sm={6}>
+					<ITInput
+						name="code"
 					label={t("form.code")}
 					value={values.code}
 					disabled={!!props.product}
 					onChange={(e) => set("code")(e.target.value.toUpperCase())}
-					error={error("code") ?? (props.product ? undefined : t("form.codeHint"))}
-					touched={!!error("code")}
-					required
-				/>
-				<ITSelect
-					name="unit"
+						error={error("code") ?? (props.product ? undefined : t("form.codeHint"))}
+						touched={!!error("code")}
+						required
+					/>
+				</ITGrid>
+				<ITGrid item xs={12} sm={6}>
+					<ITSelect
+						name="unit"
 					label={t("form.unit")}
 					value={values.unit}
 					onChange={(e) => set("unit")(e.target.value)}
-					options={props.units.map((unit) => ({ value: unit.code, label: unit.label ?? unit.code }))}
-					valueField="value"
-					labelField="label"
-					error={error("unit")}
-					touched={!!error("unit")}
-					required
-				/>
-				<div className="sf:col-span-2">
+						options={props.units.map((unit) => ({ value: unit.code, label: unit.label ?? unit.code }))}
+						valueField="value"
+						labelField="label"
+						error={error("unit")}
+						touched={!!error("unit")}
+						required
+					/>
+				</ITGrid>
+				<ITGrid item xs={12}>
 					<ITInput name="name" label={t("form.name")} value={values.name} onChange={(e) => set("name")(e.target.value)} error={error("name")} touched={!!error("name")} required />
-				</div>
-				<div className="sf:col-span-2">
+				</ITGrid>
+				<ITGrid item xs={12}>
 					<ITInput
 						name="barcode"
 						label={t("form.barcode")}
@@ -87,8 +91,8 @@ export function ProductDialog(props: { product: Product | null; units: CatalogIt
 						error={error("barcode") ?? t("form.barcodeHint")}
 						touched={!!error("barcode")}
 					/>
-				</div>
-			</div>
+				</ITGrid>
+			</ITGrid>
 		</FormDialog>
 	);
 }

@@ -1,4 +1,4 @@
-import { ITBadget, ITButton, ITConfirmDialog, ITDropdownMenu, ITPage } from "@axzydev/axzy_ui_system";
+import { ITBadget, ITButton, ITConfirmDialog, ITDropdownMenu, ITFlex, ITGrid, ITPage, ITStack, ITStatCard, ITText, type Column } from "@axzydev/axzy_ui_system";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
@@ -8,10 +8,15 @@ import { ContactDialog } from "@features/partner/ContactDialog";
 import { ApiError } from "@shared/api/client";
 import { formatDateTime } from "@shared/lib/format";
 import { toast } from "@app/store";
+import { PlainTable } from "@shared/ui/PlainTable";
 
 type Confirm = { kind: "deactivateContact" | "reactivateContact"; contact: Contact };
 
-// One supplier or customer: its data, and its contacts with their actions for who can manage.
+// One row of the contacts: the contact, which the kit tells apart by its id.
+type ContactRow = Record<string, unknown> & { id: string; contact: Contact };
+
+// One supplier or customer: its data, and its contacts with their actions for who can manage. The way back is the
+// breadcrumbs, and every piece of the screen is a component of the kit (web.md section 8).
 export function PartnerPage({ kind }: { kind: PartnerKind }) {
 	const { t, i18n } = useTranslation(["partners", "common"]);
 	const { id = "" } = useParams();
@@ -35,12 +40,13 @@ export function PartnerPage({ kind }: { kind: PartnerKind }) {
 		void load();
 	}, [load]);
 
-	const back = <ITButton variant="outlined" label={t(`${kind}.back`)} onClick={() => navigate(`/${kind}`)} />;
+	// The list this screen hangs from, and the record itself: the breadcrumbs are the way back.
+	const breadcrumbs = [{ label: t(`${kind}.title`), onClick: () => navigate(`/${kind}`) }, { label: partner ? `${partner.code} · ${partner.name}` : t(`${kind}.title`) }];
+
 	if (missing) {
 		return (
-			<ITPage title={t(`${kind}.title`)} noPadding>
-				<p className="sf:text-body-md">{t("common:errors.notFound")}</p>
-				{back}
+			<ITPage title={t(`${kind}.title`)} breadcrumbs={breadcrumbs} noPadding>
+				<ITText>{t("common:errors.notFound")}</ITText>
 			</ITPage>
 		);
 	}
@@ -59,91 +65,96 @@ export function PartnerPage({ kind }: { kind: PartnerKind }) {
 	}
 
 	const address = partner?.address;
-	const fields: [string, React.ReactNode][] = partner && address
-		? [
-				[t("columns.taxId"), partner.taxId],
-				[t("detail.paymentTerms"), partner.paymentTerms?.label ?? partner.paymentTerms?.code ?? ""],
-				[
-					t("detail.address"),
-					<span className="sf:whitespace-pre-line">
-						{`${address.street} ${address.exteriorNumber}${address.interiorNumber ? `, ${t("detail.interior", { number: address.interiorNumber })}` : ""}\n` +
-							`${address.neighborhood}, ${address.postalCode} ${address.city}\n${address.state?.label ?? ""}, ${address.country?.label ?? ""}`}
-					</span>,
-				],
-				[t("detail.createdAt"), formatDateTime(partner.createdAt, i18n.language)],
-				[t("columns.status"), <ITBadget color={partner.active ? "success" : "gray"} label={t(partner.active ? "common:status.active" : "common:status.inactive")} />],
-			]
-		: [];
+	const addressText = address
+		? `${address.street} ${address.exteriorNumber}${address.interiorNumber ? `, ${t("detail.interior", { number: address.interiorNumber })}` : ""}\n` +
+			`${address.neighborhood}, ${address.postalCode} ${address.city}\n${address.state?.label ?? ""}, ${address.country?.label ?? ""}`
+		: "";
+	const contacts: ContactRow[] = (partner?.contacts ?? []).map((contact) => ({ id: contact.id, contact }));
+
+	const columns: Column<ContactRow>[] = [
+		{ key: "name", label: t("contacts.name"), type: "string", render: (row) => row.contact.name },
+		{ key: "email", label: t("contacts.email"), type: "string", render: (row) => row.contact.email ?? "" },
+		{ key: "phone", label: t("contacts.phone"), type: "string", render: (row) => row.contact.phone ?? "" },
+		{
+			key: "status",
+			label: t("columns.status"),
+			type: "string",
+			render: (row) => <ITBadget color={row.contact.active ? "success" : "gray"} label={t(row.contact.active ? "common:status.active" : "common:status.inactive")} />,
+		},
+		{
+			key: "actions",
+			label: "",
+			type: "actions",
+			className: "sf:text-right",
+			actions: (row) =>
+				canManage ? (
+					<ITDropdownMenu
+						triggerLabel={t("columns.actions")}
+						placement="bottom-end"
+						items={[
+							{ id: "edit", label: t("actions.edit"), onClick: () => setEditing({ contact: row.contact }) },
+							row.contact.active
+								? { id: "deactivate", label: t("contacts.deactivate"), danger: true, onClick: () => setConfirm({ kind: "deactivateContact", contact: row.contact }) }
+								: { id: "reactivate", label: t("contacts.reactivate"), onClick: () => setConfirm({ kind: "reactivateContact", contact: row.contact }) },
+						]}
+					/>
+				) : null,
+		},
+	];
 
 	return (
 		<ITPage
 			title={partner ? `${partner.code} · ${partner.name}` : t(`${kind}.title`)}
+			breadcrumbs={breadcrumbs}
 			noPadding
 			loading={!partner}
-			actions={
-				<div className="sf:flex sf:gap-2">
-					{back}
-					{canManage && <ITButton label={t("actions.edit")} onClick={() => navigate(`/${kind}/${id}/edit`)} />}
-				</div>
-			}
+			actions={canManage ? <ITButton label={t("actions.edit")} onClick={() => navigate(`/${kind}/${id}/edit`)} /> : undefined}
 		>
-			<div className="sf:flex sf:flex-col sf:gap-8">
-				<dl className="sf:grid sf:max-w-3xl sf:grid-cols-[max-content_1fr] sf:gap-x-8 sf:gap-y-3" data-testid="partner-detail">
-					{fields.map(([label, value]) => (
-						<div key={label} className="sf:contents">
-							<dt className="sf:text-label-md sf:text-on-surface-muted">{label}</dt>
-							<dd className="sf:text-body-md">{value}</dd>
-						</div>
-					))}
-				</dl>
-
-				<section aria-label={t("contacts.title")} className="sf:flex sf:max-w-3xl sf:flex-col sf:gap-3" data-testid="contacts">
-					<div className="sf:flex sf:items-center sf:justify-between">
-						<h2 className="sf:text-title-md">{t("contacts.title")}</h2>
-						{canManage && partner && <ITButton size="sm" label={t("contacts.new")} onClick={() => setEditing({ contact: null })} />}
-					</div>
-					{partner?.contacts?.length === 0 && <p className="sf:text-body-md sf:text-on-surface-muted">{t("contacts.none")}</p>}
-					{!!partner?.contacts?.length && (
-						<table className="sf:w-full sf:text-left sf:text-body-md">
-							<thead>
-								<tr className="sf:text-label-md sf:text-on-surface-muted">
-									<th className="sf:py-2">{t("contacts.name")}</th>
-									<th className="sf:py-2">{t("contacts.email")}</th>
-									<th className="sf:py-2">{t("contacts.phone")}</th>
-									<th className="sf:py-2">{t("columns.status")}</th>
-									<th className="sf:py-2" />
-								</tr>
-							</thead>
-							<tbody>
-								{partner.contacts.map((contact) => (
-									<tr key={contact.id} className="sf:border-t sf:border-outline-variant" data-contact={contact.name}>
-										<td className="sf:py-2">{contact.name}</td>
-										<td className="sf:py-2">{contact.email ?? ""}</td>
-										<td className="sf:py-2">{contact.phone ?? ""}</td>
-										<td className="sf:py-2">
-											<ITBadget color={contact.active ? "success" : "gray"} label={t(contact.active ? "common:status.active" : "common:status.inactive")} />
-										</td>
-										<td className="sf:py-2 sf:text-right">
-											{canManage && (
-												<ITDropdownMenu
-													triggerLabel={t("columns.actions")}
-													placement="bottom-end"
-													items={[
-														{ id: "edit", label: t("actions.edit"), onClick: () => setEditing({ contact }) },
-														contact.active
-															? { id: "deactivate", label: t("contacts.deactivate"), danger: true, onClick: () => setConfirm({ kind: "deactivateContact", contact }) }
-															: { id: "reactivate", label: t("contacts.reactivate"), onClick: () => setConfirm({ kind: "reactivateContact", contact }) },
-													]}
-												/>
-											)}
-										</td>
-									</tr>
-								))}
-							</tbody>
-						</table>
+			<ITStack spacing={8}>
+				<ITGrid container spacing={3}>
+					{partner && address && (
+						<>
+							<ITGrid item xs={12} sm={6} lg={4}>
+								<ITStatCard label={t("columns.taxId")} value={partner.taxId} />
+							</ITGrid>
+							<ITGrid item xs={12} sm={6} lg={4}>
+								<ITStatCard label={t("detail.paymentTerms")} value={partner.paymentTerms?.label ?? partner.paymentTerms?.code ?? ""} />
+							</ITGrid>
+							<ITGrid item xs={12} sm={6} lg={4}>
+								<ITStatCard label={t("detail.createdAt")} value={formatDateTime(partner.createdAt, i18n.language)} />
+							</ITGrid>
+							<ITGrid item xs={12} sm={6} lg={4}>
+								<ITStatCard label={t("detail.address")} value={addressText} />
+							</ITGrid>
+							<ITGrid item xs={12} sm={6} lg={4}>
+								<ITStack spacing={1}>
+									<ITText muted className="sf:text-label-md">
+										{t("columns.status")}
+									</ITText>
+									<ITBadget color={partner.active ? "success" : "gray"} label={t(partner.active ? "common:status.active" : "common:status.inactive")} />
+								</ITStack>
+							</ITGrid>
+						</>
 					)}
-				</section>
-			</div>
+				</ITGrid>
+
+				<ITStack spacing={3} className="sf:max-w-3xl">
+					<ITFlex align="center" justify="between">
+						<ITText as="h2" className="sf:text-title-md">
+							{t("contacts.title")}
+						</ITText>
+						{canManage && partner && <ITButton size="sm" label={t("contacts.new")} onClick={() => setEditing({ contact: null })} />}
+					</ITFlex>
+					{partner?.contacts?.length === 0 && <ITText muted>{t("contacts.none")}</ITText>}
+					{!!partner?.contacts?.length && (
+						<PlainTable<ContactRow>
+							columns={columns}
+							data={contacts}
+							size="sm"
+						/>
+					)}
+				</ITStack>
+			</ITStack>
 
 			<ContactDialog
 				kind={kind}

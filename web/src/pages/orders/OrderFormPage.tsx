@@ -1,4 +1,4 @@
-import { ITAlert, ITButton, ITDatePicker, ITInput, ITPage, ITSelect } from "@axzydev/axzy_ui_system";
+import { ITAlert, ITButton, ITCard, ITDatePicker, ITFlex, ITGrid, ITInput, ITPage, ITSelect, ITStack, ITText } from "@axzydev/axzy_ui_system";
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
@@ -103,112 +103,130 @@ export function OrderFormPage() {
 	}
 
 	return (
-		<ITPage title={t("new")} noPadding>
+		<ITPage title={t("new")} breadcrumbs={[{ label: t("title"), onClick: () => navigate("/orders") }, { label: t("new") }]} noPadding>
 			<form onSubmit={(e) => void save(e)} noValidate aria-label={t("new")} className="sf:flex sf:max-w-4xl sf:flex-col sf:gap-6">
-				<section className="sf:flex sf:flex-col sf:gap-3">
-					<h2 className="sf:text-title-md">{t("form.header")}</h2>
-					<div className="sf:grid sf:grid-cols-1 sf:gap-3 sf:md:grid-cols-2">
-						<ITInput
-							name="number"
+				<ITStack spacing={3}>
+					<ITText as="h2" className="sf:text-title-md">
+						{t("form.header")}
+					</ITText>
+					<ITGrid container spacing={3}>
+						<ITGrid item xs={12} md={6}>
+							<ITInput
+								name="number"
 							label={t("form.number")}
 							value={number}
 							onChange={(e) => setNumber(e.target.value.toUpperCase())}
-							error={submit.fieldErrors.number ?? (tried && !number.trim() ? required : undefined) ?? t("form.numberHint")}
-							touched={tried || !!submit.fieldErrors.number}
-							required
-						/>
-						<ITDatePicker
-							name="dueDate"
+								error={submit.fieldErrors.number ?? (tried && !number.trim() ? required : undefined) ?? t("form.numberHint")}
+								touched={tried || !!submit.fieldErrors.number}
+								required
+							/>
+						</ITGrid>
+						<ITGrid item xs={12} md={6}>
+							<ITDatePicker
+								name="dueDate"
 							label={t("form.dueDate")}
 							value={dueDate}
 							minDate={businessToday()}
 							onChange={(e) => e.target.value instanceof Date && setDueDate(e.target.value)}
-							error={submit.fieldErrors.dueDate}
-							touched={!!submit.fieldErrors.dueDate}
-							required
-						/>
-						<ITSelect
-							name="customerId"
+								error={submit.fieldErrors.dueDate}
+								touched={!!submit.fieldErrors.dueDate}
+								required
+							/>
+						</ITGrid>
+						<ITGrid item xs={12} md={6}>
+							<ITSelect
+								name="customerId"
 							label={t("form.customer")}
 							value={customerId}
 							onChange={(e) => setCustomerId(e.target.value)}
 							options={customers.map((found) => ({ value: found.id, label: `${found.code} · ${found.name}` }))}
 							valueField="value"
 							labelField="label"
-							error={submit.fieldErrors.customerId ?? (tried && !customerId ? required : undefined)}
-							touched={tried || !!submit.fieldErrors.customerId}
-							required
-						/>
-						<ITSelect
-							name="contactId"
+								error={submit.fieldErrors.customerId ?? (tried && !customerId ? required : undefined)}
+								touched={tried || !!submit.fieldErrors.customerId}
+								required
+							/>
+						</ITGrid>
+						<ITGrid item xs={12} md={6}>
+							<ITSelect
+								name="contactId"
 							label={t("form.contact")}
 							value={contactId}
 							onChange={(e) => setContactId(e.target.value)}
 							options={[{ value: "", label: t("form.noContact") }, ...(customer?.contacts ?? []).filter((found) => found.active).map((found) => ({ value: found.id, label: found.name }))]}
 							valueField="value"
 							labelField="label"
-							error={submit.fieldErrors.contactId}
-							touched={!!submit.fieldErrors.contactId}
-						/>
-						<ITSelect
-							name="warehouseId"
+								error={submit.fieldErrors.contactId}
+								touched={!!submit.fieldErrors.contactId}
+							/>
+						</ITGrid>
+						<ITGrid item xs={12} md={6}>
+							<ITSelect
+								name="warehouseId"
 							label={t("form.warehouse")}
 							value={warehouseId}
 							onChange={(e) => setWarehouseId(e.target.value)}
 							options={warehouses.map((found) => ({ value: found.id, label: `${found.code} · ${found.name}` }))}
 							valueField="value"
 							labelField="label"
-							error={submit.fieldErrors.warehouseId ?? (tried && !warehouseId ? required : undefined)}
-							touched={tried || !!submit.fieldErrors.warehouseId}
-							required
-						/>
-					</div>
-				</section>
+								error={submit.fieldErrors.warehouseId ?? (tried && !warehouseId ? required : undefined)}
+								touched={tried || !!submit.fieldErrors.warehouseId}
+								required
+							/>
+						</ITGrid>
+					</ITGrid>
+				</ITStack>
 
-				<section className="sf:flex sf:flex-col sf:gap-3" aria-label={t("form.lines")}>
-					<div className="sf:flex sf:items-center sf:justify-between">
-						<h2 className="sf:text-title-md">{t("form.lines")}</h2>
+				<ITStack spacing={3}>
+					<ITFlex align="center" justify="between">
+						<ITText as="h2" className="sf:text-title-md">
+							{t("form.lines")}
+						</ITText>
 						<ITButton size="sm" variant="outlined" label={t("form.addLine")} onClick={() => setLines((current) => [...current, newLine()])} />
-					</div>
-					{lines.length === 0 && <p className="sf:text-body-md sf:text-on-surface-muted">{t("form.noLines")}</p>}
+					</ITFlex>
+					{lines.length === 0 && <ITText muted>{t("form.noLines")}</ITText>}
 					{lines.map((line, index) => {
 						const error = errorOf(line);
 						return (
-							<div key={line.key} className="sf:flex sf:flex-col sf:gap-3 sf:rounded-md sf:border sf:border-outline-variant sf:p-4" data-line={index}>
-								<div className="sf:grid sf:grid-cols-1 sf:items-end sf:gap-3 sf:md:grid-cols-[1fr_9rem_auto]">
-									<ProductPicker
-										name={`product-${index}`}
-										label={t("form.product")}
-										value={line.product?.id ?? ""}
-										onChange={(product) => setLine(line.key, { product })}
-										error={submit.fieldErrors[`lines.${index}.productId`] ?? (tried && !line.product ? required : undefined)}
-										required
-									/>
-									<ITInput
-										name={`quantity-${index}`}
-										type="number"
-										label={line.product ? `${t("form.quantity")} (${line.product.unit.label ?? line.product.unit.code})` : t("form.quantity")}
-										value={line.quantity}
-										onChange={(e) => setLine(line.key, { quantity: e.target.value })}
-										error={submit.fieldErrors[`lines.${index}.quantity`] ?? (tried && error ? t(dyn(`lineErrors.${error}`)) : undefined)}
-										touched={tried || !!submit.fieldErrors[`lines.${index}.quantity`]}
-										required
-									/>
-									<ITButton variant="text" label={t("form.remove")} onClick={() => setLines((current) => current.filter((candidate) => candidate.key !== line.key))} />
-								</div>
-								<p className="sf:text-body-md sf:text-on-surface-muted" data-available={index}>
-									{availabilityText(line)}
-								</p>
-							</div>
+							<ITCard key={line.key} title={t("form.line", { index: index + 1 })}>
+								<ITGrid container spacing={3} className="sf:items-end">
+									<ITGrid item xs={12} md={6}>
+										<ProductPicker
+											name={`product-${index}`}
+											label={t("form.product")}
+											value={line.product?.id ?? ""}
+											onChange={(product) => setLine(line.key, { product })}
+											error={submit.fieldErrors[`lines.${index}.productId`] ?? (tried && !line.product ? required : undefined)}
+											required
+										/>
+									</ITGrid>
+									<ITGrid item xs={12} md={3}>
+										<ITInput
+											name={`quantity-${index}`}
+											type="number"
+											label={line.product ? `${t("form.quantity")} (${line.product.unit.label ?? line.product.unit.code})` : t("form.quantity")}
+											value={line.quantity}
+											onChange={(e) => setLine(line.key, { quantity: e.target.value })}
+											error={submit.fieldErrors[`lines.${index}.quantity`] ?? (tried && error ? t(dyn(`lineErrors.${error}`)) : undefined)}
+											touched={tried || !!submit.fieldErrors[`lines.${index}.quantity`]}
+											required
+										/>
+									</ITGrid>
+									<ITGrid item xs={12} md={3}>
+										<ITButton variant="text" label={t("form.remove")} onClick={() => setLines((current) => current.filter((candidate) => candidate.key !== line.key))} />
+									</ITGrid>
+								</ITGrid>
+								<ITText muted>{availabilityText(line)}</ITText>
+							</ITCard>
 						);
 					})}
-				</section>
+				</ITStack>
 
 				{submit.error && <ITAlert variant="error">{submit.error}</ITAlert>}
-				<div className="sf:flex sf:justify-end sf:gap-2">
+				<ITFlex justify="end" gap={2}>
 					<ITButton variant="outlined" label={t("common:actions.cancel")} onClick={() => navigate("/orders")} />
 					<ITButton type="submit" label={submit.submitting ? t("form.saving") : t("form.save")} disabled={submit.submitting} />
-				</div>
+				</ITFlex>
 			</form>
 		</ITPage>
 	);

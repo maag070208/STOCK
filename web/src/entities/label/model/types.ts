@@ -10,6 +10,8 @@ export interface LabelTemplate {
 	placeholders: string[];
 	active: boolean;
 	updatedAt: string;
+	// The kit's table wants its rows to be records (web.md section 8).
+	[key: string]: unknown;
 }
 
 export interface TemplateVersion {
@@ -41,6 +43,8 @@ export interface Printer {
 	port: number;
 	active: boolean;
 	updatedAt: string;
+	// The kit's table wants its rows to be records (web.md section 8).
+	[key: string]: unknown;
 }
 
 export interface PrinterInput {

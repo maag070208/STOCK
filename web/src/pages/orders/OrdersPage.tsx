@@ -1,4 +1,4 @@
-import { ITBadget, ITButton, ITDataTable, ITPage, type Column } from "@axzydev/axzy_ui_system";
+import { ITBadget, ITButton, ITDataTable, ITPage, ITStack, ITText, type Column } from "@axzydev/axzy_ui_system";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
@@ -54,20 +54,20 @@ export function OrdersPage() {
 	return (
 		<ITPage title={t("title")} description={t("description")} noPadding actions={canCreate ? <ITButton label={t("new")} onClick={() => navigate("/orders/new")} /> : undefined}>
 			{alerts.length > 0 && (
-				<section aria-label={t("alerts.title")} data-testid="order-alerts" className="sf:mb-4 sf:flex sf:flex-col sf:gap-1">
-					<h2 className="sf:text-title-md">{t("alerts.title")}</h2>
+				<ITStack spacing={1} className="sf:mb-4">
+					<ITText as="h2" className="sf:text-title-md">
+						{t("alerts.title")}
+					</ITText>
 					{alerts.map((alert) => (
-						<button
+						<ITButton
 							key={alert.id}
-							type="button"
+							variant="outlined"
+							label={`${alert.order.number} · ${alert.order.customer.name ?? ""} · ${t(dyn(`alerts.${alert.kind}`))} · ${formatDate(alert.order.dueDate, i18n.language)}`}
 							onClick={() => navigate(`/orders/${alert.order.id}`)}
-							className="sf:cursor-pointer sf:rounded-md sf:border sf:border-outline-variant sf:px-3 sf:py-2 sf:text-left sf:text-body-md"
-							data-alert={alert.order.number}
-						>
-							{`${alert.order.number} · ${alert.order.customer.name ?? ""} · ${t(dyn(`alerts.${alert.kind}`))} · ${formatDate(alert.order.dueDate, i18n.language)}`}
-						</button>
+							className="sf:justify-start sf:text-left"
+						/>
 					))}
-				</section>
+				</ITStack>
 			)}
 			<ITDataTable<Order> columns={columns} fetchData={(params) => orderApi.query(params as TableParams)} layout="fixed" onRowClick={(order) => navigate(`/orders/${order.id}`)} />
 		</ITPage>

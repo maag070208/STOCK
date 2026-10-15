@@ -8,8 +8,7 @@
 		"warehouse": "Warehouse",
 		"dueDate": "Due",
 		"status": "Status",
-		"operator": "Operator",
-		"progress": "Picked"
+		"operator": "Operator"
 	},
 	"status": {
 		"CREATED": "Created",
@@ -38,7 +37,8 @@
 		"save": "Save order",
 		"saving": "Saving…",
 		"noLines": "Add at least one material.",
-		"chooseWarehouse": "Choose the warehouse first: its availability will show here."
+		"chooseWarehouse": "Choose the warehouse first: its availability will show here.",
+		"line": "Line {{index}}"
 	},
 	"lineErrors": {
 		"FIELD_REQUIRED": "Write the quantity.",
@@ -71,7 +71,6 @@
 	},
 	"alerts": {
 		"title": "Due date alerts",
-		"empty": "No order is close to its due date.",
 		"BEFORE": "Due tomorrow",
 		"DUE": "Due today",
 		"OVERDUE": "Overdue"
@@ -105,8 +104,7 @@
 		"body": "The lines, the picked material and the reservation stay with the order.",
 		"operator": "New operator",
 		"note": "Note",
-		"noteHint": "Why the operator changes.",
-		"confirm": "Change"
+		"noteHint": "Why the operator changes."
 	},
 	"transferDialog": {
 		"title": "Move picked material to another order",
@@ -117,7 +115,7 @@
 		"quantity": "Quantity",
 		"note": "Note",
 		"noteHint": "Why it moves to the other order.",
-				"abovePicked": "That is more than the line has picked.",
+		"abovePicked": "That is more than the line has picked.",
 		"aboveTarget": "The target order does not need that much.",
 		"confirm": "Move"
 	},

@@ -1,4 +1,4 @@
-import { ITInput, ITSelect, ITTextarea } from "@axzydev/axzy_ui_system";
+import { ITInput, ITSelect, ITStack, ITText, ITTextarea } from "@axzydev/axzy_ui_system";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { orderApi, type Order, type OrderLine, type OrderOperator } from "@entities/order";
@@ -44,7 +44,7 @@ export function AssignOrderDialog(props: { order: Order | null; isOpen: boolean;
 			submitting={submit.submitting}
 			error={submit.error}
 		>
-			<div className="sf:min-w-[24rem]">
+			<ITStack className="sf:min-w-[24rem]">
 				<ITSelect
 					name="operatorId"
 					label={t("assignDialog.operator")}
@@ -57,8 +57,8 @@ export function AssignOrderDialog(props: { order: Order | null; isOpen: boolean;
 					touched={tried || !!submit.fieldErrors.operatorId}
 					required
 				/>
-			</div>
-			{operators.length === 0 && <p className="sf:text-body-md sf:text-on-surface-muted">{t("assignDialog.noStaff")}</p>}
+			</ITStack>
+			{operators.length === 0 && <ITText muted>{t("assignDialog.noStaff")}</ITText>}
 		</FormDialog>
 	);
 }
@@ -92,8 +92,8 @@ export function ReassignOperatorDialog(props: { order: Order | null; isOpen: boo
 
 	return (
 		<FormDialog isOpen={props.isOpen} title={t("reassignDialog.title")} onClose={props.onClose} onSubmit={() => void save()} submitting={submit.submitting} error={submit.error}>
-			<p className="sf:text-body-md">{t("reassignDialog.body")}</p>
-			<div className="sf:grid sf:min-w-[26rem] sf:grid-cols-1 sf:gap-3">
+			<ITText>{t("reassignDialog.body")}</ITText>
+			<ITStack spacing={3} className="sf:min-w-[26rem]">
 				<ITSelect
 					name="operatorId"
 					label={t("reassignDialog.operator")}
@@ -116,7 +116,7 @@ export function ReassignOperatorDialog(props: { order: Order | null; isOpen: boo
 					maxLength={500}
 					error={submit.fieldErrors.note ?? (tried && !note.trim() ? t("common:validation.required") : undefined)}
 				/>
-			</div>
+			</ITStack>
 		</FormDialog>
 	);
 }
@@ -144,10 +144,10 @@ export function ValidateOrderDialog(props: { order: Order | null; isOpen: boolea
 
 	return (
 		<FormDialog isOpen={props.isOpen} title={t("validateDialog.title")} onClose={props.onClose} onSubmit={() => void save()} submitting={submit.submitting} error={submit.error} submitLabel={t("validateDialog.confirm")}>
-			<p className="sf:text-body-md">{t("validateDialog.body")}</p>
-			<div className="sf:min-w-[28rem]">
+			<ITText>{t("validateDialog.body")}</ITText>
+			<ITStack className="sf:min-w-[28rem]">
 				<ITTextarea name="note" label={t("validateDialog.note")} value={note} onChange={setNote} placeholder={t("validateDialog.noteHint")} rows={3} maxLength={500} />
-			</div>
+			</ITStack>
 		</FormDialog>
 	);
 }
@@ -177,8 +177,8 @@ export function AcceptDifferenceDialog(props: { order: Order | null; isOpen: boo
 
 	return (
 		<FormDialog isOpen={props.isOpen} title={t("differenceDialog.title")} onClose={props.onClose} onSubmit={() => void save()} submitting={submit.submitting} error={submit.error} submitLabel={t("differenceDialog.confirm")}>
-			<p className="sf:text-body-md">{t("differenceDialog.body")}</p>
-			<div className="sf:min-w-[28rem]">
+			<ITText>{t("differenceDialog.body")}</ITText>
+			<ITStack className="sf:min-w-[28rem]">
 				<ITTextarea
 					name="note"
 					label={t("differenceDialog.note")}
@@ -189,7 +189,7 @@ export function AcceptDifferenceDialog(props: { order: Order | null; isOpen: boo
 					maxLength={500}
 					error={submit.fieldErrors.note ?? (tried && !note.trim() ? t("common:validation.required") : undefined)}
 				/>
-			</div>
+			</ITStack>
 		</FormDialog>
 	);
 }
@@ -212,7 +212,7 @@ export function CancelOrderDialog(props: { order: Order | null; isOpen: boolean;
 
 	return (
 		<FormDialog isOpen={props.isOpen} title={t("cancelDialog.title")} onClose={props.onClose} onSubmit={() => void save()} submitting={submit.submitting} error={submit.error} submitLabel={t("cancelDialog.confirm")}>
-			<p className="sf:text-body-md">{t("cancelDialog.body")}</p>
+			<ITText>{t("cancelDialog.body")}</ITText>
 		</FormDialog>
 	);
 }
@@ -281,8 +281,8 @@ export function TransferPicksDialog(props: { order: Order | null; isOpen: boolea
 
 	return (
 		<FormDialog isOpen={props.isOpen} title={t("transferDialog.title")} onClose={props.onClose} onSubmit={() => void save()} submitting={submit.submitting} error={submit.error} submitLabel={t("transferDialog.confirm")}>
-			<p className="sf:text-body-md">{t("transferDialog.body")}</p>
-			<div className="sf:grid sf:min-w-[32rem] sf:grid-cols-1 sf:gap-3">
+			<ITText>{t("transferDialog.body")}</ITText>
+			<ITStack spacing={3} className="sf:min-w-[32rem]">
 				<ITSelect
 					name="lineId"
 					label={t("transferDialog.line")}
@@ -307,7 +307,7 @@ export function TransferPicksDialog(props: { order: Order | null; isOpen: boolea
 					touched={tried}
 					required
 				/>
-				{orders.length === 0 && <p className="sf:text-body-md sf:text-on-surface-muted">{t("transferDialog.noTargets")}</p>}
+				{orders.length === 0 && <ITText muted>{t("transferDialog.noTargets")}</ITText>}
 				<ITInput
 					name="quantity"
 					type="number"
@@ -328,7 +328,7 @@ export function TransferPicksDialog(props: { order: Order | null; isOpen: boolea
 					maxLength={500}
 					error={submit.fieldErrors.note ?? (tried && !note.trim() ? t("common:validation.required") : undefined)}
 				/>
-			</div>
+			</ITStack>
 		</FormDialog>
 	);
 }
@@ -377,8 +377,8 @@ export function ReturnPicksDialog(props: { order: Order | null; isOpen: boolean;
 
 	return (
 		<FormDialog isOpen={props.isOpen} title={t("returnDialog.title")} onClose={props.onClose} onSubmit={() => void save()} submitting={submit.submitting} error={submit.error} submitLabel={t("returnDialog.confirm")}>
-			<p className="sf:text-body-md">{t("returnDialog.body")}</p>
-			<div className="sf:grid sf:min-w-[32rem] sf:grid-cols-1 sf:gap-3">
+			<ITText>{t("returnDialog.body")}</ITText>
+			<ITStack spacing={3} className="sf:min-w-[32rem]">
 				<ITSelect
 					name="lineId"
 					label={t("returnDialog.line")}
@@ -423,7 +423,7 @@ export function ReturnPicksDialog(props: { order: Order | null; isOpen: boolean;
 					maxLength={500}
 					error={submit.fieldErrors.note ?? (tried && !note.trim() ? t("common:validation.required") : undefined)}
 				/>
-			</div>
+			</ITStack>
 		</FormDialog>
 	);
 }

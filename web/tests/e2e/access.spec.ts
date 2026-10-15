@@ -15,7 +15,7 @@ test("an administrator changes a matrix cell, and the change is saved", async ({
 		await signInAs(page, e2eAdmin());
 		await page.goto("/#/roles");
 		await page.getByText("Matriz", { exact: true }).click();
-		const cell = page.locator(`select[data-cell="${role}|audit.view"]`);
+		const cell = page.locator(`select[name="${role}|audit.view"]`);
 		await expect(cell).toHaveValue("NONE");
 		await cell.selectOption("ALL");
 		await expect(page.getByText("1 cambios sin guardar")).toBeVisible();
@@ -36,7 +36,7 @@ test("the console refuses a change that would leave nobody able to manage access
 	await signInAs(page, e2eAdmin());
 	await page.goto("/#/roles");
 	await page.getByText("Matriz", { exact: true }).click();
-	await page.locator('select[data-cell="ADMIN|roles.manage"]').selectOption("NONE");
+	await page.locator('select[name="ADMIN|roles.manage"]').selectOption("NONE");
 	await page.getByRole("button", { name: "Guardar cambios" }).click();
 	await expect(page.getByText("El cambio dejaría el sistema sin un administrador activo.")).toBeVisible();
 });
@@ -60,7 +60,8 @@ test("an administrator creates a policy with a condition, and deletes it", async
 	await dialog.getByLabel("Valor", { exact: true }).fill(nobody);
 	await dialog.getByRole("button", { name: "Guardar" }).click();
 
-	const row = page.getByTestId("policies-table").getByRole("row").filter({ hasText: key });
+	// The policy's key is unique, so its row is found by what it says.
+	const row = page.getByRole("row").filter({ hasText: key });
 	await expect(row).toBeVisible();
 	await expect(row).toContainText(`target.id es igual a ${nobody}`);
 	const policies = await call("GET", "/policies", { token: await adminToken() });

@@ -1,4 +1,4 @@
-import { ITSelect } from "@axzydev/axzy_ui_system";
+import { ITFlex, ITSelect, ITText } from "@axzydev/axzy_ui_system";
 import { useTranslation } from "react-i18next";
 import { useDispatch } from "react-redux";
 import { authApi, useSessionUser, userLoaded } from "@entities/user";
@@ -21,10 +21,10 @@ export function LanguageSwitch({ compact = false }: { compact?: boolean }) {
 
 	if (compact) {
 		return (
-			<div className="sf:flex sf:items-center sf:gap-2">
-				<label htmlFor={id} className="sf:sr-only">
+			<ITFlex align="center" gap={2}>
+				<ITText as="label" htmlFor={id} className="sf:sr-only">
 					{t("language.label")}
-				</label>
+				</ITText>
 				<select
 					id={id}
 					value={i18n.language}
@@ -37,7 +37,7 @@ export function LanguageSwitch({ compact = false }: { compact?: boolean }) {
 						</option>
 					))}
 				</select>
-			</div>
+			</ITFlex>
 		);
 	}
 

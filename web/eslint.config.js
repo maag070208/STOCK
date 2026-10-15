@@ -18,6 +18,22 @@ export default tseslint.config(
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
+    // Only the kit builds a screen (docs/architecture/web.md section 8): raw HTML in the app's own screens is a defect,
+    // and this is what keeps it from coming back. `form` is the one element a screen may write.
+    files: ["src/pages/**/*.tsx", "src/features/**/*.tsx", "src/entities/**/*.tsx", "src/widgets/**/*.tsx"],
+    rules: {
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector:
+            "JSXOpeningElement[name.name=/^(div|span|p|dl|dt|dd|table|thead|tbody|tfoot|tr|th|td|ul|ol|li|h[1-6]|section|article|header|footer|nav|aside|main)$/]",
+          message:
+            "A screen is built with the UI kit, not with raw HTML (web.md section 8): use ITStack, ITFlex, ITGrid, ITText, ITTable, ITCard, ITStatCard or ITField.",
+        },
+      ],
+    },
+  },
+  {
     files: ["**/*.{ts,tsx}"],
     languageOptions: { globals: globals.browser },
     plugins: { "react-hooks": reactHooks, boundaries },

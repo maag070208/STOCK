@@ -16,6 +16,7 @@ export interface OrderLine {
 	unit: UnitRef | null;
 	quantity: number;
 	pickedQuantity: number;
+	[key: string]: unknown;
 }
 
 export interface Order {

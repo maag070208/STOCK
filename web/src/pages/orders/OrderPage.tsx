@@ -1,14 +1,15 @@
-import { ITBadget, ITButton, ITPage } from "@axzydev/axzy_ui_system";
+import { ITAlert, ITBadget, ITButton, ITFlex, ITGrid, ITPage, ITStack, ITStatCard, ITText, type Column } from "@axzydev/axzy_ui_system";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
-import { orderActions, orderApi, type Order, type OrderAction } from "@entities/order";
+import { orderActions, orderApi, type Order, type OrderAction, type OrderLine } from "@entities/order";
 import { useCan } from "@entities/user";
 import { AcceptDifferenceDialog, AssignOrderDialog, CancelOrderDialog, ReassignOperatorDialog, ReturnPicksDialog, TransferPicksDialog, ValidateOrderDialog } from "@features/order/OrderDialogs";
 import { ApiError } from "@shared/api/client";
 import { formatDate, formatQuantity } from "@shared/lib/format";
 import { toast } from "@app/store";
 import { STATUS_COLOR } from "./OrdersPage";
+import { PlainTable } from "@shared/ui/PlainTable";
 
 // One order: its header, what each line asked for and how much has left, and the actions its status and the person's
 // permissions allow (order-fulfillment.md sections 6, 7a and 8). A validated order is locked: its receipt is all that is
@@ -43,12 +44,10 @@ export function OrderPage() {
 		void load();
 	}, [load]);
 
-	const back = <ITButton variant="outlined" label={t("detail.back")} onClick={() => navigate("/orders")} />;
 	if (missing) {
 		return (
-			<ITPage title={t("title")} noPadding>
-				<p className="sf:text-body-md">{t("common:errors.notFound")}</p>
-				{back}
+			<ITPage title={t("title")} breadcrumbs={[{ label: t("title"), onClick: () => navigate("/orders") }]} noPadding>
+				<ITAlert variant="error">{t("common:errors.notFound")}</ITAlert>
 			</ITPage>
 		);
 	}
@@ -79,6 +78,14 @@ export function OrderPage() {
 		}
 	}
 
+	// The lines of the order: what each material asked for, how much has left, and what is still missing.
+	const lineColumns: Column<OrderLine>[] = [
+		{ key: "product", label: t("form.product"), type: "string", render: (line) => `${line.product.code} · ${line.product.name}` },
+		{ key: "quantity", label: t("detail.quantity"), type: "string", render: (line) => quantity(line.quantity, line.unit?.decimalPlaces) },
+		{ key: "picked", label: t("detail.picked"), type: "string", render: (line) => quantity(line.pickedQuantity, line.unit?.decimalPlaces) },
+		{ key: "pending", label: t("detail.pending"), type: "string", render: (line) => quantity(Number(line.quantity) - Number(line.pickedQuantity), line.unit?.decimalPlaces) },
+	];
+
 	const saved = () => {
 		setOpen(null);
 		toast(t("common:saved"));
@@ -90,9 +97,10 @@ export function OrderPage() {
 			title={order ? `${order.number} · ${order.customer.name ?? ""}` : t("title")}
 			noPadding
 			loading={!order}
+			breadcrumbs={[{ label: t("title"), onClick: () => navigate("/orders") }, { label: order?.number ?? "" }]}
 			actions={
-				<div className="sf:flex sf:flex-wrap sf:gap-2">
-					{back}
+				<ITFlex wrap="wrap" align="center" gap={2}>
+					{order && <ITBadget color={STATUS_COLOR[order.status.code]} label={order.status.label ?? order.status.code} />}
 					{actions.includes("assign") && <ITButton label={t("detail.assign")} onClick={() => setOpen("assign")} />}
 					{actions.includes("reassignOperator") && <ITButton variant="outlined" label={t("detail.reassignOperator")} onClick={() => setOpen("reassignOperator")} />}
 					{actions.includes("transfer") && <ITButton variant="outlined" label={t("detail.transfer")} onClick={() => setOpen("transfer")} />}
@@ -101,71 +109,46 @@ export function OrderPage() {
 					{actions.includes("validate") && <ITButton label={t("detail.validate")} onClick={() => setOpen("validate")} />}
 					{actions.includes("cancel") && <ITButton variant="outlined" label={t("detail.cancel")} onClick={() => setOpen("cancel")} />}
 					{actions.includes("document") && <ITButton label={t("detail.document")} onClick={() => void downloadDocument()} disabled={downloading} />}
-				</div>
+				</ITFlex>
 			}
 		>
 			{order && (
-				<div className="sf:flex sf:flex-col sf:gap-6">
-					<dl className="sf:grid sf:max-w-3xl sf:grid-cols-[max-content_1fr] sf:gap-x-8 sf:gap-y-3" data-testid="order-header">
-						<dt className="sf:text-label-md sf:text-on-surface-muted">{t("columns.status")}</dt>
-						<dd>
-							<ITBadget color={STATUS_COLOR[order.status.code]} label={order.status.label ?? order.status.code} />
-						</dd>
-						<dt className="sf:text-label-md sf:text-on-surface-muted">{t("detail.customer")}</dt>
-						<dd className="sf:text-body-md">{`${order.customer.code ?? ""} · ${order.customer.name ?? ""}`}</dd>
+				<ITStack spacing={6}>
+					<ITGrid container spacing={4}>
+						<ITGrid item xs={12} sm={6} lg={4}>
+							<ITStatCard label={t("detail.customer")} value={`${order.customer.code ?? ""} · ${order.customer.name ?? ""}`} />
+						</ITGrid>
 						{order.contact && (
-							<>
-								<dt className="sf:text-label-md sf:text-on-surface-muted">{t("detail.contact")}</dt>
-								<dd className="sf:text-body-md">{order.contact.name}</dd>
-							</>
+							<ITGrid item xs={12} sm={6} lg={4}>
+								<ITStatCard label={t("detail.contact")} value={order.contact.name ?? ""} />
+							</ITGrid>
 						)}
-						<dt className="sf:text-label-md sf:text-on-surface-muted">{t("detail.warehouse")}</dt>
-						<dd className="sf:text-body-md">{order.warehouse.code}</dd>
-						<dt className="sf:text-label-md sf:text-on-surface-muted">{t("detail.dueDate")}</dt>
-						<dd className="sf:text-body-md">{formatDate(order.dueDate, i18n.language)}</dd>
-						<dt className="sf:text-label-md sf:text-on-surface-muted">{t("detail.createdBy")}</dt>
-						<dd className="sf:text-body-md">{order.createdBy?.name ?? ""}</dd>
-						<dt className="sf:text-label-md sf:text-on-surface-muted">{t("detail.operator")}</dt>
-						<dd className="sf:text-body-md" data-testid="order-operator">
-							{order.operator?.name ?? t("detail.noOperator")}
-						</dd>
+						<ITGrid item xs={12} sm={6} lg={4}>
+							<ITStatCard label={t("detail.warehouse")} value={order.warehouse.code ?? ""} />
+						</ITGrid>
+						<ITGrid item xs={12} sm={6} lg={4}>
+							<ITStatCard label={t("detail.dueDate")} value={formatDate(order.dueDate, i18n.language)} />
+						</ITGrid>
+						<ITGrid item xs={12} sm={6} lg={4}>
+							<ITStatCard label={t("detail.createdBy")} value={order.createdBy?.name ?? ""} />
+						</ITGrid>
+						<ITGrid item xs={12} sm={6} lg={4}>
+							<ITStatCard label={t("detail.operator")} value={order.operator?.name ?? t("detail.noOperator")} />
+						</ITGrid>
 						{order.validatedBy && (
-							<>
-								<dt className="sf:text-label-md sf:text-on-surface-muted">{t("detail.validatedBy")}</dt>
-								<dd className="sf:text-body-md">{order.validatedBy.name}</dd>
-							</>
+							<ITGrid item xs={12} sm={6} lg={4}>
+								<ITStatCard label={t("detail.validatedBy")} value={order.validatedBy.name ?? ""} />
+							</ITGrid>
 						)}
-					</dl>
+					</ITGrid>
 
-					<section aria-label={t("detail.lines")} className="sf:flex sf:flex-col sf:gap-3" data-testid="order-lines">
-						<h2 className="sf:text-title-md">{t("detail.lines")}</h2>
-						{lines.length === 0 && <p className="sf:text-body-md sf:text-on-surface-muted">{t("detail.noLines")}</p>}
-						{lines.length > 0 && (
-							<table className="sf:w-full sf:max-w-3xl sf:text-left sf:text-body-md">
-								<thead>
-									<tr className="sf:text-label-md sf:text-on-surface-muted">
-										<th className="sf:px-2 sf:py-1">{t("form.product")}</th>
-										<th className="sf:px-2 sf:py-1 sf:text-right">{t("detail.quantity")}</th>
-										<th className="sf:px-2 sf:py-1 sf:text-right">{t("detail.picked")}</th>
-										<th className="sf:px-2 sf:py-1 sf:text-right">{t("detail.pending")}</th>
-									</tr>
-								</thead>
-								<tbody>
-									{lines.map((line) => (
-										<tr key={line.id} className="sf:border-t sf:border-outline-variant" data-line={line.product.code ?? ""}>
-											<td className="sf:px-2 sf:py-1">{`${line.product.code} · ${line.product.name}`}</td>
-											<td className="sf:px-2 sf:py-1 sf:text-right sf:tabular-nums">{quantity(line.quantity, line.unit?.decimalPlaces)}</td>
-											<td className="sf:px-2 sf:py-1 sf:text-right sf:tabular-nums" data-picked={line.product.code ?? ""}>
-												{quantity(line.pickedQuantity, line.unit?.decimalPlaces)}
-											</td>
-											<td className="sf:px-2 sf:py-1 sf:text-right sf:tabular-nums">{quantity(Number(line.quantity) - Number(line.pickedQuantity), line.unit?.decimalPlaces)}</td>
-										</tr>
-									))}
-								</tbody>
-							</table>
-						)}
-					</section>
-				</div>
+					<ITStack spacing={3}>
+						<ITText as="h2" className="sf:text-title-lg">
+							{t("detail.lines")}
+						</ITText>
+						{lines.length === 0 ? <ITText muted>{t("detail.noLines")}</ITText> : <PlainTable<OrderLine>columns={lineColumns} data={lines} size="sm" />}
+					</ITStack>
+				</ITStack>
 			)}
 
 			<AssignOrderDialog order={order} isOpen={open === "assign"} title={t("assignDialog.title")} onClose={() => setOpen(null)} onSaved={saved} />

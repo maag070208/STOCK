@@ -1,4 +1,4 @@
-import { ITAlert, ITButton, ITInput, ITPage, ITSelect } from "@axzydev/axzy_ui_system";
+import { ITAlert, ITButton, ITFlex, ITGrid, ITInput, ITPage, ITSelect, ITStack, ITText } from "@axzydev/axzy_ui_system";
 import { useEffect, useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
@@ -36,6 +36,7 @@ const fromPartner = (partner: Partner): Values => ({
 const REQUIRED: (keyof Values)[] = ["name", "taxId", "paymentTerms", "street", "exteriorNumber", "neighborhood", "city", "state", "postalCode", "country"];
 
 // The form of a supplier or a customer, new or existing. Each error from the API shows next to its field.
+// The form element is the kit's one exception (it carries `onSubmit`) and everything inside it is the kit (web.md 8).
 export function PartnerFormPage({ kind }: { kind: PartnerKind }) {
 	const { t } = useTranslation(["partners", "common"]);
 	const { id } = useParams();
@@ -98,58 +99,88 @@ export function PartnerFormPage({ kind }: { kind: PartnerKind }) {
 		/>
 	);
 
+	const title = t(id ? `${kind}.edit` : `${kind}.new`);
+
 	return (
-		<ITPage title={t(id ? `${kind}.edit` : `${kind}.new`)} noPadding>
-			<form onSubmit={(e) => void save(e)} noValidate className="sf:flex sf:max-w-3xl sf:flex-col sf:gap-6" aria-label={t(id ? `${kind}.edit` : `${kind}.new`)}>
-				<section className="sf:flex sf:flex-col sf:gap-3">
-					<h2 className="sf:text-title-md">{t("form.general")}</h2>
-					<div className="sf:grid sf:grid-cols-1 sf:gap-3 sf:md:grid-cols-2">
-						<ITInput
-							name="code"
-							label={t("form.code")}
-							value={values.code}
-							disabled={!!id}
-							onChange={(e) => set("code")(e.target.value.toUpperCase())}
-							error={error("code") ?? (id ? undefined : t("form.codeHint"))}
-							touched={!!error("code")}
-							required
-						/>
-						<ITInput
-							name="taxId"
-							label={t("form.taxId")}
-							value={values.taxId}
-							onChange={(e) => set("taxId")(e.target.value.toUpperCase())}
-							error={error("taxId") ?? t("form.taxIdHint")}
-							touched={!!error("taxId")}
-							required
-						/>
-						<div className="sf:md:col-span-2">
-							<ITInput name="name" label={t("form.name")} value={values.name} onChange={(e) => set("name")(e.target.value)} error={error("name")} touched={!!error("name")} required />
-						</div>
-						{select("paymentTerms", t("form.paymentTerms"), catalogs.terms, error("paymentTerms"))}
-					</div>
-					{catalogs.terms.length === 0 && <ITAlert variant="warning">{t("form.noPaymentTerms")}</ITAlert>}
-				</section>
+		<ITPage title={title} breadcrumbs={[{ label: t(`${kind}.title`), onClick: () => navigate(`/${kind}`) }, { label: title }]} noPadding>
+			<form onSubmit={(e) => void save(e)} noValidate aria-label={title}>
+				<ITStack spacing={6} className="sf:max-w-3xl">
+					<ITStack spacing={3}>
+						<ITText as="h2" className="sf:text-title-md">
+							{t("form.general")}
+						</ITText>
+						<ITGrid container spacing={3}>
+							<ITGrid item xs={12} md={6}>
+								<ITInput
+									name="code"
+									label={t("form.code")}
+									value={values.code}
+									disabled={!!id}
+									onChange={(e) => set("code")(e.target.value.toUpperCase())}
+									error={error("code") ?? (id ? undefined : t("form.codeHint"))}
+									touched={!!error("code")}
+									required
+								/>
+							</ITGrid>
+							<ITGrid item xs={12} md={6}>
+								<ITInput
+									name="taxId"
+									label={t("form.taxId")}
+									value={values.taxId}
+									onChange={(e) => set("taxId")(e.target.value.toUpperCase())}
+									error={error("taxId") ?? t("form.taxIdHint")}
+									touched={!!error("taxId")}
+									required
+								/>
+							</ITGrid>
+							<ITGrid item xs={12}>
+								<ITInput name="name" label={t("form.name")} value={values.name} onChange={(e) => set("name")(e.target.value)} error={error("name")} touched={!!error("name")} required />
+							</ITGrid>
+							<ITGrid item xs={12} md={6}>
+								{select("paymentTerms", t("form.paymentTerms"), catalogs.terms, error("paymentTerms"))}
+							</ITGrid>
+						</ITGrid>
+						{catalogs.terms.length === 0 && <ITAlert variant="warning">{t("form.noPaymentTerms")}</ITAlert>}
+					</ITStack>
 
-				<section className="sf:flex sf:flex-col sf:gap-3">
-					<h2 className="sf:text-title-md">{t("form.address")}</h2>
-					<div className="sf:grid sf:grid-cols-1 sf:gap-3 sf:md:grid-cols-4">
-						<div className="sf:md:col-span-2">{input("street")}</div>
-						{input("exteriorNumber", { hint: t("form.exteriorHint") })}
-						{input("interiorNumber", { required: false })}
-						<div className="sf:md:col-span-2">{input("neighborhood")}</div>
-						<div className="sf:md:col-span-2">{input("city")}</div>
-						{input("postalCode")}
-						<div className="sf:md:col-span-2">{select("state", t("form.state"), states, addressError("state"))}</div>
-						{select("country", t("form.country"), catalogs.countries, addressError("country"))}
-					</div>
-				</section>
+					<ITStack spacing={3}>
+						<ITText as="h2" className="sf:text-title-md">
+							{t("form.address")}
+						</ITText>
+						<ITGrid container spacing={3}>
+							<ITGrid item xs={12} md={6}>
+								{input("street")}
+							</ITGrid>
+							<ITGrid item xs={12} md={3}>
+								{input("exteriorNumber", { hint: t("form.exteriorHint") })}
+							</ITGrid>
+							<ITGrid item xs={12} md={3}>
+								{input("interiorNumber", { required: false })}
+							</ITGrid>
+							<ITGrid item xs={12} md={6}>
+								{input("neighborhood")}
+							</ITGrid>
+							<ITGrid item xs={12} md={6}>
+								{input("city")}
+							</ITGrid>
+							<ITGrid item xs={12} md={3}>
+								{input("postalCode")}
+							</ITGrid>
+							<ITGrid item xs={12} md={6}>
+								{select("state", t("form.state"), states, addressError("state"))}
+							</ITGrid>
+							<ITGrid item xs={12} md={3}>
+								{select("country", t("form.country"), catalogs.countries, addressError("country"))}
+							</ITGrid>
+						</ITGrid>
+					</ITStack>
 
-				{submit.error && <ITAlert variant="error">{submit.error}</ITAlert>}
-				<div className="sf:flex sf:justify-end sf:gap-2">
-					<ITButton variant="outlined" label={t("form.cancel")} onClick={() => navigate(id ? `/${kind}/${id}` : `/${kind}`)} />
-					<ITButton type="submit" label={t("form.save")} disabled={submit.submitting} />
-				</div>
+					{submit.error && <ITAlert variant="error">{submit.error}</ITAlert>}
+					<ITFlex justify="end" gap={2}>
+						<ITButton variant="outlined" label={t("form.cancel")} onClick={() => navigate(id ? `/${kind}/${id}` : `/${kind}`)} />
+						<ITButton type="submit" label={t("form.save")} disabled={submit.submitting} />
+					</ITFlex>
+				</ITStack>
 			</form>
 		</ITPage>
 	);

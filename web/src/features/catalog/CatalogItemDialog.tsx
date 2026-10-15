@@ -1,4 +1,4 @@
-import { ITInput } from "@axzydev/axzy_ui_system";
+import { ITCheckbox, ITGrid, ITInput } from "@axzydev/axzy_ui_system";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { catalogApi, type CatalogItem, type CatalogLabel } from "@entities/catalog";
@@ -62,25 +62,35 @@ export function CatalogItemDialog(props: { catalog: string; item: CatalogItem | 
 	const errors = submit.fieldErrors;
 	return (
 		<FormDialog isOpen={props.isOpen} title={props.item ? t("editItem") : t("newItem")} onClose={props.onClose} onSubmit={() => void save()} submitting={submit.submitting} error={submit.error}>
-			<div className="sf:grid sf:min-w-[28rem] sf:grid-cols-2 sf:gap-3">
-				<div className="sf:col-span-2">
+			<ITGrid container spacing={3} className="sf:min-w-[28rem]">
+				<ITGrid item xs={12}>
 					<ITInput name="code" label={t("form.code")} value={values.code} disabled={!!props.item} onChange={(e) => set("code")(e.target.value.toUpperCase())} error={errors.code ?? (props.item ? undefined : t("form.codeHint"))} touched={!!errors.code} required />
-				</div>
-				<ITInput name="labelEs" label={t("form.labelEs")} value={values.labelEs} onChange={(e) => set("labelEs")(e.target.value)} error={errors["labels.es"] ?? errors["labels.es.label"]} touched={!!(errors["labels.es"] ?? errors["labels.es.label"])} />
-				<ITInput name="labelEn" label={t("form.labelEn")} value={values.labelEn} onChange={(e) => set("labelEn")(e.target.value)} error={errors["labels.en"] ?? errors["labels.en.label"]} touched={!!(errors["labels.en"] ?? errors["labels.en.label"])} />
-				<ITInput name="descriptionEs" label={t("form.descriptionEs")} value={values.descriptionEs} onChange={(e) => set("descriptionEs")(e.target.value)} />
-				<ITInput name="descriptionEn" label={t("form.descriptionEn")} value={values.descriptionEn} onChange={(e) => set("descriptionEn")(e.target.value)} />
-				<ITInput name="sortOrder" type="number" label={t("form.sortOrder")} value={values.sortOrder} onChange={(e) => set("sortOrder")(e.target.value)} error={errors.sortOrder} touched={!!errors.sortOrder} />
-				<ITInput name="decimalPlaces" type="number" label={t("form.decimalPlaces")} value={values.decimalPlaces} onChange={(e) => set("decimalPlaces")(e.target.value)} error={errors["attributes.decimal_places"]} touched={!!errors["attributes.decimal_places"]} />
-				<label className="sf:flex sf:items-center sf:gap-2 sf:text-body-md">
-					<input type="checkbox" name="terminal" checked={values.terminal} onChange={(e) => set("terminal")(e.target.checked)} />
-					{t("form.terminal")}
-				</label>
-				<label className="sf:flex sf:items-center sf:gap-2 sf:text-body-md">
-					<input type="checkbox" name="active" checked={values.active} onChange={(e) => set("active")(e.target.checked)} />
-					{t("form.active")}
-				</label>
-			</div>
+				</ITGrid>
+				<ITGrid item xs={12} sm={6}>
+					<ITInput name="labelEs" label={t("form.labelEs")} value={values.labelEs} onChange={(e) => set("labelEs")(e.target.value)} error={errors["labels.es"] ?? errors["labels.es.label"]} touched={!!(errors["labels.es"] ?? errors["labels.es.label"])} />
+				</ITGrid>
+				<ITGrid item xs={12} sm={6}>
+					<ITInput name="labelEn" label={t("form.labelEn")} value={values.labelEn} onChange={(e) => set("labelEn")(e.target.value)} error={errors["labels.en"] ?? errors["labels.en.label"]} touched={!!(errors["labels.en"] ?? errors["labels.en.label"])} />
+				</ITGrid>
+				<ITGrid item xs={12} sm={6}>
+					<ITInput name="descriptionEs" label={t("form.descriptionEs")} value={values.descriptionEs} onChange={(e) => set("descriptionEs")(e.target.value)} />
+				</ITGrid>
+				<ITGrid item xs={12} sm={6}>
+					<ITInput name="descriptionEn" label={t("form.descriptionEn")} value={values.descriptionEn} onChange={(e) => set("descriptionEn")(e.target.value)} />
+				</ITGrid>
+				<ITGrid item xs={12} sm={6}>
+					<ITInput name="sortOrder" type="number" label={t("form.sortOrder")} value={values.sortOrder} onChange={(e) => set("sortOrder")(e.target.value)} error={errors.sortOrder} touched={!!errors.sortOrder} />
+				</ITGrid>
+				<ITGrid item xs={12} sm={6}>
+					<ITInput name="decimalPlaces" type="number" label={t("form.decimalPlaces")} value={values.decimalPlaces} onChange={(e) => set("decimalPlaces")(e.target.value)} error={errors["attributes.decimal_places"]} touched={!!errors["attributes.decimal_places"]} />
+				</ITGrid>
+				<ITGrid item xs={12} sm={6}>
+					<ITCheckbox name="terminal" label={t("form.terminal")} checked={values.terminal} onChange={(on) => set("terminal")(on)} />
+				</ITGrid>
+				<ITGrid item xs={12} sm={6}>
+					<ITCheckbox name="active" label={t("form.active")} checked={values.active} onChange={(on) => set("active")(on)} />
+				</ITGrid>
+			</ITGrid>
 		</FormDialog>
 	);
 }

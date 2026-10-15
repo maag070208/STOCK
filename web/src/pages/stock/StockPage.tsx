@@ -1,4 +1,4 @@
-import { ITButton, ITDataTable, ITPage, ITTabs, type Column } from "@axzydev/axzy_ui_system";
+import { ITButton, ITDataTable, ITPage, ITTabs, ITText, type Column } from "@axzydev/axzy_ui_system";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
@@ -24,7 +24,9 @@ export function StockPage() {
 	}, []);
 
 	const quantity = (row: Balance | ProductTotal) => (
-		<span className="sf:block sf:text-right sf:tabular-nums">{formatQuantity(row.quantity, row.unit?.decimalPlaces, i18n.language)}</span>
+		<ITText as="span" className="sf:block sf:text-right sf:tabular-nums">
+			{formatQuantity(row.quantity, row.unit?.decimalPlaces, i18n.language)}
+		</ITText>
 	);
 	const warehouseColumn = {
 		key: "warehouseId",
@@ -49,7 +51,11 @@ export function StockPage() {
 		{ key: "product", label: t("columns.product"), type: "string", filter: "search", sortable: true, render: (row) => `${row.productCode} · ${row.productName}` },
 		warehouseColumn,
 		{ key: "unit", label: t("columns.unit"), type: "string", render: (row) => row.unit?.label ?? row.unit?.code ?? "" },
-		{ key: "locations", label: t("columns.locations"), type: "string", sortable: true, render: (row) => <span className="sf:block sf:text-right">{row.locations}</span> },
+		{ key: "locations", label: t("columns.locations"), type: "string", sortable: true, render: (row) => (
+						<ITText as="span" className="sf:block sf:text-right">
+							{row.locations}
+						</ITText>
+					) },
 		{ key: "quantity", label: t("columns.quantity"), type: "string", sortable: true, render: quantity },
 	];
 
@@ -67,18 +73,18 @@ export function StockPage() {
 						id: "byLocation",
 						label: t("tabs.byLocation"),
 						content: (
-							<div data-testid="stock-by-location">
+							<ITText as="div" data-testid="stock-by-location">
 								<ITDataTable<Balance> columns={byLocation} fetchData={(params) => stockApi.balances(params as TableParams)} layout="fixed" />
-							</div>
+							</ITText>
 						),
 					},
 					{
 						id: "byProduct",
 						label: t("tabs.byProduct"),
 						content: (
-							<div data-testid="stock-by-product">
+							<ITText as="div" data-testid="stock-by-product">
 								<ITDataTable<ProductTotal> columns={byProduct} fetchData={(params) => stockApi.products(params as TableParams)} layout="fixed" />
-							</div>
+							</ITText>
 						),
 					},
 				]}

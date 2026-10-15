@@ -3,15 +3,13 @@
     "title": "Proveedores",
     "description": "Las empresas que envían facturas, con su dirección, condiciones de pago y contactos.",
     "new": "Nuevo proveedor",
-    "edit": "Editar proveedor",
-    "back": "Volver a proveedores"
+    "edit": "Editar proveedor"
   },
   "customers": {
     "title": "Clientes",
     "description": "A quienes se envían los pedidos, con su dirección, condiciones de pago y contactos.",
     "new": "Nuevo cliente",
-    "edit": "Editar cliente",
-    "back": "Volver a clientes"
+    "edit": "Editar cliente"
   },
   "columns": {
     "code": "Código",
