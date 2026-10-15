@@ -68,11 +68,11 @@ class InvoiceService(
 	private val audit: AuditService,
 	private val clock: Clock,
 ) {
+	// One status code, or several: the list asks for the open ones (OPEN, PENDING and IN_ASSIGNMENT) in one query.
 	private val statusFilter: TableFilter<Invoice> = { root, builder, value ->
-		when (val id = catalogs.itemId(STATUS_CATALOG, value.toString())) {
-			null -> builder.disjunction()
-			else -> builder.equal(root.get<UUID>("statusId"), id)
-		}
+		val codes = (value as? List<*>)?.map { it.toString() } ?: listOf(value.toString())
+		val ids = codes.mapNotNull { catalogs.itemId(STATUS_CATALOG, it) }
+		if (ids.isEmpty() || ids.size != codes.size) builder.disjunction() else root.get<UUID>("statusId").`in`(ids)
 	}
 
 	// One box for the list (F8-02): the invoice number, the supplier's code or its name, each with OR among themselves

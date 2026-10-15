@@ -67,6 +67,34 @@ class InvoicesEndpointTest : ApiTest() {
 	}
 
 	@Test
+	fun `the list is filtered by one status or by several, and by the open ones`() {
+		val f = EntriesFixture(api)
+		val open = f.create(f.body(f.line(f.product("Abierta"), 5))).json
+		// An invoice with an assignment is PENDING, and one with a line assigned and counted is IN_ASSIGNMENT.
+		val pending = f.create(f.body(f.line(f.product("Pendiente"), 10, f.operators[0] to 10))).json
+		val counted = f.create(f.body(f.line(f.product("Contada"), 10, f.operators[0] to 10))).json
+		val share = counted.get("lines").get(0).get("assignments").get(0).get("id").asString()
+		assertEquals(200, api.call("POST", "/receipts/assignments/$share/count", f.operators[0].token, mapOf("countedQuantity" to 10), channel = "app").status)
+		// Nothing of this warehouse can be closed until it has lines and nothing counted: one of them goes to CLOSED.
+		val closed = f.create(f.body(f.line(f.product("Cerrada"), 5))).json
+		assertEquals(200, api.post("/invoices/${closed.get("id").asString()}/closure", f.admin, mapOf<String, Any>()).status)
+
+		// The warehouse of this fixture keeps the query to the invoices of this test.
+		fun query(status: Any): Set<String> =
+			api.post("/invoices/query", f.admin, mapOf("filters" to mapOf("status" to status, "warehouseId" to f.warehouse), "limit" to 100)).json.get("data").list
+				.map { it.get("number").asString() }.toSet()
+
+		// One code, the same as always.
+		assertEquals(setOf(closed.get("number").asString()), query("CLOSED"))
+		// Several, which is what the list's chips ask for: the open ones are the three that are not closed.
+		val openOnes = query(listOf("OPEN", "PENDING", "IN_ASSIGNMENT"))
+		assertTrue(openOnes.containsAll(setOf(open.get("number").asString(), pending.get("number").asString(), counted.get("number").asString())), openOnes.toString())
+		assertTrue(!openOnes.contains(closed.get("number").asString()))
+		// A code nobody knows leaves nothing, and never everything.
+		assertEquals(emptySet<String>(), query(listOf("OPEN", "NOPE")))
+	}
+
+	@Test
 	fun `an invoice dated in the future is accepted, and the date is the one that was written`() {
 		val f = EntriesFixture(api)
 		val tomorrow = BusinessDays.today(1).toString()

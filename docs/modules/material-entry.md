@@ -93,7 +93,7 @@ All under `/api/v1`, with the headers and checks of [identity.md](identity.md) s
 
 | Method and path | Permission | Notes |
 |---|---|---|
-| `POST /invoices/query` | `invoices.view` | Table contract. Filters: `search` (the number, the supplier's code or its name, with OR among the three), `number`, `supplierId`, `warehouseId`, `status` (code). Sort: `createdAt` (default, newest first), `number`, `invoiceDate` |
+| `POST /invoices/query` | `invoices.view` | Table contract. Filters: `search` (the number, the supplier's code or its name, with OR among the three), `number`, `supplierId`, `warehouseId`, `status` (one code or several, so the list can ask for the open ones in one query). Sort: `createdAt` (default, newest first), `number`, `invoiceDate` |
 | `GET /invoices/{id}` | `invoices.view` | The invoice with its lines, each with its assignments, counts and placements |
 | `POST /invoices` | `invoices.create` | Header `Idempotency-Key` (required). `number`, `supplierId`, `contactId` (optional), `invoiceDate`, `warehouseId`, `lines: [{ productId, quantity, assignments: [{ operatorId, quantity }] }]`. Path A sends no `assignments`; path B sends them and saves once |
 | `POST /invoices/{id}/lines` | `invoices.create` | `productId`, `quantity`. While the invoice is `OPEN` or `PENDING` |
