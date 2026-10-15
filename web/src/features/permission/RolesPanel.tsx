@@ -1,6 +1,8 @@
-import { ITBadget, ITButton, ITConfirmDialog, ITFlex, ITInput, ITStack, ITText, type Column } from "@axzydev/axzy_ui_system";
+import { type Column, ITBadget, ITButton, ITConfirmDialog, ITFlex, ITInput, ITStack, ITText } from "@axzydev/axzy_ui_system";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { IconButton } from "@shared/ui/IconButton";
+import { FaEdit, FaToggleOff, FaToggleOn, FaTrash } from "react-icons/fa";
 import { accessApi, roleLabel, type Role } from "@entities/permission";
 import { ApiError } from "@shared/api/client";
 import { FormDialog } from "@shared/ui/FormDialog";
@@ -65,9 +67,21 @@ export function RolesPanel(props: { roles: Role[]; onChanged: (message?: string)
 			actions: (row) =>
 				row.role.system ? null : (
 					<ITFlex justify="end" gap={1}>
-						<ITButton size="sm" variant="text" label={t("common:actions.edit")} onClick={() => { submit.reset(); setValues({ key: row.role.key, name: row.role.name ?? "" }); setRenaming(row.role); }} />
-						<ITButton size="sm" variant="text" label={row.role.active ? t("roles.deactivate") : t("roles.activate")} onClick={() => void run(() => accessApi.updateRole(row.role.key, { active: !row.role.active }))} />
-						<ITButton size="sm" variant="text" color="danger" label={t("common:actions.delete")} onClick={() => setDeleting(row.role)} />
+						<IconButton
+							icon={<FaEdit aria-hidden />}
+							label={t("common:actions.edit")}
+							onClick={() => {
+								submit.reset();
+								setValues({ key: row.role.key, name: row.role.name ?? "" });
+								setRenaming(row.role);
+							}}
+						/>
+						<IconButton
+							icon={row.role.active ? <FaToggleOn aria-hidden /> : <FaToggleOff aria-hidden />}
+							label={row.role.active ? t("roles.deactivate") : t("roles.activate")}
+							onClick={() => void run(() => accessApi.updateRole(row.role.key, { active: !row.role.active }))}
+						/>
+						<IconButton icon={<FaTrash aria-hidden />} label={t("common:actions.delete")} color="danger" onClick={() => setDeleting(row.role)} />
 					</ITFlex>
 				),
 		},

@@ -1,4 +1,4 @@
-import { ITTable, type Column } from "@axzydev/axzy_ui_system";
+import { type Column, ITTable } from "@axzydev/axzy_ui_system";
 
 // A table of the rows a screen already has, built with the kit: one page with every row and the table view, because a
 // list the screen holds itself is not paginated (web.md section 8). The kit's table takes its page size once, so it is

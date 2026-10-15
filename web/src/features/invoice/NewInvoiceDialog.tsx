@@ -12,7 +12,7 @@ import {
 	type NewInvoiceField,
 	type Ref,
 } from "@entities/invoice";
-import { SupplierPicker } from "@entities/partner";
+import { PartnerPicker } from "@entities/partner";
 import { firstInvalidField } from "@shared/lib/focusTrap";
 import { businessToday, isoDate } from "@shared/lib/format";
 import { FormDialog } from "@shared/ui/FormDialog";
@@ -107,7 +107,7 @@ export function NewInvoiceDialog(props: {
 					touched={Boolean(fieldError("number"))}
 					required
 				/>
-				<SupplierPicker
+				<PartnerPicker
 					name="supplierId"
 					label={t("form.supplier")}
 					value={supplierId}

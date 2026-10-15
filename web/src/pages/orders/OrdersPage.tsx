@@ -1,4 +1,4 @@
-import { ITBadget, ITButton, ITDataTable, ITPage, ITStack, ITText, type Column } from "@axzydev/axzy_ui_system";
+import { type Column, ITBadget, ITButton, ITDataTable, ITPage, ITStack, ITText } from "@axzydev/axzy_ui_system";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";

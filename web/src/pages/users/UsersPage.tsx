@@ -1,6 +1,7 @@
-import { ITBadget, ITButton, ITConfirmDialog, ITDataTable, ITDialog, ITDropdownMenu, ITFlex, ITPage, ITText, type Column, type ITDropdownMenuItem } from "@axzydev/axzy_ui_system";
+import { type Column, ITBadget, ITButton, ITConfirmDialog, ITDataTable, ITDialog, ITDropdownMenu, type ITDropdownMenuItem, ITFlex, ITPage, ITText } from "@axzydev/axzy_ui_system";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { FaEllipsisV } from "react-icons/fa";
 import { accessApi, roleLabel, type PermissionDefinition, type Role } from "@entities/permission";
 import { useCan, userApi, type User } from "@entities/user";
 import { CreateUserDialog } from "@features/user/create-user/CreateUserDialog";
@@ -72,7 +73,7 @@ export function UsersPage() {
 				if (can.edit && user.locked) items.push({ id: "unlock", label: t("actions.unlock"), onClick: () => void act(() => userApi.unlock(user.id)) });
 				if (can.remove && user.active) items.push({ id: "deactivate", label: t("actions.deactivate"), danger: true, onClick: () => setConfirm({ kind: "deactivate", user }) });
 				if (can.remove && !user.active) items.push({ id: "reactivate", label: t("actions.reactivate"), onClick: () => setConfirm({ kind: "reactivate", user }) });
-				return items.length ? <ITDropdownMenu items={items} triggerLabel={t("columns.actions")} placement="bottom-end" /> : null;
+				return items.length ? <ITDropdownMenu items={items} trigger={<FaEllipsisV aria-hidden />} triggerLabel={t("columns.actions")} placement="bottom-end" /> : null;
 			},
 		},
 	];

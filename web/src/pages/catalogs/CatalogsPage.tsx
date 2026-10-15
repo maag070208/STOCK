@@ -1,6 +1,8 @@
-import { ITBadget, ITButton, ITCheckbox, ITFlex, ITGrid, ITInput, ITPage, ITSelect, ITStack, ITText, type Column } from "@axzydev/axzy_ui_system";
+import { type Column, ITBadget, ITButton, ITCheckbox, ITFlex, ITGrid, ITInput, ITPage, ITSelect, ITStack, ITText } from "@axzydev/axzy_ui_system";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { IconButton } from "@shared/ui/IconButton";
+import { FaEdit } from "react-icons/fa";
 import { catalogApi, type Catalog, type CatalogItem } from "@entities/catalog";
 import { useCan } from "@entities/user";
 import { CatalogItemDialog } from "@features/catalog/CatalogItemDialog";
@@ -77,7 +79,7 @@ export function CatalogsPage() {
 			label: "",
 			type: "actions",
 			className: "sf:text-right",
-			actions: (row) => (canManage ? <ITButton size="sm" variant="text" label={t("common:actions.edit")} onClick={() => setEditing({ item: row.item })} /> : null),
+			actions: (row) => (canManage ? <IconButton icon={<FaEdit aria-hidden />} label={t("common:actions.edit")} onClick={() => setEditing({ item: row.item })} /> : null),
 		},
 	];
 

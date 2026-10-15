@@ -1,4 +1,4 @@
-import { ITAlert, ITBadget, ITButton, ITChip, ITDataTable, ITEmptyState, ITFlex, ITInput, ITPage, ITStack, ITText, type Column, type ITDataTableFetchParams } from "@axzydev/axzy_ui_system";
+import { type Column, ITAlert, ITBadget, ITButton, ITChip, ITDataTable, type ITDataTableFetchParams, ITEmptyState, ITFlex, ITInput, ITPage, ITStack, ITText } from "@axzydev/axzy_ui_system";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { FaSearch } from "react-icons/fa";

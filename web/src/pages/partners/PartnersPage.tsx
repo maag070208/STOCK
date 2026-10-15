@@ -1,6 +1,7 @@
-import { ITBadget, ITButton, ITConfirmDialog, ITDataTable, ITDropdownMenu, ITPage, type Column, type ITDropdownMenuItem } from "@axzydev/axzy_ui_system";
+import { type Column, ITBadget, ITButton, ITConfirmDialog, ITDataTable, ITDropdownMenu, type ITDropdownMenuItem, ITPage } from "@axzydev/axzy_ui_system";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { FaEllipsisV } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { partnerApi, type Partner, type PartnerKind } from "@entities/partner";
 import { useCan } from "@entities/user";
@@ -42,7 +43,7 @@ export function PartnersPage({ kind }: { kind: PartnerKind }) {
 					if (partner.active) items.push({ id: "deactivate", label: t("actions.deactivate"), danger: true, onClick: () => setConfirm({ kind: "deactivate", partner }) });
 					else items.push({ id: "reactivate", label: t("actions.reactivate"), onClick: () => setConfirm({ kind: "reactivate", partner }) });
 				}
-				return <ITDropdownMenu items={items} triggerLabel={t("columns.actions")} placement="bottom-end" />;
+				return <ITDropdownMenu items={items} trigger={<FaEllipsisV aria-hidden />} triggerLabel={t("columns.actions")} placement="bottom-end" />;
 			},
 		},
 	];

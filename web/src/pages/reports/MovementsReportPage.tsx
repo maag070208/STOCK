@@ -1,4 +1,4 @@
-import { ITDataTable, ITGrid, ITPage, ITText, type Column, type ColumnFilters } from "@axzydev/axzy_ui_system";
+import { type Column, type ColumnFilters, ITDataTable, ITGrid, ITPage, ITText } from "@axzydev/axzy_ui_system";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { catalogApi, type CatalogItem } from "@entities/catalog";

@@ -15,6 +15,8 @@ export default defineConfig({
   },
   projects: [
     { name: "unit", testMatch: /unit\/.*\.spec\.ts/, use: { baseURL: undefined } },
-    { name: "e2e", testMatch: /e2e\/.*\.spec\.ts/, use: { ...devices["Desktop Chrome"] } },
+    // An end-to-end test builds its own data through the API and drives the app: the default 30 s is tight when the
+    // whole suite runs at once, and a heavy fixture is not a slow screen (testing.md).
+    { name: "e2e", testMatch: /e2e\/.*\.spec\.ts/, timeout: 60_000, use: { ...devices["Desktop Chrome"] } },
   ],
 });

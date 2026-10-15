@@ -1,6 +1,7 @@
-import { ITBadget, ITButton, ITConfirmDialog, ITDataTable, ITDropdownMenu, ITFlex, ITPage, type Column, type ITDropdownMenuItem } from "@axzydev/axzy_ui_system";
+import { type Column, ITBadget, ITButton, ITConfirmDialog, ITDataTable, ITDropdownMenu, type ITDropdownMenuItem, ITFlex, ITPage } from "@axzydev/axzy_ui_system";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { FaEllipsisV } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { catalogApi, type CatalogItem } from "@entities/catalog";
 import { productApi, type Product } from "@entities/product";
@@ -59,7 +60,7 @@ export function ProductsPage() {
 					if (product.active) items.push({ id: "deactivate", label: t("actions.deactivate"), danger: true, onClick: () => setConfirm({ kind: "deactivate", product }) });
 					else items.push({ id: "reactivate", label: t("actions.reactivate"), onClick: () => setConfirm({ kind: "reactivate", product }) });
 				}
-				return <ITDropdownMenu items={items} triggerLabel={t("columns.actions")} placement="bottom-end" />;
+				return <ITDropdownMenu items={items} trigger={<FaEllipsisV aria-hidden />} triggerLabel={t("columns.actions")} placement="bottom-end" />;
 			},
 		},
 	];

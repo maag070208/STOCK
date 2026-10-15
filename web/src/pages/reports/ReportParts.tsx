@@ -1,7 +1,7 @@
-import { ITAlert, ITButton, ITCheckbox, ITDatePicker, ITFlex, ITSelect, ITText, type ColumnFilters } from "@axzydev/axzy_ui_system";
-import { useEffect, useState, type ReactNode } from "react";
+import { type ColumnFilters, ITAlert, ITButton, ITCheckbox, ITDatePicker, ITFlex, ITSelect, ITText } from "@axzydev/axzy_ui_system";
+import { useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { partnerApi, type PartnerKind } from "@entities/partner";
+import { PartnerPicker, type PartnerKind } from "@entities/partner";
 import { reportApi, type ReportFormat, type ReportKind, type ReportRef, type ReportTotal } from "@entities/report";
 import { useCan } from "@entities/user";
 import { isoDate } from "@shared/lib/format";
@@ -27,28 +27,17 @@ export function WarehouseFilter({ options, value, onChange, required = false }: 
 	);
 }
 
-// The supplier of the invoices report, or the customer of the orders report: the partners the reader may see, read from
-// their own module (reports.md section 3).
+// The supplier of the invoices report, or the customer of the orders report: the partners are searched, because an
+// installation holds hundreds and the first page is not the list (reports.md section 3).
 export function PartnerFilter({ kind, value, onChange }: { kind: PartnerKind; value: string; onChange: (value: string) => void }) {
-	const { t } = useTranslation(["reports", "partners"]);
-	const [options, setOptions] = useState<{ value: string; label: string }[]>([]);
-
-	useEffect(() => {
-		void partnerApi(kind)
-			.query({ page: 1, limit: 200, filters: { active: "true" } })
-			.then((page) => setOptions(page.data.map((partner) => ({ value: partner.id, label: `${partner.code} · ${partner.name}` }))))
-			.catch(() => setOptions([]));
-	}, [kind]);
-
+	const { t } = useTranslation("reports");
 	return (
-		<ITSelect
+		<PartnerPicker
+			kind={kind}
 			name={kind === "suppliers" ? "supplierId" : "customerId"}
 			label={t(kind === "suppliers" ? "filters.supplier" : "filters.customer")}
 			value={value}
-			onChange={(event) => onChange(event.target.value)}
-			options={[{ value: "", label: t("filters.allPartners") }, ...options]}
-			valueField="value"
-			labelField="label"
+			onChange={(partner) => onChange(partner?.id ?? "")}
 		/>
 	);
 }

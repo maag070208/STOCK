@@ -1,6 +1,8 @@
-import { ITBadget, ITButton, ITPage, type Column } from "@axzydev/axzy_ui_system";
+import { type Column, ITBadget, ITButton, ITPage } from "@axzydev/axzy_ui_system";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { IconButton } from "@shared/ui/IconButton";
+import { FaEdit } from "react-icons/fa";
 import { printerApi, type Printer } from "@entities/label";
 import { useCan } from "@entities/user";
 import { warehouseApi } from "@entities/warehouse";
@@ -46,7 +48,7 @@ export function PrintersPage() {
 			key: "actions",
 			label: "",
 			type: "actions",
-			actions: (printer) => (canManage ? <ITButton size="sm" variant="text" label={t("common:actions.edit")} onClick={() => setEditing({ printer })} /> : null),
+			actions: (printer) => (canManage ? <IconButton icon={<FaEdit aria-hidden />} label={t("common:actions.edit")} onClick={() => setEditing({ printer })} /> : null),
 		},
 	];
 

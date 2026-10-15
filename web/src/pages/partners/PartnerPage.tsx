@@ -1,6 +1,7 @@
-import { ITBadget, ITButton, ITConfirmDialog, ITDropdownMenu, ITFlex, ITGrid, ITPage, ITStack, ITStatCard, ITText, type Column } from "@axzydev/axzy_ui_system";
+import { type Column, ITBadget, ITButton, ITConfirmDialog, ITDropdownMenu, ITFlex, ITGrid, ITPage, ITStack, ITStatCard, ITText } from "@axzydev/axzy_ui_system";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { FaEllipsisV } from "react-icons/fa";
 import { useNavigate, useParams } from "react-router-dom";
 import { partnerApi, type Contact, type Partner, type PartnerKind } from "@entities/partner";
 import { useCan } from "@entities/user";
@@ -89,6 +90,7 @@ export function PartnerPage({ kind }: { kind: PartnerKind }) {
 			actions: (row) =>
 				canManage ? (
 					<ITDropdownMenu
+						trigger={<FaEllipsisV aria-hidden />}
 						triggerLabel={t("columns.actions")}
 						placement="bottom-end"
 						items={[

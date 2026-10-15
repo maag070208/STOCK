@@ -1,6 +1,8 @@
-import { ITButton, ITDataTable, ITPage, ITText, type Column } from "@axzydev/axzy_ui_system";
+import { type Column, ITDataTable, ITPage, ITText } from "@axzydev/axzy_ui_system";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { IconButton } from "@shared/ui/IconButton";
+import { FaBalanceScale } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { receivingApi, type Discrepancy } from "@entities/invoice";
 import { AdjustDialog } from "@features/invoice/InvoiceDialogs";
@@ -31,7 +33,7 @@ export function DiscrepanciesPage() {
 			key: "actions",
 			label: t("discrepancies.columns.actions"),
 			type: "actions",
-			actions: (row) => <ITButton size="sm" label={t("detail.adjust")} onClick={() => setAdjusting(row)} />,
+			actions: (row) => <IconButton icon={<FaBalanceScale aria-hidden />} label={t("detail.adjust")} variant="outlined" onClick={() => setAdjusting(row)} />,
 		},
 	];
 

@@ -56,7 +56,36 @@ test("the office filters the current stock, exports it, and reads the kardex of 
 	await expect(page.getByTestId("kardex-closing")).toContainText("40");
 });
 
-test("the movements, orders and invoices reports answer with their own rows", async ({ page }) => {
+test("the movements report answers what came in for a material", async ({ page }) => {
+	const f = await ordersFixture();
+	const product = await f.product("Clavo de reportes");
+	await f.stock(product.id, 25);
+	const office = await newUser(["OFFICE"]);
+	await signInAs(page, office);
+
+	await page.goto("/#/reports/movements");
+	await expect(page.getByRole("heading", { name: "Movimientos" })).toBeVisible();
+	await page.getByPlaceholder("Busca por código o nombre").fill(product.code);
+	await page.getByText(`${product.code} · ${product.name}`).first().click();
+	await expect(page.getByTestId("movements-report").getByRole("row").filter({ hasText: product.code })).toContainText("25");
+	await expect(page.getByTestId("movements-total")).toContainText("Entradas");
+});
+
+test("the invoices report answers the entry that put a material on the shelf", async ({ page }) => {
+	const f = await ordersFixture();
+	const product = await f.product("Clavo de reportes");
+	await f.stock(product.id, 25);
+	const office = await newUser(["OFFICE"]);
+	await signInAs(page, office);
+
+	await page.goto("/#/reports/invoices");
+	await expect(page.getByRole("heading", { name: "Facturas y entradas" })).toBeVisible();
+	await page.locator('input[name="supplierId"]').fill(f.supplier.code);
+	await page.locator("div.max-h-60").last().getByText(f.supplier.code, { exact: false }).first().click();
+	await expect(page.getByTestId("invoices-report").getByRole("row").filter({ hasText: product.code })).toContainText("25");
+});
+
+test("the orders report answers the orders of a period and a customer", async ({ page }) => {
 	const f = await ordersFixture();
 	const product = await f.product("Clavo de reportes");
 	await f.stock(product.id, 25);
@@ -65,24 +94,10 @@ test("the movements, orders and invoices reports answer with their own rows", as
 	const office = await newUser(["OFFICE"]);
 	await signInAs(page, office);
 
-	// The movements of the material that was received: what came in.
-	await page.goto("/#/reports/movements");
-	await expect(page.getByRole("heading", { name: "Movimientos" })).toBeVisible();
-	await page.getByPlaceholder("Busca por código o nombre").fill(product.code);
-	await page.getByText(`${product.code} · ${product.name}`).first().click();
-	await expect(page.getByTestId("movements-report").getByRole("row").filter({ hasText: product.code })).toContainText("25");
-	await expect(page.getByTestId("movements-total")).toContainText("Entradas");
-
-	// The invoices of the entry that put that material on the shelf, of its own supplier.
-	await page.goto("/#/reports/invoices");
-	await expect(page.getByRole("heading", { name: "Facturas y entradas" })).toBeVisible();
-	await page.locator('select[name="supplierId"]').selectOption(f.supplier.id);
-	await expect(page.getByTestId("invoices-report").getByRole("row").filter({ hasText: product.code })).toContainText("25");
-
-	// The orders of the period, of the customer the fixture used, with what was asked.
 	await page.goto("/#/reports/orders");
 	await expect(page.getByRole("heading", { name: "Órdenes" })).toBeVisible();
-	await page.locator('select[name="customerId"]').selectOption(f.customer.id);
+	await page.locator('input[name="customerId"]').fill(f.customer.code);
+	await page.locator("div.max-h-60").last().getByText(f.customer.code, { exact: false }).first().click();
 	await expect(page.getByTestId("orders-report").getByRole("row").filter({ hasText: product.code })).toContainText("10");
 });
 

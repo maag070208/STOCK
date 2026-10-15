@@ -172,8 +172,19 @@ invoice ones first — and its `files` list grows with each screen, so the rest 
 | `dl`, `dt`, `dd` | `ITGrid` with `ITStatCard`, or `ITTable` |
 | a label and its control | `ITField` |
 
-`src/shared/ui` is where the app keeps the few primitives the kit does not have (`FormDialog`, `SecretValue`, `useSubmit`).
-Anything a screen needs beyond those comes from the kit, never from new raw markup.
+`src/shared/ui` is where the app keeps the few primitives the kit does not have (`FormDialog`, `SecretValue`, `useSubmit`,
+`IconButton`, `PlainTable`). Anything a screen needs beyond those comes from the kit, never from new raw markup.
+
+Rules that follow from this:
+
+1. **A table's action is an icon.** The buttons of a row carry no text: only the icon, with the name on `ariaLabel` and
+   `title` through [`IconButton`](../../web/src/shared/ui/IconButton.tsx) — the words a person reads in the tooltip are
+   the words a screen reader and a test find. A row menu (`ITDropdownMenu`) puts an icon in its `trigger` with the name
+   in `triggerLabel`. A page action, a dialog button or a form button keeps its text: those are not table cells.
+2. **Every screen ends with room.** The bottom margin belongs to the layout (`.sf-pb-12` on its content), so no page has
+   to remember it and no action ends up glued to the edge of the window.
+3. **The action of the state lives with the state.** A screen whose main action changes the state of what it shows (close
+   an invoice) puts that action in the page header, next to the badge of its state, not at the end of the content.
 
 ## 9. Insecure context
 

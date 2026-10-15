@@ -58,7 +58,8 @@ export function AppShell({ children }: { children: ReactNode }) {
 	return (
 		<ITLayout
 			className="sf-shell"
-			contentClassName="sf:max-w-(--sf-layout-container-max)"
+			// Every screen ends with room to breathe: the layout owns the bottom margin, so no page carries it.
+			contentClassName="sf:max-w-(--sf-layout-container-max) sf:pb-12"
 			sidebarFullHeight
 			topBar={{
 				logoText: t("app.name"),

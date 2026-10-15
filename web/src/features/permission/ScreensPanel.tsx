@@ -1,4 +1,4 @@
-import { ITText, type Column } from "@axzydev/axzy_ui_system";
+import { type Column, ITText } from "@axzydev/axzy_ui_system";
 import { useTranslation } from "react-i18next";
 import { APP_SCREENS, roleLabel, screensOfRole, type MatrixCell, type Role } from "@entities/permission";
 import { PlainTable } from "@shared/ui/PlainTable";

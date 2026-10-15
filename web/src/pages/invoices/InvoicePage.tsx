@@ -1,6 +1,7 @@
-import { ITAlert, ITBadget, ITButton, ITCard, ITEmptyState, ITFlex, ITGrid, ITPage, ITStack, ITStatCard, ITText, type Column } from "@axzydev/axzy_ui_system";
+import { type Column, ITAlert, ITBadget, ITButton, ITCard, ITEmptyState, ITFlex, ITGrid, ITPage, ITStack, ITStatCard, ITText } from "@axzydev/axzy_ui_system";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { FaBalanceScale, FaExchangeAlt, FaTrash } from "react-icons/fa";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { toast } from "@app/store";
 import { captureSummary, invoiceApi, staffApi, type Assignment, type Invoice, type InvoiceLine, type StaffMember } from "@entities/invoice";
@@ -8,6 +9,7 @@ import { useCan } from "@entities/user";
 import { AdjustDialog, AssignDialog } from "@features/invoice/InvoiceDialogs";
 import { QuickCapture } from "@features/invoice/QuickCapture";
 import { ApiError } from "@shared/api/client";
+import { IconButton } from "@shared/ui/IconButton";
 import { formatDate, formatQuantity } from "@shared/lib/format";
 import { STATUS_COLOR } from "./InvoicesPage";
 import { PlainTable } from "@shared/ui/PlainTable";
@@ -98,9 +100,14 @@ export function InvoicePage() {
 			actions: (line) => (
 				<ITFlex gap={2} justify="end">
 					{open && can.assign && !line.assignments.some((assignment) => assignment.countedQuantity !== null) && (
-						<ITButton size="sm" variant="outlined" label={line.assignments.length ? t("detail.reassign") : t("detail.assign")} onClick={() => setAssigning(line)} />
+						<IconButton
+							icon={<FaExchangeAlt aria-hidden />}
+							label={line.assignments.length ? t("detail.reassign") : t("detail.assign")}
+							variant="outlined"
+							onClick={() => setAssigning(line)}
+						/>
 					)}
-					{open && can.create && <ITButton size="sm" variant="text" label={t("common:actions.remove")} onClick={() => void removeLine(line)} />}
+					{open && can.create && <IconButton icon={<FaTrash aria-hidden />} label={t("common:actions.remove")} color="danger" onClick={() => void removeLine(line)} />}
 				</ITFlex>
 			),
 		},
@@ -134,10 +141,10 @@ export function InvoicePage() {
 			actions: (row) => (
 				<ITFlex gap={2} justify="end">
 					{open && can.assign && row.assignment.countedQuantity === null && (
-						<ITButton size="sm" variant="outlined" label={t("detail.reassign")} onClick={() => setAssigning(row.line)} />
+						<IconButton icon={<FaExchangeAlt aria-hidden />} label={t("detail.reassign")} variant="outlined" onClick={() => setAssigning(row.line)} />
 					)}
 					{can.resolve && row.assignment.outcome === "DISCREPANCY" && invoice?.status.code === "PENDING" && (
-						<ITButton size="sm" label={t("detail.adjust")} onClick={() => setAdjusting({ line: row.line, assignment: row.assignment })} />
+						<IconButton icon={<FaBalanceScale aria-hidden />} label={t("detail.adjust")} onClick={() => setAdjusting({ line: row.line, assignment: row.assignment })} />
 					)}
 				</ITFlex>
 			),
@@ -150,7 +157,17 @@ export function InvoicePage() {
 			breadcrumbs={[{ label: t("title"), onClick: () => navigate("/invoices") }, { label: invoice?.number ?? t("title") }]}
 			loading={!invoice}
 			noPadding
-			actions={invoice && <ITBadget color={STATUS_COLOR[invoice.status.code]} label={invoice.status.label ?? invoice.status.code} />}
+			// The state, and the one action that changes it, live together at the top of the page.
+			actions={
+				invoice && (
+					<ITFlex align="center" gap={3}>
+						<ITBadget color={STATUS_COLOR[invoice.status.code]} label={invoice.status.label ?? invoice.status.code} />
+						{can.create && open && lines.length > 0 && (
+							<ITButton label={closing ? t("modal.saving") : t("closing.button")} onClick={() => void closeInvoice()} disabled={closing} />
+						)}
+					</ITFlex>
+				)
+			}
 		>
 			{invoice && (
 				<ITStack spacing={6}>
@@ -203,12 +220,6 @@ export function InvoicePage() {
 							</ITAlert>
 						)}
 
-						{/* Closing by hand: only while the invoice is open and has something in it (F8-03, F8-07). */}
-						{can.create && open && lines.length > 0 && (
-							<ITFlex justify="end">
-								<ITButton label={closing ? t("modal.saving") : t("closing.button")} onClick={() => void closeInvoice()} disabled={closing} />
-							</ITFlex>
-						)}
 					</ITStack>
 				</ITStack>
 			)}

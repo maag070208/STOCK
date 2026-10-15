@@ -1,6 +1,8 @@
-import { ITBadget, ITButton, ITCheckbox, ITConfirmDialog, ITFlex, ITGrid, ITInput, ITMultiSelect, ITSelect, ITStack, ITText, type Column } from "@axzydev/axzy_ui_system";
+import { type Column, ITBadget, ITButton, ITCheckbox, ITConfirmDialog, ITFlex, ITGrid, ITInput, ITMultiSelect, ITSelect, ITStack, ITText } from "@axzydev/axzy_ui_system";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { IconButton } from "@shared/ui/IconButton";
+import { FaEdit, FaTrash } from "react-icons/fa";
 import { accessApi, formatPolicyValue, parsePolicyValue, roleLabel, type Policy, type PolicyAction, type Role } from "@entities/permission";
 import { ApiError } from "@shared/api/client";
 import { dyn } from "@shared/i18n";
@@ -114,8 +116,8 @@ export function PoliciesPanel(props: { policies: Policy[]; actions: PolicyAction
 			type: "actions",
 			actions: (row) => (
 				<ITFlex justify="end" gap={1}>
-					<ITButton size="sm" variant="text" label={t("common:actions.edit")} onClick={() => open(row.policy)} />
-					<ITButton size="sm" variant="text" color="danger" label={t("common:actions.delete")} onClick={() => setDeleting(row.policy)} />
+					<IconButton icon={<FaEdit aria-hidden />} label={t("common:actions.edit")} onClick={() => open(row.policy)} />
+					<IconButton icon={<FaTrash aria-hidden />} label={t("common:actions.delete")} color="danger" onClick={() => setDeleting(row.policy)} />
 				</ITFlex>
 			),
 		},

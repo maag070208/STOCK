@@ -1,4 +1,4 @@
-import { ITDataTable, ITPage, type Column } from "@axzydev/axzy_ui_system";
+import { type Column, ITDataTable, ITPage } from "@axzydev/axzy_ui_system";
 import { useTranslation } from "react-i18next";
 import { auditApi, type AuditRecord } from "@entities/audit";
 import type { TableParams } from "@shared/api/table";

@@ -1,6 +1,7 @@
-import { ITBadget, ITButton, ITConfirmDialog, ITDataTable, ITDropdownMenu, ITFlex, ITPage, ITStack, ITText, type Column, type ColumnFilters, type ITDropdownMenuItem } from "@axzydev/axzy_ui_system";
+import { type Column, type ColumnFilters, ITBadget, ITButton, ITConfirmDialog, ITDataTable, ITDropdownMenu, type ITDropdownMenuItem, ITFlex, ITPage, ITStack, ITText } from "@axzydev/axzy_ui_system";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { FaEllipsisV } from "react-icons/fa";
 import { useNavigate, useParams } from "react-router-dom";
 import { useCan } from "@entities/user";
 import { locationApi, warehouseApi, type AisleGroup, type Location, type Warehouse } from "@entities/warehouse";
@@ -98,7 +99,7 @@ export function WarehousePage() {
 							: { id: "reactivate", label: t("actions.reactivate"), onClick: () => setConfirm({ kind: "reactivateLocation", location }) },
 					);
 				}
-				return items.length > 0 ? <ITDropdownMenu items={items} triggerLabel={t("columns.actions")} placement="bottom-end" /> : null;
+				return items.length > 0 ? <ITDropdownMenu items={items} trigger={<FaEllipsisV aria-hidden />} triggerLabel={t("columns.actions")} placement="bottom-end" /> : null;
 			},
 		},
 	];

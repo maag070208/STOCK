@@ -1,6 +1,8 @@
-import { ITAlert, ITButton, ITDialog, ITFlex, ITGrid, ITInput, ITMultiSelect, ITSelect, ITStack, ITText, type Column } from "@axzydev/axzy_ui_system";
+import { type Column, ITAlert, ITButton, ITDialog, ITFlex, ITGrid, ITInput, ITMultiSelect, ITSelect, ITStack, ITText } from "@axzydev/axzy_ui_system";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { IconButton } from "@shared/ui/IconButton";
+import { FaTrash } from "react-icons/fa";
 import { roleLabel, type PermissionDefinition, type Role } from "@entities/permission";
 import { userApi, type PermissionExceptionView, type Scope, type User } from "@entities/user";
 import { dyn } from "@shared/i18n";
@@ -65,7 +67,7 @@ export function UserAccessDialog(props: { user: User | null; roles: Role[]; perm
 			label: "",
 			type: "actions",
 			className: "sf:text-right",
-			actions: (row) => <ITButton variant="text" label={t("common:actions.remove")} onClick={() => void removeException(row.exception.permission)} />,
+			actions: (row) => <IconButton icon={<FaTrash aria-hidden />} label={t("common:actions.remove")} onClick={() => void removeException(row.exception.permission)} />,
 		},
 	];
 
