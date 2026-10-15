@@ -26,8 +26,13 @@ test("unit: the label files are up to date with the document", () => {
 
 // The Kotlin side reads the labels by key: a key it asks for that the document does not have fails here.
 test("unit: the labels the API prints are in the document", () => {
-  const source = readFileSync(join(root, "api/src/main/kotlin/com/axzydev/stock/api/modules/orders/OrderDocumentText.kt"), "utf8");
-  const wanted = [...source.matchAll(/get\("([a-z_.]+)"/g)].map((match) => match[1]);
+  const files = [
+    "api/src/main/kotlin/com/axzydev/stock/api/modules/orders/OrderDocumentText.kt",
+    "api/src/main/kotlin/com/axzydev/stock/api/modules/reports/ReportsExportService.kt",
+  ];
+  const wanted = files.flatMap((file) =>
+    [...readFileSync(join(root, file), "utf8").matchAll(/(?:get|text)\("([a-z_.]+)"/g)].map((match) => match[1]),
+  );
   assert.ok(wanted.length > 10, "the labels are read from the source");
   const keys = new Set(rows.map((row) => row.key));
   assert.deepEqual(wanted.filter((key) => !keys.has(key)), []);

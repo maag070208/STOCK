@@ -1,7 +1,5 @@
 package com.axzydev.stock.api.modules.orders
 
-import org.springframework.context.support.ReloadableResourceBundleMessageSource
-import java.util.Locale
 
 // The labels the comprobante prints (docs/i18n/documents.md), in es and en. A missing label fails loudly, because the
 // document would be wrong for the customer.
@@ -27,15 +25,8 @@ data class DocumentLabels(
 
 object OrderDocumentText {
 
-	private val source = ReloadableResourceBundleMessageSource().apply {
-		setBasename("classpath:messages/documents")
-		setDefaultEncoding("UTF-8")
-		setFallbackToSystemLocale(false)
-	}
-
 	fun labels(language: String): DocumentLabels {
-		val locale = Locale.forLanguageTag(language)
-		fun get(key: String): String = source.getMessage(key, null, locale)
+		fun get(key: String): String = com.axzydev.stock.api.core.i18n.DocumentLabels.text(key, language)
 		return DocumentLabels(
 			title = get("document.title"),
 			warehouse = get("document.warehouse"),

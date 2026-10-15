@@ -1,12 +1,12 @@
 package com.axzydev.stock.api.modules.entries
 
 import com.axzydev.stock.api.support.ApiTest
+import com.axzydev.stock.api.support.BusinessDays
 import com.axzydev.stock.api.support.list
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import tools.jackson.databind.JsonNode
-import java.time.LocalDate
 import java.util.UUID
 
 // F4-07 to F4-13 · e2e: the invoice, its lines, its idempotent creation, its visibility by warehouse, the staff
@@ -51,7 +51,7 @@ class InvoicesEndpointTest : ApiTest() {
 		val wrong = f.create(
 			f.body(
 				f.line(product, 0), f.line(product, 5),
-				changes = mapOf("number" to "FAC 1", "supplierId" to inactive, "invoiceDate" to LocalDate.now().plusDays(1).toString()),
+				changes = mapOf("number" to "FAC 1", "supplierId" to inactive, "invoiceDate" to BusinessDays.today(1).toString()),
 			),
 		)
 		assertEquals(

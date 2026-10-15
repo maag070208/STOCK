@@ -90,7 +90,8 @@
     "ORDER_CANCELLED": "Order cancelled",
     "ORDER_REASSIGNED": "Order reassigned",
     "ORDER_PICKS_TRANSFERRED": "Picked material transferred",
-    "ORDER_PICKS_RETURNED": "Picked material returned"
+    "ORDER_PICKS_RETURNED": "Picked material returned",
+    "REPORT_EXPORTED": "Report exported"
   },
   "targets": {
     "user": "User",

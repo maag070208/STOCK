@@ -90,7 +90,8 @@
     "ORDER_CANCELLED": "Orden cancelada",
     "ORDER_REASSIGNED": "Orden reasignada",
     "ORDER_PICKS_TRANSFERRED": "Material surtido traspasado",
-    "ORDER_PICKS_RETURNED": "Material surtido devuelto"
+    "ORDER_PICKS_RETURNED": "Material surtido devuelto",
+    "REPORT_EXPORTED": "Reporte exportado"
   },
   "targets": {
     "user": "Usuario",

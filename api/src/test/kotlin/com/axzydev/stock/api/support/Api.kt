@@ -74,6 +74,22 @@ class Api(private val port: Int) {
 		)
 	}
 
+	// A download that carries a body, such as the export of a report: the bytes as they are.
+	fun downloadPost(path: String, token: String?, body: Any?, channel: String? = "web"): ApiDownload {
+		val request = HttpRequest.newBuilder(URI.create("http://localhost:$port/api/v1$path"))
+			.POST(HttpRequest.BodyPublishers.ofString(mapper.writeValueAsString(body)))
+			.header("Content-Type", "application/json")
+		if (token != null) request.header("Authorization", "Bearer $token")
+		if (channel != null) request.header("X-Client-Channel", channel)
+		val response = client.send(request.build(), HttpResponse.BodyHandlers.ofByteArray())
+		return ApiDownload(
+			response.statusCode(),
+			response.headers().firstValue("Content-Type").orElse(null),
+			response.headers().firstValue("Content-Disposition").orElse(null),
+			response.body(),
+		)
+	}
+
 	// Sends a file as a form, the way a browser uploads it: the file in `file`, and the other fields as text.
 	fun upload(path: String, token: String?, file: ByteArray, fields: Map<String, String> = emptyMap(), filename: String = "inventario.xlsx"): ApiResponse {
 		val boundary = "----stockflow" + UUID.randomUUID().toString().replace("-", "")
