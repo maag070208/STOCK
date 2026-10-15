@@ -1,6 +1,9 @@
 // Helpers for the Android end-to-end tests: adb, the accessibility dump and the screen's pixels.
+// The suites drive one phone at a time: two of them at once fight over the screen, the accessibility dump fails and the
+// failures look like bugs. `node --test` runs the files it is given in parallel, so they are run one file at a time, and
+// the lock below says so when that is forgotten.
 import { execFileSync } from "node:child_process";
-import { readFileSync, unlinkSync } from "node:fs";
+import { readFileSync, unlinkSync, writeFileSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { tmpdir } from "node:os";
@@ -11,6 +14,48 @@ const apk = join(root, "app/androidApp/build/outputs/apk/debug/androidApp-debug.
 
 export const adb = (...args) => execFileSync("adb", args, { encoding: "utf8" });
 export const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+// One suite at a time on one device: the first one takes the lock while its process lives. Written with the exclusive
+// flag, so two suites that start together cannot both take it.
+const lock = join(tmpdir(), "stockflow-android-device.lock");
+const alive = (pid) => {
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch {
+    return false;
+  }
+};
+function takeDevice() {
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      writeFileSync(lock, String(process.pid), { flag: "wx" });
+      return;
+    } catch (error) {
+      if (error?.code !== "EEXIST") throw error;
+      let holder = 0;
+      try {
+        holder = Number(readFileSync(lock, "utf8"));
+      } catch {
+        holder = 0;
+      }
+      if (holder && alive(holder)) {
+        throw new Error(`otra suite de Android está usando el dispositivo (pid ${holder}): córrelas de a una, "node --test tests/e2e-app/<archivo>.test.mjs"`);
+      }
+      // The lock is stale: whoever held it is gone.
+      unlinkSync(lock);
+    }
+  }
+  throw new Error("no se pudo tomar el turno del dispositivo Android");
+}
+takeDevice();
+process.on("exit", () => {
+  try {
+    if (Number(readFileSync(lock, "utf8")) === process.pid) unlinkSync(lock);
+  } catch {
+    // The lock is already gone: nothing to release.
+  }
+});
 
 // The device the tests drive. With several connected, ANDROID_SERIAL chooses one: adb reads the same variable.
 const connected = adb("devices").split("\n").filter((line) => line.endsWith("\tdevice")).map((line) => line.split("\t")[0]);
@@ -122,7 +167,14 @@ export async function signIn(username, password) {
 // The screen as the accessibility tree sees it. Empty when the tree cannot be read at this moment,
 // which happens while an app is starting: the file on the device would then be an older screen.
 export function dump() {
-  const result = adb("shell", "uiautomator", "dump", "/sdcard/stockflow-screen.xml");
+  // The accessibility bridge fails now and then — an animation, a window that just changed — and the command answers
+  // with an error. That is not a failure of the test: it reads the screen again.
+  let result = "";
+  try {
+    result = adb("shell", "uiautomator", "dump", "/sdcard/stockflow-screen.xml");
+  } catch {
+    return "";
+  }
   if (!result.includes("dumped to")) return "";
   const local = join(tmpdir(), "stockflow-screen.xml");
   adb("pull", "/sdcard/stockflow-screen.xml", local);
