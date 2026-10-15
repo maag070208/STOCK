@@ -1,4 +1,4 @@
-import { ITButton, ITDataTable, ITPage, type Column } from "@axzydev/axzy_ui_system";
+import { ITButton, ITDataTable, ITPage, ITText, type Column } from "@axzydev/axzy_ui_system";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
@@ -23,9 +23,9 @@ export function DiscrepanciesPage() {
 		{ key: "warehouse", label: t("discrepancies.columns.warehouse"), type: "string", render: (row) => row.warehouse.code ?? "" },
 		{ key: "product", label: t("discrepancies.columns.product"), type: "string", render: (row) => `${row.product.code} · ${row.product.name}` },
 		{ key: "operator", label: t("discrepancies.columns.operator"), type: "string", render: (row) => row.operator.name ?? "" },
-		{ key: "expectedQuantity", label: t("discrepancies.columns.expected"), type: "string", render: (row) => <span className="sf:tabular-nums">{number(row.expectedQuantity)}</span> },
-		{ key: "countedQuantity", label: t("discrepancies.columns.counted"), type: "string", render: (row) => <span className="sf:tabular-nums">{number(row.countedQuantity)}</span> },
-		{ key: "difference", label: t("discrepancies.columns.difference"), type: "string", render: (row) => <span className="sf:tabular-nums sf:text-danger">{signed(row.difference)}</span> },
+		{ key: "expectedQuantity", label: t("discrepancies.columns.expected"), type: "string", render: (row) => <ITText className="sf:tabular-nums">{number(row.expectedQuantity)}</ITText> },
+		{ key: "countedQuantity", label: t("discrepancies.columns.counted"), type: "string", render: (row) => <ITText className="sf:tabular-nums">{number(row.countedQuantity)}</ITText> },
+		{ key: "difference", label: t("discrepancies.columns.difference"), type: "string", render: (row) => <ITText className="sf:tabular-nums sf:text-danger">{signed(row.difference)}</ITText> },
 		{ key: "countNotes", label: t("discrepancies.columns.notes"), type: "string", render: (row) => row.countNotes ?? "" },
 		{
 			key: "actions",
@@ -36,8 +36,8 @@ export function DiscrepanciesPage() {
 	];
 
 	return (
-		<ITPage title={t("discrepancies.title")} description={t("discrepancies.description")} noPadding>
-			<div data-testid="discrepancies">
+		<ITPage title={t("discrepancies.title")} description={t("discrepancies.description")} breadcrumbs={[{ label: t("discrepancies.title") }]} noPadding>
+			<section data-testid="discrepancies">
 				<ITDataTable<Discrepancy>
 					columns={columns}
 					fetchData={(params) => receivingApi.discrepancies(params as TableParams)}
@@ -45,7 +45,7 @@ export function DiscrepanciesPage() {
 					layout="fixed"
 					onRowClick={(row) => navigate(`/invoices/${row.invoice.id}`)}
 				/>
-			</div>
+			</section>
 			<AdjustDialog
 				assignmentId={adjusting?.assignmentId ?? null}
 				summary={adjusting && { expected: number(adjusting.expectedQuantity), counted: number(adjusting.countedQuantity), difference: signed(adjusting.difference) }}

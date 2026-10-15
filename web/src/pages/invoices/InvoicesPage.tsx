@@ -1,4 +1,4 @@
-import { ITAlert, ITBadget, ITButton, ITChip, ITDataTable, ITEmptyState, ITInput, ITPage, type Column, type ITDataTableFetchParams } from "@axzydev/axzy_ui_system";
+import { ITAlert, ITBadget, ITButton, ITChip, ITDataTable, ITEmptyState, ITFlex, ITInput, ITPage, ITStack, ITText, type Column, type ITDataTableFetchParams } from "@axzydev/axzy_ui_system";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { FaSearch } from "react-icons/fa";
@@ -108,32 +108,38 @@ export function InvoicesPage() {
 	];
 
 	return (
-		<ITPage title={t("title")} description={t("description")} noPadding actions={canCreate ? <ITButton label={t("new")} onClick={() => setCreating(true)} /> : undefined}>
-			<div className="sf:flex sf:flex-col sf:gap-4">
+		<ITPage
+			title={t("title")}
+			description={t("description")}
+			breadcrumbs={[{ label: t("title") }]}
+			noPadding
+			actions={canCreate ? <ITButton label={t("new")} onClick={() => setCreating(true)} /> : undefined}
+		>
+			<ITStack spacing={4}>
 				{created && (
 					<ITAlert variant="success" dismissible onDismiss={() => setCreated(null)}>
-						<div className="sf:flex sf:flex-wrap sf:items-center sf:justify-between sf:gap-2">
-							<span>{t("modal.created", { number: created.number })}</span>
+						<ITFlex wrap="wrap" align="center" justify="between" gap={2}>
+							<ITText as="span">{t("modal.created", { number: created.number })}</ITText>
 							<ITButton size="sm" label={t("modal.addMaterials")} onClick={() => navigate(`/invoices/${created.id}`, { state: { focus: "capture" } })} />
-						</div>
+						</ITFlex>
 					</ITAlert>
 				)}
 
-				<div className="sf:flex sf:flex-wrap sf:items-end sf:justify-between sf:gap-3">
-					<div className="sf:w-96 sf:max-w-full">
+				<ITFlex wrap="wrap" align="end" justify="between" gap={3}>
+					<ITStack className="sf:w-96 sf:max-w-full">
 						<ITInput name="search" label={t("list.search")} value={search} onChange={(event) => setSearch(String(event.target.value))} iconLeft={<FaSearch aria-hidden />} />
-					</div>
-					<div className="sf:flex sf:items-center sf:gap-2" role="group" aria-label={t("list.statusFilter")}>
+					</ITStack>
+					<ITText as="div" role="group" aria-label={t("list.statusFilter")} className="sf:flex sf:items-center sf:gap-2">
 						{chips.map((option) => (
 							<ITChip key={option.id} label={option.label} selected={chip === option.id} onClick={() => choose(option.id)} />
 						))}
-					</div>
-				</div>
+					</ITText>
+				</ITFlex>
 
 				{/* The empty state is shown instead of the table, and the table stays mounted: it is what asks for the next
 				    page when the filters change, so clearing them brings the rows back. */}
 				{total === 0 && <ITEmptyState title={t("list.empty")} action={<ITButton variant="outlined" label={t("list.clearFilters")} onClick={clear} />} />}
-				<div className={total === 0 ? "sf:hidden" : undefined}>
+				<ITStack className={total === 0 ? "sf:hidden" : undefined}>
 					<ITDataTable<Invoice>
 						columns={columns}
 						fetchData={fetchData}
@@ -142,8 +148,8 @@ export function InvoicesPage() {
 						layout="fixed"
 						onRowClick={(invoice) => navigate(`/invoices/${invoice.id}`)}
 					/>
-				</div>
-			</div>
+				</ITStack>
+			</ITStack>
 
 			<NewInvoiceDialog
 				isOpen={creating}

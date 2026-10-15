@@ -46,7 +46,7 @@ export function InvoicePage() {
 		return (
 			<ITPage
 				title={t("title")}
-				breadcrumbs={[{ label: t("title"), href: "/invoices" }]}
+				breadcrumbs={[{ label: t("title"), onClick: () => navigate("/invoices") }]}
 				noPadding
 				actions={<ITButton variant="outlined" label={t("detail.back")} onClick={() => navigate("/invoices")} />}
 			>
@@ -139,7 +139,7 @@ export function InvoicePage() {
 	return (
 		<ITPage
 			title={invoice ? `${invoice.number} · ${invoice.supplier.name ?? ""}` : t("title")}
-			breadcrumbs={[{ label: t("title"), href: "/invoices" }, { label: invoice?.number ?? "" }]}
+			breadcrumbs={[{ label: t("title"), onClick: () => navigate("/invoices") }, { label: invoice?.number ?? t("title") }]}
 			loading={!invoice}
 			noPadding
 			actions={invoice && <ITBadget color={STATUS_COLOR[invoice.status.code]} label={invoice.status.label ?? invoice.status.code} />}
