@@ -183,7 +183,12 @@ Rules that follow from this:
    in `triggerLabel`. A page action, a dialog button or a form button keeps its text: those are not table cells.
 2. **Every screen ends with room.** The bottom margin belongs to the layout (`.sf-pb-12` on its content), so no page has
    to remember it and no action ends up glued to the edge of the window.
-3. **The action of the state lives with the state.** A screen whose main action changes the state of what it shows (close
+3. **A list of more than four choices is searched.** `ITSelect` is for the short, closed lists: two or three options
+   such as a language, an effect or a scope. Anything a person would have to scan — materials, warehouses, suppliers,
+   customers, operators, users, permissions, catalog values — is an `ITSearchSelect`, which filters as the person types,
+   and when the choices come from the API and can be hundreds the picker searches the API instead of bringing a page
+   (`PartnerPicker`, `WarehousePicker`).
+4. **The action of the state lives with the state.** A screen whose main action changes the state of what it shows (close
    an invoice) puts that action in the page header, next to the badge of its state, not at the end of the content.
 
 ## 9. Insecure context
