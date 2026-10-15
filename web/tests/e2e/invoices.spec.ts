@@ -1,7 +1,7 @@
 // F4-20, F4-21 and F8: office captures an invoice in the modal over the list, adds its materials in the quick bar and
 // assigns them from the detail (the mock leaves the assignment out of the creation). Discrepancies are adjusted by who
 // may resolve them, and only them.
-import { test, expect, type Page } from "@playwright/test";
+import { test, expect, type Page } from "../support/test";
 import { businessDate, call, newUser, signInAs, uniqueName } from "../support/api";
 import { entriesFixture } from "../support/entries";
 import { captureMaterial, fillNewInvoice } from "../support/invoices";

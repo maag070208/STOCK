@@ -1,7 +1,7 @@
 // F3-11 and F3-12 · e2e: the template editor reports problems as the administrator types and saves new versions;
 // printers take a valid address; a manager prints a product label to the fake printer, from the printers of their
 // warehouse only. The fake printer is a TCP server on the printing port of the profile e2e (testing.md rule 7).
-import { test, expect } from "@playwright/test";
+import { test, expect } from "../support/test";
 import { createServer } from "node:net";
 import { adminToken, call, e2eAdmin, newUser, signInAs, uniqueName } from "../support/api";
 import { pickRemoteOption, pickSearchOption } from "../support/forms";

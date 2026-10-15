@@ -1,5 +1,5 @@
 // F1-02 and F1-18 · e2e: an administrator manages users from the web.
-import { test, expect, type Page } from "@playwright/test";
+import { test, expect, type Page } from "../support/test";
 import { adminToken, call, e2eAdmin, newUser, signInAs, uniqueName } from "../support/api";
 import { pickSearchOption } from "../support/forms";
 

@@ -1,6 +1,6 @@
 // F4-19 · e2e: the stock screens. The opening inventory loads from its screen; the stock lists show the balances with
 // their unit's decimals, and follow the reader's warehouses.
-import { test, expect } from "@playwright/test";
+import { test, expect } from "../support/test";
 import { adminToken, call, e2eAdmin, newUser, signInAs, uniqueName, upload } from "../support/api";
 import { legacyInventory } from "../support/xlsx";
 

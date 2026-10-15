@@ -8,6 +8,9 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   // A test that fails on the first run is not retried locally (the suite is fast enough to run again).
   reporter: "list",
+  // What the API cannot remove (a closed invoice, the append-only movements, a killed run) is taken away when the suite
+  // is over, so the database the tests fill is left clean every time (testing.md rule 4).
+  globalTeardown: "./tests/support/teardown.ts",
   // Three at a time, not more: the tests share one database that grows as they run, and past three they slow each other
   // into timeouts that have nothing to do with the app.
   workers: process.env.CI ? 1 : 3,

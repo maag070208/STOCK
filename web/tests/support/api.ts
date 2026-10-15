@@ -23,7 +23,9 @@ export async function call(method: string, path: string, options: { token?: stri
 	const request = () => fetch(base + path, { method, headers, body: options.body === undefined ? undefined : JSON.stringify(options.body) });
 	const response = await request().catch(request);
 	const text = await response.text();
-	return { status: response.status, json: text ? JSON.parse(text) : null };
+	const json = text ? JSON.parse(text) : null;
+	if (response.status < 400) track(method, path, options.body, json);
+	return { status: response.status, json };
 }
 
 // Sends a file as a form, the way the web uploads it: the file in `file`, the other fields as text.
@@ -34,6 +36,53 @@ export async function upload(path: string, token: string, file: Buffer, fields: 
 	const response = await fetch(base + path, { method: "POST", headers: { "X-Client-Channel": "web", Authorization: `Bearer ${token}` }, body: form });
 	const text = await response.text();
 	return { status: response.status, json: text ? JSON.parse(text) : null };
+}
+
+// What a test creates, so it can take it away when the test ends. The API is the only way in and the only way out
+// (testing.md rule 4): a resource that has no endpoint to remove it is left for the reset of the whole database
+// (tests/support/teardown.ts).
+interface Created {
+	label: string;
+	remove: string;
+}
+
+const created: Created[] = [];
+
+// How each thing a test creates is taken away: the path it was created at, where its key comes from, and the path that
+// removes it. The order of the list does not matter: the removals run backwards, the last created first.
+const removable: { path: RegExp; key: (json: any, body: any) => string | null; remove: (key: string) => string }[] = [
+	{ path: /^\/users$/, key: (json) => json?.user?.id ?? null, remove: (id) => `/users/${id}` },
+	{ path: /^\/suppliers$/, key: (json) => json?.id ?? null, remove: (id) => `/suppliers/${id}` },
+	{ path: /^\/customers$/, key: (json) => json?.id ?? null, remove: (id) => `/customers/${id}` },
+	{ path: /^\/suppliers\/[^/]+\/contacts$/, key: (json) => json?.id ?? null, remove: (id) => `/suppliers/contacts/${id}` },
+	{ path: /^\/customers\/[^/]+\/contacts$/, key: (json) => json?.id ?? null, remove: (id) => `/customers/contacts/${id}` },
+	{ path: /^\/products$/, key: (json) => json?.id ?? null, remove: (id) => `/products/${id}` },
+	{ path: /^\/warehouses$/, key: (json) => json?.id ?? null, remove: (id) => `/warehouses/${id}` },
+	{ path: /^\/roles$/, key: (_json, body) => body?.key ?? null, remove: (key) => `/roles/${key}` },
+	{ path: /^\/policies$/, key: (_json, body) => body?.key ?? null, remove: (key) => `/policies/${key}` },
+];
+
+function track(method: string, path: string, body: unknown, json: any) {
+	if (method !== "POST") return;
+	const rule = removable.find((candidate) => candidate.path.test(path));
+	if (!rule) return;
+	const key = rule.key(json, body);
+	if (key) created.push({ label: path, remove: rule.remove(key) });
+}
+
+// How much has been created so far. A test takes this before it starts, so it removes what it wrote and not what a
+// `beforeAll` of its file wrote, which the whole file still needs.
+export const createdMark = (): number => created.length;
+
+// Empties what was created after that mark, in reverse order, and never fails the test: a resource another test already
+// took away is not a reason to call a passing test a failure.
+export async function drainCreated(since = 0, token?: string) {
+	const auth = token ?? (await adminToken().catch(() => undefined));
+	while (created.length > since) {
+		const item = created.pop()!;
+		if (!auth) continue;
+		await call("DELETE", item.remove, { token: auth }).catch(() => undefined);
+	}
 }
 
 // The test administrator of the profile e2e.

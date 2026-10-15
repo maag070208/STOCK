@@ -1,7 +1,7 @@
 // F5-16 and F5-17 · e2e: office creates an order with two lines against the availability the warehouse has, assigns it
 // to an operator and sees it in the list; then the actions of an order — validating it, moving picked material to
 // another order, cancelling one with nothing picked, and downloading the receipt of a validated one, which is locked.
-import { test, expect, type Page } from "@playwright/test";
+import { test, expect, type Page } from "../support/test";
 import { newUser, signInAs, uniqueName } from "../support/api";
 import { ordersFixture } from "../support/orders";
 import { pickRemoteOption, pickSearchOption } from "../support/forms";

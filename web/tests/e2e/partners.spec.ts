@@ -1,6 +1,6 @@
 // F2-13 · e2e: the suppliers and customers screens. An administrator creates a supplier with a contact; a wrong RFC
 // shows the API's error next to its field; an office user sees the lists and cannot open the form.
-import { test, expect } from "@playwright/test";
+import { test, expect } from "../support/test";
 import { e2eAdmin, newUser, signInAs, testPaymentTerms, uniqueName } from "../support/api";
 import { pickSearchOption } from "../support/forms";
 

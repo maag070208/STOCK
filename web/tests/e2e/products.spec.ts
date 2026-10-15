@@ -1,6 +1,6 @@
 // F2-12 · e2e: the materials screens and the import of the inventory file. The dry run shows its counts before the
 // confirm is enabled, the confirm imports, and a second import of the same file finds nothing new.
-import { test, expect } from "@playwright/test";
+import { test, expect } from "../support/test";
 import { e2eAdmin, newUser, signInAs, uniqueName } from "../support/api";
 import { legacyInventory } from "../support/xlsx";
 

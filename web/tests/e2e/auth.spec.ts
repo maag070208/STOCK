@@ -1,5 +1,5 @@
 // F1-18 · e2e: sign-in, the forced password change, the menu by permissions, the 403 page and sign-out.
-import { test, expect, type Page } from "@playwright/test";
+import { test, expect, type Page } from "../support/test";
 import { newUser, signInAs, skipIntro } from "../support/api";
 
 const menu = (page: Page) => page.locator("aside nav").first();

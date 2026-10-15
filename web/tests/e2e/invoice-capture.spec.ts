@@ -1,6 +1,6 @@
 // F8-05 to F8-08 · e2e: the fast invoice flow. One search box and three status chips on the list, a new invoice in a
 // modal over it, the quick capture bar and the closing by hand on the detail, all with the keyboard.
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Page } from "../support/test";
 import { businessDate, call, newUser, signInAs, uniqueName } from "../support/api";
 import { entriesFixture, type EntriesFixture } from "../support/entries";
 import { captureMaterial, fillNewInvoice } from "../support/invoices";

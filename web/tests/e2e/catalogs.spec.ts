@@ -1,5 +1,5 @@
 // F1-15 and F1-16 · e2e: the catalogs screen. Who can read sees the values; who can manage adds and deactivates them.
-import { test, expect } from "@playwright/test";
+import { test, expect } from "../support/test";
 import { e2eAdmin, newUser, signInAs, uniqueName } from "../support/api";
 import { pickSearchOption } from "../support/forms";
 

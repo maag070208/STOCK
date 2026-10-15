@@ -1,5 +1,5 @@
 // F0-11 · e2e: Spanish by default, English on request, and the choice stays after a reload.
-import { test, expect } from "@playwright/test";
+import { test, expect } from "../support/test";
 
 test("the page is in Spanish by default and switches to English", async ({ page }) => {
   await page.goto("/#/login");

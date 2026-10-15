@@ -1,5 +1,5 @@
 // F0-18 · e2e: the web follows design/command-center-DESIGN.md. Expected values are read from the tokens, not typed here.
-import { test, expect, type Page } from "@playwright/test";
+import { test, expect, type Page } from "../support/test";
 import { designTokens } from "../../src/shared/ui/design-tokens";
 import { newUser, signInAs, type TestUser } from "../support/api";
 

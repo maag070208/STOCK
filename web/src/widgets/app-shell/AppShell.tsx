@@ -7,6 +7,7 @@ import { FaBalanceScale, FaBoxes, FaClipboardList, FaCubes, FaFileInvoice, FaHan
 import { APP_SCREENS, isScreenVisible, type AppScreen } from "@entities/permission";
 import { authApi, signedOut, usePermissions, useSessionUser } from "@entities/user";
 import { LanguageSwitch } from "@widgets/language-switch/LanguageSwitch";
+import { useState } from "react";
 
 const ICONS: Record<string, ReactNode> = {
 	home: <FaHome />,
@@ -30,6 +31,13 @@ const ICONS: Record<string, ReactNode> = {
 // The menu is built from APP_SCREENS and the person's permissions; the API still checks every request.
 export function AppShell({ children }: { children: ReactNode }) {
 	const { t } = useTranslation();
+	// The sidebar of the layout is controlled by the kit: opening it and remembering it is this component's business.
+	const [collapsed, setCollapsed] = useState(() => typeof window !== "undefined" && window.localStorage.getItem("stockflow.sidebar") === "collapsed");
+	const toggleSidebar = () =>
+		setCollapsed((value: boolean) => {
+			window.localStorage.setItem("stockflow.sidebar", value ? "open" : "collapsed");
+			return !value;
+		});
 	const navigate = useNavigate();
 	const location = useLocation();
 	const dispatch = useDispatch();
@@ -74,6 +82,10 @@ export function AppShell({ children }: { children: ReactNode }) {
 			sidebar={{
 				navigationItems,
 				brand: { text: t("app.name"), logo: <img src="/brand/stockflow-glyph-dark.svg" alt="" className="sf:size-10" /> },
+				// It starts open, collapses from the button of the top bar, and remembers how the person left it.
+				isCollapsed: collapsed,
+				onToggleCollapse: () => toggleSidebar(),
+				expandOnHover: false,
 			}}
 		>
 			{children}

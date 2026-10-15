@@ -1,6 +1,6 @@
 // F1-19 · e2e: the access console. An administrator changes a matrix cell and a policy;
 // a person without roles.manage cannot open it.
-import { test, expect } from "@playwright/test";
+import { test, expect } from "../support/test";
 import { adminToken, call, e2eAdmin, newUser, signInAs } from "../support/api";
 import { pickSearchOption } from "../support/forms";
 

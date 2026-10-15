@@ -1,5 +1,5 @@
 // F1-17 · e2e: the audit log screen shows every write, and offers no way to change a record.
-import { test, expect } from "@playwright/test";
+import { test, expect } from "../support/test";
 import { e2eAdmin, newUser, signInAs } from "../support/api";
 
 

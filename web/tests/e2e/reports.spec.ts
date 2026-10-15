@@ -1,7 +1,7 @@
 // F6-06 · e2e: the report screens. The office opens the current stock, filters it by material, takes it away as a file,
 // and reads the kardex of a material, whose running balance is the one the API computed (reports.md sections 3 and 4).
 // Nobody without reports.view sees anything but the 403 page (section 2).
-import { test, expect, type Page } from "@playwright/test";
+import { test, expect, type Page } from "../support/test";
 import { adminToken, call, newUser, signInAs, uniqueName } from "../support/api";
 import { ordersFixture } from "../support/orders";
 import { pickSearchOption } from "../support/forms";

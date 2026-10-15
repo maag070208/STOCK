@@ -1,5 +1,5 @@
 // F0-16 · e2e: the intro plays once before sign-in, the loader shows while the animation loads, and reduced motion stops the movement.
-import { test, expect } from "@playwright/test";
+import { test, expect } from "../support/test";
 
 test("the intro plays once, then sign-in is shown", async ({ page }) => {
   await page.goto("/#/login");

@@ -1,6 +1,6 @@
 // F2-11 · e2e: the warehouses screens. An administrator creates a warehouse and a rack from the form,
 // the groups by aisle and rack show it, and a duplicate rack shows the API's refusal next to the form.
-import { test, expect } from "@playwright/test";
+import { test, expect } from "../support/test";
 import { adminToken, call, e2eAdmin, newUser, signInAs, uniqueName } from "../support/api";
 
 test("an administrator creates a warehouse and a rack, and the groups show the rack", async ({ page }) => {

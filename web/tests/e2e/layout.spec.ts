@@ -1,5 +1,5 @@
 // F0-10 · e2e: the shell shows the navigation and the flat appearance on desktop, and a phone opens the menu from the top bar.
-import { test, expect } from "@playwright/test";
+import { test, expect } from "../support/test";
 import { newUser, signInAs, type TestUser } from "../support/api";
 
 // The shell is private: the tests sign in as an office user.
