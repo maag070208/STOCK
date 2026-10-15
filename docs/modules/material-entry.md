@@ -55,7 +55,14 @@ After the lines are added, the office chooses one of two paths. Both store the s
 
 The office can use either path. Path B does not create a separate draft.
 
-## 6. Assignment
+## 6. Closing an invoice
+
+An invoice closes by itself when every share of every line is placed (section 7 of
+[material-receiving.md](material-receiving.md)). An invoice captured fast, with lines and no operators, has no shares to
+place, so the office closes it with `POST /invoices/{id}/closure` (decided 2026-10-15, F8-03). It is refused while any
+share is counted, so the work of the warehouse is never thrown away.
+
+## 6a. Assignment
 
 An assignment gives one line to one `WAREHOUSE_OPERATOR`, with the quantity that operator should receive. Several operators can share one line.
 
@@ -86,13 +93,14 @@ All under `/api/v1`, with the headers and checks of [identity.md](identity.md) s
 
 | Method and path | Permission | Notes |
 |---|---|---|
-| `POST /invoices/query` | `invoices.view` | Table contract. Filters: `number`, `supplierId`, `warehouseId`, `status` (code). Sort: `createdAt` (default, newest first), `number`, `invoiceDate` |
+| `POST /invoices/query` | `invoices.view` | Table contract. Filters: `search` (the number, the supplier's code or its name, with OR among the three), `number`, `supplierId`, `warehouseId`, `status` (code). Sort: `createdAt` (default, newest first), `number`, `invoiceDate` |
 | `GET /invoices/{id}` | `invoices.view` | The invoice with its lines, each with its assignments, counts and placements |
 | `POST /invoices` | `invoices.create` | Header `Idempotency-Key` (required). `number`, `supplierId`, `contactId` (optional), `invoiceDate`, `warehouseId`, `lines: [{ productId, quantity, assignments: [{ operatorId, quantity }] }]`. Path A sends no `assignments`; path B sends them and saves once |
 | `POST /invoices/{id}/lines` | `invoices.create` | `productId`, `quantity`. While the invoice is `OPEN` or `PENDING` |
 | `PATCH /invoices/{id}/lines/{lineId}` | `invoices.create` | `quantity`. Not once a share of the line is counted (`ASSIGNMENT_LOCKED`); with shares, they must still add up |
 | `DELETE /invoices/{id}/lines/{lineId}` | `invoices.create` | Removes a line added by mistake, while nothing of it is counted. The audit log keeps it |
 | `PUT /invoices/{id}/lines/{lineId}/assignments` | `receipts.assign` | `assignments: [{ operatorId, quantity }]`. Replaces the shares of the line, while none is counted |
+| `POST /invoices/{id}/closure` | `invoices.create` | Closes an invoice by hand (F8-03): it needs lines (`INVOICE_WITHOUT_LINES`) and nothing counted (`INVOICE_STATUS_INVALID`). Audited as `INVOICE_CLOSED`. From the first count on, the placement closes it |
 | `GET /warehouses/{id}/staff` | `receipts.assign` or `staff_templates.manage` | The operators of the warehouse's template |
 | `PUT /warehouses/{id}/staff` | `staff_templates.manage` | `userIds`. Each one an active person who can count receipts and works in the warehouse |
 
