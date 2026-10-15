@@ -46,7 +46,7 @@ export function AuditPage() {
 
 	return (
 		<ITPage title={t("title")} description={t("description")} noPadding>
-			<ITDataTable<AuditRecord> columns={columns} fetchData={(params) => auditApi.query(params as TableParams)} layout="fixed" />
+			<ITDataTable<AuditRecord> showViewToggle={false} columns={columns} fetchData={(params) => auditApi.query(params as TableParams)} layout="fixed" />
 		</ITPage>
 	);
 }

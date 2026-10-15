@@ -92,6 +92,7 @@ export function ProductsPage() {
 			}
 		>
 			<ITDataTable<Product>
+				showViewToggle={false}
 				columns={columns}
 				fetchData={(params) => productApi.query(params as TableParams)}
 				reloadTrigger={reload}

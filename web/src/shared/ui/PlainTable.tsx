@@ -17,6 +17,9 @@ export function PlainTable<T extends Record<string, unknown>>(props: {
 			data={props.data}
 			size={props.size}
 			onRowClick={props.onRowClick ? (row: T) => props.onRowClick?.(row) : undefined}
+			// The kit's table offers the cards view and a page size; a screen that holds all its rows needs neither.
+			showViewToggle={false}
+			footerClassName="sf:hidden"
 			defaultView="table"
 			defaultItemsPerPage={rows}
 			itemsPerPageOptions={[rows]}

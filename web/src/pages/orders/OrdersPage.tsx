@@ -69,7 +69,7 @@ export function OrdersPage() {
 					))}
 				</ITStack>
 			)}
-			<ITDataTable<Order> columns={columns} fetchData={(params) => orderApi.query(params as TableParams)} layout="fixed" onRowClick={(order) => navigate(`/orders/${order.id}`)} />
+			<ITDataTable<Order> showViewToggle={false} columns={columns} fetchData={(params) => orderApi.query(params as TableParams)} layout="fixed" onRowClick={(order) => navigate(`/orders/${order.id}`)} />
 		</ITPage>
 	);
 }

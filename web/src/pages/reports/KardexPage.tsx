@@ -115,6 +115,7 @@ export function KardexPage() {
 			)}
 			<ITText as="section" data-testid="kardex-report">
 				<ITDataTable<KardexRow>
+				showViewToggle={false}
 					columns={columns}
 					fetchData={(params) => {
 						const asked = { ...params.filters, ...chosen };

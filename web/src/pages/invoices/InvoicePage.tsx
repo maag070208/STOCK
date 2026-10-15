@@ -93,7 +93,7 @@ export function InvoicePage() {
 		{ key: "quantity", label: t("form.quantity"), type: "string", render: (line) => `${quantity(line.quantity, line)} ${line.unit?.label ?? ""}` },
 		{
 			key: "actions",
-			label: "",
+			label: t("columns.actions"),
 			type: "actions",
 			actions: (line) => (
 				<ITFlex gap={2} justify="end">
@@ -128,12 +128,19 @@ export function InvoicePage() {
 		{ key: "placed", label: t("detail.placed"), type: "string", render: (row) => quantity(row.assignment.placedQuantity, row.line) },
 		{
 			key: "actions",
-			label: "",
+			label: t("columns.actions"),
 			type: "actions",
-			actions: (row) =>
-				can.resolve && row.assignment.outcome === "DISCREPANCY" && invoice?.status.code === "PENDING" ? (
-					<ITButton size="sm" label={t("detail.adjust")} onClick={() => setAdjusting({ line: row.line, assignment: row.assignment })} />
-				) : null,
+			// The material is assigned to a person, and a difference is settled, from the row that shows it.
+			actions: (row) => (
+				<ITFlex gap={2} justify="end">
+					{open && can.assign && row.assignment.countedQuantity === null && (
+						<ITButton size="sm" variant="outlined" label={t("detail.reassign")} onClick={() => setAssigning(row.line)} />
+					)}
+					{can.resolve && row.assignment.outcome === "DISCREPANCY" && invoice?.status.code === "PENDING" && (
+						<ITButton size="sm" label={t("detail.adjust")} onClick={() => setAdjusting({ line: row.line, assignment: row.assignment })} />
+					)}
+				</ITFlex>
+			),
 		},
 	];
 

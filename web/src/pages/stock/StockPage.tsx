@@ -74,7 +74,7 @@ export function StockPage() {
 						label: t("tabs.byLocation"),
 						content: (
 							<ITText as="div" data-testid="stock-by-location">
-								<ITDataTable<Balance> columns={byLocation} fetchData={(params) => stockApi.balances(params as TableParams)} layout="fixed" />
+								<ITDataTable<Balance> showViewToggle={false} columns={byLocation} fetchData={(params) => stockApi.balances(params as TableParams)} layout="fixed" />
 							</ITText>
 						),
 					},

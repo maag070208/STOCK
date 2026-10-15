@@ -64,6 +64,7 @@ export function WarehousesPage() {
 	return (
 		<ITPage title={t("title")} description={t("description")} noPadding actions={canManage ? <ITButton label={t("new")} onClick={() => setEditing({ warehouse: null })} /> : undefined}>
 			<ITDataTable<Warehouse>
+				showViewToggle={false}
 				columns={columns}
 				fetchData={(params) => warehouseApi.query(params as TableParams)}
 				reloadTrigger={reload}

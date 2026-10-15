@@ -59,6 +59,7 @@ export function StockReportPage() {
 			)}
 			<ITText as="section" data-testid="stock-report">
 				<ITDataTable<StockReportRow>
+				showViewToggle={false}
 					columns={columns}
 					// The filters this screen manages travel as external filters: the table merges them with its own
 					// before asking, and the export takes exactly the filters of the last answer.

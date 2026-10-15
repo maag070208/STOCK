@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@axzydev/axzy_ui_system':
-        specifier: ^1.4.7
-        version: 1.4.7(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+        specifier: ^1.5.2
+        version: 1.5.2(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       '@reduxjs/toolkit':
         specifier: ^2.13.0
         version: 2.13.0(react-redux@9.3.0(@types/react@19.3.0)(react@19.3.0)(redux@5.0.1))(react@19.3.0)
@@ -93,8 +93,8 @@ importers:
 
 packages:
 
-  '@axzydev/axzy_ui_system@1.4.7':
-    resolution: {integrity: sha512-LVDYNeJAgcDA6Xj6gMoRYR/EV8VhltUXjeefvMRoELJck3nI7VZUnZgpNUJVfQZxO7pRflPVrdCdoQ14qpSTBQ==}
+  '@axzydev/axzy_ui_system@1.5.2':
+    resolution: {integrity: sha512-VxHqkW7+a9W5BAqOuKO7r9JSk41JKhiy+ua3dBqz9EUcf/OIWc6ExGu5FmpS6SVdF+R0TwoWwej4IeRVMCAXqA==}
     peerDependencies:
       react: '>=18'
       react-dom: '>=18'
@@ -1684,7 +1684,7 @@ packages:
 
 snapshots:
 
-  '@axzydev/axzy_ui_system@1.4.7(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)':
+  '@axzydev/axzy_ui_system@1.5.2(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)':
     dependencies:
       clsx: 2.1.1
       date-fns: 4.4.0

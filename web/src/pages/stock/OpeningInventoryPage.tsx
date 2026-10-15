@@ -1,9 +1,9 @@
-import { ITAlert, ITBadget, ITButton, ITFlex, ITGrid, ITPage, ITSelect, ITStack, ITStatCard, ITText } from "@axzydev/axzy_ui_system";
+import { ITAlert, ITBadget, ITButton, ITFlex, ITGrid, ITPage, ITStack, ITStatCard, ITText } from "@axzydev/axzy_ui_system";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { stockApi, type OpeningReport } from "@entities/stock";
-import { warehouseApi, type Warehouse } from "@entities/warehouse";
+import { warehouseApi, WarehousePicker } from "@entities/warehouse";
 import { formatNumber } from "@shared/lib/format";
 import { useSubmit } from "@shared/ui/useSubmit";
 
@@ -16,7 +16,6 @@ export function OpeningInventoryPage() {
 	const { t, i18n } = useTranslation(["stock", "common"]);
 	const navigate = useNavigate();
 	const picker = useRef<HTMLInputElement>(null);
-	const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
 	const [warehouseId, setWarehouseId] = useState("");
 	const [file, setFile] = useState<File | null>(null);
 	const [report, setReport] = useState<OpeningReport | null>(null);
@@ -25,10 +24,10 @@ export function OpeningInventoryPage() {
 	const number = (value: number | null) => (none(value) ? "" : formatNumber(Number(value), i18n.language));
 
 	useEffect(() => {
-		void warehouseApi.query({ page: 1, limit: 200, filters: { active: "true" } }).then((page) => {
-			setWarehouses(page.data);
-			// CENTRAL holds the opening inventory (products.md section 5), when it exists.
-			setWarehouseId((current) => current || (page.data.find((w) => w.code === "CENTRAL") ?? page.data[0])?.id || "");
+		// CENTRAL holds the opening inventory (products.md section 5), when it exists.
+		void warehouseApi.query({ page: 1, limit: 1, filters: { active: "true", code: "CENTRAL" } }).then((page) => {
+			const central = page.data[0];
+			if (central) setWarehouseId((current) => current || central.id);
 		});
 	}, []);
 
@@ -64,17 +63,14 @@ export function OpeningInventoryPage() {
 			<ITStack spacing={6} className="sf:max-w-4xl">
 				<ITGrid container spacing={3}>
 					<ITGrid item xs={12} sm={6}>
-						<ITSelect
+						<WarehousePicker
 							name="warehouseId"
 							label={t("opening.warehouse")}
 							value={warehouseId}
-							onChange={(e) => {
-								setWarehouseId(e.target.value);
+							onChange={(chosen) => {
+								setWarehouseId(chosen);
 								reset();
 							}}
-							options={warehouses.map((w) => ({ value: w.id, label: `${w.code} · ${w.name}` }))}
-							valueField="value"
-							labelField="label"
 						/>
 					</ITGrid>
 					<ITGrid item xs={12} sm={6}>

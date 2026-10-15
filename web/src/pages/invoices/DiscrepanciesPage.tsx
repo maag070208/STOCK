@@ -38,6 +38,7 @@ export function DiscrepanciesPage() {
 	return (
 		<ITPage title={t("discrepancies.title")} description={t("discrepancies.description")} breadcrumbs={[{ label: t("discrepancies.title") }]} noPadding>
 			<ITDataTable<Discrepancy>
+				showViewToggle={false}
 					columns={columns}
 					fetchData={(params) => receivingApi.discrepancies(params as TableParams)}
 					reloadTrigger={reload}

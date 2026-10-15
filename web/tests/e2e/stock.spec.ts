@@ -25,7 +25,9 @@ test("an administrator loads the opening inventory from its screen, and the stoc
 	await signInAs(page, e2eAdmin());
 	await page.goto("/#/stock");
 	await page.getByRole("button", { name: "Inventario inicial" }).click();
-	await page.locator('select[name="warehouseId"]').selectOption(warehouse.id);
+	// The warehouse is searched by its code: an installation holds hundreds of them (the picker asks the API).
+	await page.locator('input[name="warehouseId"]').fill(warehouse.code);
+	await page.locator("div.max-h-60").last().getByText(warehouse.code, { exact: false }).first().click();
 	await page.locator('input[name="file"]').setInputFiles({ name: "inventario.xlsx", mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", buffer: file });
 	await page.getByRole("button", { name: "Revisar archivo" }).click();
 	const report = page.getByTestId("opening-report");

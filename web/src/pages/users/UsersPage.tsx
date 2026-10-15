@@ -107,7 +107,7 @@ export function UsersPage() {
 			noPadding
 			actions={can.create ? <ITButton label={t("new")} onClick={() => setCreating(true)} /> : undefined}
 		>
-			<ITDataTable<User> columns={columns} fetchData={(params) => userApi.query(params as TableParams)} reloadTrigger={reload} layout="fixed" />
+			<ITDataTable<User> showViewToggle={false} columns={columns} fetchData={(params) => userApi.query(params as TableParams)} reloadTrigger={reload} layout="fixed" />
 
 			<CreateUserDialog
 				isOpen={creating}

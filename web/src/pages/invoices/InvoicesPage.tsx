@@ -141,6 +141,7 @@ export function InvoicesPage() {
 				{total === 0 && <ITEmptyState title={t("list.empty")} action={<ITButton variant="outlined" label={t("list.clearFilters")} onClick={clear} />} />}
 				<ITStack className={total === 0 ? "sf:hidden" : undefined}>
 					<ITDataTable<Invoice>
+				showViewToggle={false}
 						columns={columns}
 						fetchData={fetchData}
 						reloadTrigger={`${applied}|${chip}|${reload}`}

@@ -63,6 +63,7 @@ export function PartnersPage({ kind }: { kind: PartnerKind }) {
 	return (
 		<ITPage title={t(`${kind}.title`)} description={t(`${kind}.description`)} noPadding actions={canManage ? <ITButton label={t(`${kind}.new`)} onClick={() => navigate(`/${kind}/new`)} /> : undefined}>
 			<ITDataTable<Partner>
+				showViewToggle={false}
 				columns={columns}
 				fetchData={(params) => api.query(params as TableParams)}
 				reloadTrigger={reload}

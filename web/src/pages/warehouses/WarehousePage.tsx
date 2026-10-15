@@ -176,7 +176,7 @@ export function WarehousePage() {
 							</>
 						)}
 					</ITFlex>
-					<ITDataTable<Location> columns={columns} externalFilters={filters} fetchData={(params) => locationApi.query(params as TableParams)} reloadTrigger={reload} layout="fixed" />
+					<ITDataTable<Location> showViewToggle={false} columns={columns} externalFilters={filters} fetchData={(params) => locationApi.query(params as TableParams)} reloadTrigger={reload} layout="fixed" />
 				</ITStack>
 			</ITStack>
 
