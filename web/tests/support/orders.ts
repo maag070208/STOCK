@@ -1,7 +1,7 @@
 // What an order needs, created through the API as a person would (testing.md rule 4): a customer, a warehouse with a
 // rack, materials with stock in it, and the operators of that warehouse in its staff template. Stock is put in a real
 // location through the material entry flow (invoice, assignment, count and placement), so a pick takes it from a shelf.
-import { adminToken, call, newUser, testPaymentTerms, uniqueName, type TestUser } from "./api";
+import { adminToken, businessDate, call, newUser, testPaymentTerms, uniqueName, type TestUser } from "./api";
 
 export interface OrderJson {
 	id: string;
@@ -73,7 +73,7 @@ export async function ordersFixture(): Promise<OrdersFixture> {
 	const stock = async (productId: string, quantity: number, locationIndex = 0) => {
 		const invoice = await call("POST", "/invoices", {
 			token,
-			body: { number: uniqueName("F-").toUpperCase(), supplierId: supplierPartner.id, invoiceDate: new Date().toISOString().slice(0, 10), warehouseId: warehouse.id, lines: [{ productId, quantity }] },
+			body: { number: uniqueName("F-").toUpperCase(), supplierId: supplierPartner.id, invoiceDate: businessDate(), warehouseId: warehouse.id, lines: [{ productId, quantity }] },
 			headers: { "Idempotency-Key": uniqueName("k") },
 		});
 		if (invoice.status !== 201) throw new Error(`invoice creation failed: ${JSON.stringify(invoice.json)}`);
@@ -90,7 +90,7 @@ export async function ordersFixture(): Promise<OrdersFixture> {
 	};
 
 	const order = async (input: { number: string; productId: string; quantity: number; operatorId?: string; dueDate?: string }) => {
-		const due = input.dueDate ?? new Date(Date.now() + 3 * 86400000).toISOString().slice(0, 10);
+		const due = input.dueDate ?? businessDate(3);
 		const created = await call("POST", "/orders", {
 			token,
 			body: { number: input.number, warehouseId: warehouse.id, customerId: client.id, dueDate: due, lines: [{ productId: input.productId, quantity: input.quantity }] },

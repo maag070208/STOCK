@@ -58,6 +58,13 @@ export interface TestUser {
 
 export const uniqueName = (prefix = "w") => prefix + randomUUID().replace(/-/g, "").slice(0, 10);
 
+// The business day of the API (America/Mexico_City). Invoice dates and order due dates are checked against it, so a
+// test that used the UTC calendar would fail every evening: UTC has already rolled over and the business day has not.
+// `en-CA` formats a date as YYYY-MM-DD, which is what the API reads.
+export const businessDate = (daysAhead = 0): string =>
+	new Intl.DateTimeFormat("en-CA", { timeZone: "America/Mexico_City", year: "numeric", month: "2-digit", day: "2-digit" })
+		.format(new Date(Date.now() + daysAhead * 86_400_000));
+
 // A payment term for suppliers and customers. The owner has not given the real ones, so the tests add their own,
 // marked as test data, the same one the API's suite uses. It is created once; later calls find it.
 export async function testPaymentTerms(): Promise<{ code: string; label: string }> {

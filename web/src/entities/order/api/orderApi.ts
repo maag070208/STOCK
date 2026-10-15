@@ -33,7 +33,7 @@ export const orderApi = {
 	reassignOperator: (id: string, operatorId: string, note: string) => post<Order>(`/orders/${id}/reassignments/operator`, { operatorId, note }),
 	transfer: (id: string, input: TransferInput) => post<Order>(`/orders/${id}/reassignments/transfer`, input),
 	returnStock: (id: string, input: ReturnInput) => post<Order>(`/orders/${id}/reassignments/return`, input),
-	// The warehouses an order can leave from: every active one. Who creates orders needs them without reading
-	// locations, which is the endpoint the invoice form uses for the same reason.
-	warehouseOptions: () => get<Ref[]>("/invoices/warehouse-options"),
+	// The warehouses a new order may leave from, with orders.create: whoever orders does not need the invoice
+	// permission to see them.
+	warehouseOptions: () => get<Ref[]>("/orders/warehouse-options"),
 };

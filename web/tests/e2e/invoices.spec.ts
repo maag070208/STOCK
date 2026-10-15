@@ -1,7 +1,7 @@
 // F4-20 and F4-21 · e2e: office creates an invoice and assigns it after saving (path A), then another assigned before
 // saving (path B); the detail shows the status. Discrepancies are adjusted by who may resolve them, and only them.
 import { test, expect, type Page } from "@playwright/test";
-import { call, newUser, signInAs, uniqueName } from "../support/api";
+import { businessDate, call, newUser, signInAs, uniqueName } from "../support/api";
 import { entriesFixture } from "../support/entries";
 
 async function pickProduct(page: Page, index: number, product: { code: string; name: string }) {
@@ -72,7 +72,7 @@ test("a discrepancy is adjusted by the warehouse's manager or by office, and not
 	const [a] = f.operators;
 	const nails = await f.product("Clavo de prueba");
 	const body = (number: string) => ({
-		number, supplierId: f.supplier.id, invoiceDate: new Date().toISOString().slice(0, 10), warehouseId: f.warehouse.id,
+		number, supplierId: f.supplier.id, invoiceDate: businessDate(), warehouseId: f.warehouse.id,
 		lines: [{ productId: nails.id, quantity: 100, assignments: [{ operatorId: a.id, quantity: 100 }] }],
 	});
 	const created = await fetch("http://localhost:8080/api/v1/invoices", {
