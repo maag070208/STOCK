@@ -12,7 +12,7 @@
     "test:e2e": "playwright test --project=e2e"
   },
   "dependencies": {
-    "@axzydev/axzy_ui_system": "^1.5.2",
+    "@axzydev/axzy_ui_system": "^1.5.3",
     "@reduxjs/toolkit": "^2.13.0",
     "axios": "^1.20.0",
     "i18next": "^26.4.4",

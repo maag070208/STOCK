@@ -25,7 +25,7 @@ export function QuickCapture(props: {
 	const focusMaterial = () => focusField("capture-product");
 	const focusQuantity = () => focusField("capture-quantity");
 
-	// Arriving from `Guardar y agregar materiales`, the material is waiting with the focus on it.
+	// Arriving from the modal of a new invoice, the material is waiting with the focus on it.
 	useEffect(() => {
 		if (props.autoFocus) bar.current?.querySelector<HTMLInputElement>('[name="capture-product"]')?.focus();
 	}, [props.autoFocus]);

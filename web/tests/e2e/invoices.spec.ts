@@ -23,7 +23,7 @@ test("office creates an invoice in the modal and assigns its line from the detai
 	await fillNewInvoice(page, { number, supplier: f.supplier, warehouseId: f.warehouse.id });
 
 	// The primary action lands on the detail, where the materials are captured.
-	await page.getByRole("button", { name: "Guardar y agregar materiales" }).click();
+	await page.getByRole("button", { name: "Guardar", exact: true }).click();
 	await expect(page.getByRole("heading", { name: new RegExp(number) })).toBeVisible();
 	await captureMaterial(page, screws, "100");
 	await expect(page.getByText("1 línea · 100 piezas")).toBeVisible();

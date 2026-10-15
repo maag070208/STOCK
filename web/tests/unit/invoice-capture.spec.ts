@@ -41,10 +41,10 @@ test("the summary of the lines counts them and adds their quantities (F8-07)", (
 	expect(captureSummary([{ quantity: 100 } as never, { quantity: 20.5 } as never])).toEqual({ lines: 2, pieces: 120.5 });
 });
 
-test("the modal asks for four fields and nothing else, and each action goes where it says (F8-06)", () => {
+test("the modal asks for four fields and nothing else, and its one action goes to the materials (F8-06)", () => {
 	expect([...NEW_INVOICE_FIELDS]).toEqual(["number", "supplierId", "invoiceDate", "warehouseId"]);
-	expect(newInvoiceDestination("save", "inv-1")).toBe("/invoices");
-	expect(newInvoiceDestination("materials", "inv-1")).toBe("/invoices/inv-1");
+	// One action: saving a new invoice leads to its materials.
+	expect(newInvoiceDestination("inv-1")).toBe("/invoices/inv-1");
 });
 
 test("the modal says which field is missing, in the order of the fields (F8-06)", () => {

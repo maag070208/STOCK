@@ -22,9 +22,9 @@ export function newInvoiceErrors(values: NewInvoiceValues): Partial<Record<NewIn
 	return errors;
 }
 
-// `Guardar` goes back to the list, `Guardar y agregar materiales` to the detail of the invoice that was just created.
-export function newInvoiceDestination(action: "save" | "materials", id: string): string {
-	return action === "materials" ? `/invoices/${id}` : "/invoices";
+// Saving a new invoice leads to the materials of that invoice: the flow the owner asked for (F8-06).
+export function newInvoiceDestination(id: string): string {
+	return `/invoices/${id}`;
 }
 
 // The last supplier and warehouse are remembered for the session, which is what the mock asks for: they are the two

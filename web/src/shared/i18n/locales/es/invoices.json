@@ -15,12 +15,9 @@
     "title": "Nueva factura",
     "remembered": "Recordamos el último almacén que usaste.",
     "save": "Guardar",
-    "saveAndAdd": "Guardar y agregar materiales",
     "saving": "Guardando…",
-    "created": "Factura {{number}} creada",
-    "addMaterials": "Agregar materiales",
     "network": "No se pudo guardar. Intenta de nuevo.",
-    "supplierSearch": "Busca por código o nombre del proveedor"
+    "supplierSearch": "Busca por código o nombre"
   },
   "capture": {
     "title": "Captura rápida",
@@ -46,11 +43,11 @@
   },
   "form": {
     "header": "Datos de la factura",
-    "number": "Número de factura",
+    "number": "Número",
     "numberHint": "Letras, números, guiones y diagonales.",
     "supplier": "Proveedor",
-    "date": "Fecha de la factura",
-    "warehouse": "Almacén que recibe",
+    "date": "Fecha",
+    "warehouse": "Almacén",
     "lines": "Materiales",
     "addLine": "Agregar material",
     "product": "Material",

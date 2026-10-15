@@ -1,9 +1,8 @@
-import { type Column, ITAlert, ITBadget, ITButton, ITChip, ITDataTable, type ITDataTableFetchParams, ITEmptyState, ITFlex, ITInput, ITPage, ITStack, ITText } from "@axzydev/axzy_ui_system";
+import { type Column, ITBadget, ITButton, ITChip, ITDataTable, type ITDataTableFetchParams, ITEmptyState, ITFlex, ITInput, ITPage, ITStack, ITText } from "@axzydev/axzy_ui_system";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { FaSearch } from "react-icons/fa";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { toast } from "@app/store";
 import { catalogApi, type CatalogItem } from "@entities/catalog";
 import { invoiceApi, invoiceFilters, statusChip, type Invoice, type InvoiceStatus, type Ref, type StatusChip } from "@entities/invoice";
 import { useCan } from "@entities/user";
@@ -27,9 +26,6 @@ export function InvoicesPage() {
 	const [total, setTotal] = useState<number | null>(null);
 	const [creating, setCreating] = useState(false);
 	const [warehouses, setWarehouses] = useState<Ref[]>([]);
-	const [created, setCreated] = useState<Invoice | null>(null);
-	// Bumped when an invoice is created, so the table asks for its page again and the new row is there.
-	const [reload, setReload] = useState(0);
 
 	useEffect(() => {
 		void catalogApi.items("INVOICE_STATUS").then(setStatuses).catch(() => setStatuses([]));
@@ -116,15 +112,6 @@ export function InvoicesPage() {
 			actions={canCreate ? <ITButton label={t("new")} onClick={() => setCreating(true)} /> : undefined}
 		>
 			<ITStack spacing={4}>
-				{created && (
-					<ITAlert variant="success" dismissible onDismiss={() => setCreated(null)}>
-						<ITFlex wrap="wrap" align="center" justify="between" gap={2}>
-							<ITText as="span">{t("modal.created", { number: created.number })}</ITText>
-							<ITButton size="sm" label={t("modal.addMaterials")} onClick={() => navigate(`/invoices/${created.id}`, { state: { focus: "capture" } })} />
-						</ITFlex>
-					</ITAlert>
-				)}
-
 				<ITFlex wrap="wrap" align="end" justify="between" gap={3}>
 					<ITStack className="sf:w-96 sf:max-w-full">
 						<ITInput name="search" label={t("list.search")} value={search} onChange={(event) => setSearch(String(event.target.value))} iconLeft={<FaSearch aria-hidden />} />
@@ -144,7 +131,7 @@ export function InvoicesPage() {
 				showViewToggle={false}
 						columns={columns}
 						fetchData={fetchData}
-						reloadTrigger={`${applied}|${chip}|${reload}`}
+						reloadTrigger={`${applied}|${chip}`}
 						variant="striped"
 						layout="fixed"
 						onRowClick={(invoice) => navigate(`/invoices/${invoice.id}`)}
@@ -156,15 +143,10 @@ export function InvoicesPage() {
 				isOpen={creating}
 				warehouses={warehouses}
 				onClose={() => setCreating(false)}
-				onCreated={(invoice, action) => {
+				// Saving goes straight to the materials of the invoice that was just created.
+				onCreated={(invoice) => {
 					setCreating(false);
-					if (action === "materials") {
-						navigate(`/invoices/${invoice.id}`, { state: { focus: "capture" } });
-						return;
-					}
-					setCreated(invoice);
-					setReload((count) => count + 1);
-					toast(t("modal.created", { number: invoice.number }));
+					navigate(`/invoices/${invoice.id}`, { state: { focus: "capture" } });
 				}}
 			/>
 		</ITPage>

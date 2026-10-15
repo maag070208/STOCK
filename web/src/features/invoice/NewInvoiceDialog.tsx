@@ -1,4 +1,4 @@
-import { ITButton, ITDatePicker, ITInput, ITSelect, ITStack, ITText } from "@axzydev/axzy_ui_system";
+import { ITDatePicker, ITInput, ITSelect, ITStack, ITText } from "@axzydev/axzy_ui_system";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -25,7 +25,7 @@ export function NewInvoiceDialog(props: {
 	isOpen: boolean;
 	warehouses: Ref[];
 	onClose: () => void;
-	onCreated: (invoice: Invoice, action: "save" | "materials") => void;
+	onCreated: (invoice: Invoice) => void;
 }) {
 	const { t } = useTranslation(["invoices", "common"]);
 	const [number, setNumber] = useState("");
@@ -66,7 +66,7 @@ export function NewInvoiceDialog(props: {
 		return code === "FIELD_REQUIRED" ? t("common:validation.required") : code;
 	};
 
-	async function save(action: "save" | "materials") {
+	async function save() {
 		setTried(true);
 		const missing = firstInvalidField(newInvoiceErrors({ number, supplierId, invoiceDate, warehouseId }), NEW_INVOICE_FIELDS);
 		if (missing) {
@@ -83,7 +83,7 @@ export function NewInvoiceDialog(props: {
 			return;
 		}
 		rememberWorkspace({ supplierId, warehouseId });
-		props.onCreated(created, action);
+		props.onCreated(created);
 	}
 
 	return (
@@ -91,11 +91,10 @@ export function NewInvoiceDialog(props: {
 			isOpen={props.isOpen}
 			title={t("modal.title")}
 			onClose={props.onClose}
-			onSubmit={() => void save("materials")}
+			onSubmit={() => void save()}
 			submitting={submit.submitting}
 			error={submit.error}
-			submitLabel={submit.submitting ? t("modal.saving") : t("modal.saveAndAdd")}
-			secondaryAction={<ITButton variant="outlined" label={t("modal.save")} onClick={() => void save("save")} disabled={submit.submitting} />}
+			submitLabel={submit.submitting ? t("modal.saving") : t("modal.save")}
 		>
 			<ITStack spacing={4} className="sf:w-[30rem]">
 				<ITInput

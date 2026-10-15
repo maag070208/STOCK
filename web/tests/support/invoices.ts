@@ -5,7 +5,8 @@ import { expect, type Page } from "@playwright/test";
 // The modal of a new invoice asks for its four fields: the supplier is searched by its code, and the warehouse, which is
 // a short list, is waited for before it is chosen.
 export async function fillNewInvoice(page: Page, values: { number: string; supplier: { code: string; name: string }; warehouseId: string }) {
-	await page.getByLabel("Número de factura").fill(values.number);
+	// The number field, by its name: the label carries the required mark, so its text is not the whole name.
+	await page.locator('input[name="number"]').fill(values.number);
 	await page.locator('[name="supplierId"]').fill(values.supplier.code);
 	await page.locator("div.max-h-60").last().getByText(`${values.supplier.code} · ${values.supplier.name}`).click();
 	await expect(page.locator(`select[name="warehouseId"] option[value="${values.warehouseId}"]`)).toHaveCount(1);

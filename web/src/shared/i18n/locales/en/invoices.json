@@ -15,12 +15,9 @@
     "title": "New invoice",
     "remembered": "We remember the last warehouse you used.",
     "save": "Save",
-    "saveAndAdd": "Save and add materials",
     "saving": "Saving…",
-    "created": "Invoice {{number}} created",
-    "addMaterials": "Add materials",
     "network": "Could not save. Try again.",
-    "supplierSearch": "Search by the supplier's code or name"
+    "supplierSearch": "Search by code or name"
   },
   "capture": {
     "title": "Quick capture",
@@ -46,11 +43,11 @@
   },
   "form": {
     "header": "Invoice data",
-    "number": "Invoice number",
+    "number": "Number",
     "numberHint": "Letters, digits, hyphens and slashes.",
     "supplier": "Supplier",
-    "date": "Invoice date",
-    "warehouse": "Receiving warehouse",
+    "date": "Date",
+    "warehouse": "Warehouse",
     "lines": "Materials",
     "addLine": "Add material",
     "product": "Material",
