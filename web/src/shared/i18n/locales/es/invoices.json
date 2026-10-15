@@ -87,7 +87,8 @@
     "supplier": "Proveedor",
     "adjust": "Ajustar",
     "noLines": "La factura aún no tiene materiales.",
-    "notAssigned": "Sin asignar"
+    "notAssigned": "Sin asignar",
+    "materials": "Materiales"
   },
   "assignDialog": {
     "title": "Asignar {{product}}",

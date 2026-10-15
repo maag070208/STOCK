@@ -14,7 +14,8 @@ test("an administrator creates a warehouse and a rack, and the groups show the r
 	await dialog.getByRole("button", { name: "Guardar" }).click();
 
 	// The new warehouse opens, with its temporary location and no racks yet.
-	await expect(page.getByRole("heading", { name: `${code} · Almacén de prueba` })).toBeVisible();
+	await expect(page.getByRole("heading", { name: code })).toBeVisible();
+	await expect(page.getByText("Almacén de prueba").first()).toBeVisible();
 	await expect(page.getByText("Este almacén aún no tiene racks.")).toBeVisible();
 	await expect(page.getByText("TEMPORARY · Temporal")).toBeVisible();
 
@@ -74,6 +75,6 @@ test("a warehouse manager sees the warehouses but cannot create them or their ra
 	await expect(page.getByRole("cell", { name: "Almacén asignado" })).toBeVisible();
 	await expect(page.getByRole("button", { name: "Nuevo almacén" })).toHaveCount(0);
 	await page.goto(`/#/warehouses/${warehouse.id}`);
-	await expect(page.getByRole("heading", { name: /Almacén asignado/ })).toBeVisible();
+	await expect(page.getByText("Almacén asignado").first()).toBeVisible();
 	await expect(page.getByRole("button", { name: "Nuevo rack" })).toHaveCount(0);
 });

@@ -36,7 +36,8 @@ test("the editor reports a forbidden command as it is typed, and each saved chan
 	const { id, key } = await template();
 	await signInAs(page, e2eAdmin());
 	await page.goto(`/#/labels/${id}`);
-	await expect(page.getByRole("heading", { name: `${key} · Etiqueta de prueba` })).toBeVisible();
+	await expect(page.getByRole("heading", { name: key })).toBeVisible();
+	await expect(page.getByText("Etiqueta de prueba").first()).toBeVisible();
 	const report = page.getByTestId("zpl-report");
 	await expect(report.getByText("La plantilla cumple las reglas.")).toBeVisible();
 

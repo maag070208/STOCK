@@ -1,5 +1,6 @@
-import { type Column, ITAlert, ITBadget, ITButton, ITCard, ITEmptyState, ITFlex, ITGrid, ITPage, ITStack, ITStatCard, ITText } from "@axzydev/axzy_ui_system";
+import { type Column, ITAlert, ITBadget, ITButton, ITCard, ITEmptyState, ITFlex, ITPage, ITStack, ITText } from "@axzydev/axzy_ui_system";
 import { trail } from "@shared/lib/breadcrumbs";
+import { FactStrip } from "@shared/ui/FactStrip";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { FaBalanceScale, FaTrash, FaUserEdit, FaUserPlus } from "react-icons/fa";
@@ -145,7 +146,8 @@ export function InvoicePage() {
 
 	return (
 		<ITPage
-			title={invoice ? `${invoice.number} · ${invoice.supplier.name ?? ""}` : t("title")}
+			title={invoice?.number ?? t("title")}
+			description={invoice?.supplier.name ?? undefined}
 			breadcrumbs={trail(t("common:nav.home"), navigate, { label: t("title"), onClick: () => navigate("/invoices") }, { label: invoice?.number ?? t("title") })}
 			loading={!invoice}
 			noPadding
@@ -163,17 +165,14 @@ export function InvoicePage() {
 		>
 			{invoice && (
 				<ITStack spacing={6}>
-					<ITGrid container spacing={4}>
-						<ITGrid item xs={12} sm={6} lg={4}>
-							<ITStatCard label={t("detail.supplier")} value={`${invoice.supplier.code ?? ""} · ${invoice.supplier.name ?? ""}`} />
-						</ITGrid>
-						<ITGrid item xs={12} sm={6} lg={4}>
-							<ITStatCard label={t("detail.date")} value={formatDate(invoice.invoiceDate, i18n.language)} />
-						</ITGrid>
-						<ITGrid item xs={12} sm={6} lg={4}>
-							<ITStatCard label={t("detail.warehouse")} value={invoice.warehouse.code ?? ""} />
-						</ITGrid>
-					</ITGrid>
+					<FactStrip
+						facts={[
+							{ label: t("detail.supplier"), value: `${invoice.supplier.code ?? ""} · ${invoice.supplier.name ?? ""}` },
+							{ label: t("detail.date"), value: formatDate(invoice.invoiceDate, i18n.language) },
+							{ label: t("detail.warehouse"), value: invoice.warehouse.code ?? "" },
+							{ label: t("detail.materials"), value: `${t("capture.summaryLines", { count: summary.lines })} · ${t("capture.summaryPieces", { count: summary.pieces })}` },
+						]}
+					/>
 
 					{!open && <ITAlert variant="info">{t("closing.readOnly")}</ITAlert>}
 
@@ -184,12 +183,9 @@ export function InvoicePage() {
 					)}
 
 					<ITStack spacing={3}>
-						<ITFlex justify="between" align="center" wrap="wrap" gap={2}>
-							<ITText as="h2" className="sf:text-title-lg">
-								{t("detail.lines")}
-							</ITText>
-							<ITText muted>{`${t("capture.summaryLines", { count: summary.lines })} · ${t("capture.summaryPieces", { count: summary.pieces })}`}</ITText>
-						</ITFlex>
+						<ITText as="h2" className="sf:text-title-lg">
+							{t("detail.lines")}
+						</ITText>
 
 						{rows.length === 0 ? (
 							<ITEmptyState title={open ? t("capture.empty") : t("detail.noLines")} />

@@ -1,4 +1,4 @@
-import { type Column, ITBadget, ITButton, ITConfirmDialog, ITDropdownMenu, ITFlex, ITGrid, ITPage, ITStack, ITStatCard, ITText } from "@axzydev/axzy_ui_system";
+import { type Column, ITBadget, ITButton, ITConfirmDialog, ITDropdownMenu, ITFlex, ITPage, ITStack, ITText } from "@axzydev/axzy_ui_system";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { FaEllipsisV } from "react-icons/fa";
@@ -9,6 +9,7 @@ import { ContactDialog } from "@features/partner/ContactDialog";
 import { ApiError } from "@shared/api/client";
 import { formatDateTime } from "@shared/lib/format";
 import { toast } from "@app/store";
+import { FactStrip } from "@shared/ui/FactStrip";
 import { PlainTable } from "@shared/ui/PlainTable";
 
 type Confirm = { kind: "deactivateContact" | "reactivateContact"; contact: Contact };
@@ -106,39 +107,33 @@ export function PartnerPage({ kind }: { kind: PartnerKind }) {
 
 	return (
 		<ITPage
-			title={partner ? `${partner.code} · ${partner.name}` : t(`${kind}.title`)}
+			title={partner?.code ?? t(`${kind}.title`)}
+			description={partner?.name ?? undefined}
 			breadcrumbs={breadcrumbs}
 			noPadding
 			loading={!partner}
 			actions={canManage ? <ITButton label={t("actions.edit")} onClick={() => navigate(`/${kind}/${id}/edit`)} /> : undefined}
 		>
 			<ITStack spacing={8}>
-				<ITGrid container spacing={3}>
-					{partner && address && (
-						<>
-							<ITGrid item xs={12} sm={6} lg={4}>
-								<ITStatCard label={t("columns.taxId")} value={partner.taxId} />
-							</ITGrid>
-							<ITGrid item xs={12} sm={6} lg={4}>
-								<ITStatCard label={t("detail.paymentTerms")} value={partner.paymentTerms?.label ?? partner.paymentTerms?.code ?? ""} />
-							</ITGrid>
-							<ITGrid item xs={12} sm={6} lg={4}>
-								<ITStatCard label={t("detail.createdAt")} value={formatDateTime(partner.createdAt, i18n.language)} />
-							</ITGrid>
-							<ITGrid item xs={12} sm={6} lg={4}>
-								<ITStatCard label={t("detail.address")} value={addressText} />
-							</ITGrid>
-							<ITGrid item xs={12} sm={6} lg={4}>
-								<ITStack spacing={1}>
-									<ITText muted className="sf:text-label-md">
-										{t("columns.status")}
-									</ITText>
-									<ITBadget color={partner.active ? "success" : "gray"} label={t(partner.active ? "common:status.active" : "common:status.inactive")} />
-								</ITStack>
-							</ITGrid>
-						</>
-					)}
-				</ITGrid>
+				{partner && address && (
+					<ITStack spacing={4}>
+						<FactStrip
+							perRow={2}
+							facts={[
+								{ label: t("columns.taxId"), value: partner.taxId },
+								{ label: t("detail.paymentTerms"), value: partner.paymentTerms?.label ?? partner.paymentTerms?.code ?? "" },
+								{ label: t("detail.createdAt"), value: formatDateTime(partner.createdAt, i18n.language) },
+								{ label: t("detail.address"), value: addressText },
+							]}
+						/>
+						<ITFlex align="center" gap={2}>
+							<ITText muted className="sf:text-label-md">
+								{t("columns.status")}
+							</ITText>
+							<ITBadget color={partner.active ? "success" : "gray"} label={t(partner.active ? "common:status.active" : "common:status.inactive")} />
+						</ITFlex>
+					</ITStack>
+				)}
 
 				<ITStack spacing={3} className="sf:max-w-3xl">
 					<ITFlex align="center" justify="between">

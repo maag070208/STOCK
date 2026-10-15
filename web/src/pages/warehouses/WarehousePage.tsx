@@ -129,8 +129,8 @@ export function WarehousePage() {
 
 	return (
 		<ITPage
-			title={warehouse ? `${warehouse.code} · ${warehouse.name}` : t("title")}
-			description={t("description")}
+			title={warehouse?.code ?? t("title")}
+			description={warehouse?.name ?? t("description")}
 			breadcrumbs={breadcrumbs}
 			noPadding
 			loading={!warehouse}

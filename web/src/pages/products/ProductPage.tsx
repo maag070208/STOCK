@@ -1,4 +1,4 @@
-import { ITBadget, ITButton, ITFlex, ITGrid, ITPage, ITStack, ITStatCard, ITText } from "@axzydev/axzy_ui_system";
+import { ITBadget, ITButton, ITFlex, ITPage, ITText } from "@axzydev/axzy_ui_system";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
@@ -9,6 +9,7 @@ import { PrintDialog, type PrintTarget } from "@features/label/PrintDialog";
 import { ProductDialog } from "@features/product/ProductDialog";
 import { formatDateTime } from "@shared/lib/format";
 import { toast } from "@app/store";
+import { FactStrip } from "@shared/ui/FactStrip";
 
 // One material: its fields, editing for who can manage, and its label for who prints. The way back is the breadcrumbs,
 // and the detail is the kit's grid and cards (web.md section 8).
@@ -60,7 +61,8 @@ export function ProductPage() {
 
 	return (
 		<ITPage
-			title={product ? `${product.code} · ${product.name}` : t("title")}
+			title={product?.code ?? t("title")}
+			description={product?.name ?? undefined}
 			breadcrumbs={breadcrumbs}
 			noPadding
 			loading={!product}
@@ -75,23 +77,15 @@ export function ProductPage() {
 				) : undefined
 			}
 		>
-			<ITGrid container spacing={3} className="sf:max-w-2xl">
-				{fields.map((field) => (
-					<ITGrid key={field.label} item xs={12} sm={6}>
-						<ITStatCard label={field.label} value={field.value} />
-					</ITGrid>
-				))}
-				{product && (
-					<ITGrid item xs={12} sm={6}>
-						<ITStack spacing={1}>
-							<ITText muted className="sf:text-label-md">
-								{t("columns.status")}
-							</ITText>
-							<ITBadget color={product.active ? "success" : "gray"} label={t(product.active ? "common:status.active" : "common:status.inactive")} />
-						</ITStack>
-					</ITGrid>
-				)}
-			</ITGrid>
+			<FactStrip facts={fields.map((field) => ({ label: field.label, value: field.value }))} />
+			{product && (
+				<ITFlex align="center" gap={2}>
+					<ITText muted className="sf:text-label-md">
+						{t("columns.status")}
+					</ITText>
+					<ITBadget color={product.active ? "success" : "gray"} label={t(product.active ? "common:status.active" : "common:status.inactive")} />
+				</ITFlex>
+			)}
 			{product && (
 				<ProductDialog
 					isOpen={editing}

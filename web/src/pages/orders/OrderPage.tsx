@@ -1,5 +1,6 @@
-import { type Column, ITAlert, ITBadget, ITButton, ITFlex, ITGrid, ITPage, ITStack, ITStatCard, ITText } from "@axzydev/axzy_ui_system";
+import { type Column, ITAlert, ITBadget, ITButton, ITFlex, ITPage, ITStack, ITText } from "@axzydev/axzy_ui_system";
 import { trail } from "@shared/lib/breadcrumbs";
+import { FactStrip } from "@shared/ui/FactStrip";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
@@ -95,7 +96,8 @@ export function OrderPage() {
 
 	return (
 		<ITPage
-			title={order ? `${order.number} · ${order.customer.name ?? ""}` : t("title")}
+			title={order?.number ?? t("title")}
+			description={order?.customer.name ?? undefined}
 			noPadding
 			loading={!order}
 			breadcrumbs={trail(t("common:nav.home"), navigate, { label: t("title"), onClick: () => navigate("/orders") }, { label: order?.number ?? "" })}
@@ -115,33 +117,18 @@ export function OrderPage() {
 		>
 			{order && (
 				<ITStack spacing={6}>
-					<ITGrid container spacing={4}>
-						<ITGrid item xs={12} sm={6} lg={4}>
-							<ITStatCard label={t("detail.customer")} value={`${order.customer.code ?? ""} · ${order.customer.name ?? ""}`} />
-						</ITGrid>
-						{order.contact && (
-							<ITGrid item xs={12} sm={6} lg={4}>
-								<ITStatCard label={t("detail.contact")} value={order.contact.name ?? ""} />
-							</ITGrid>
-						)}
-						<ITGrid item xs={12} sm={6} lg={4}>
-							<ITStatCard label={t("detail.warehouse")} value={order.warehouse.code ?? ""} />
-						</ITGrid>
-						<ITGrid item xs={12} sm={6} lg={4}>
-							<ITStatCard label={t("detail.dueDate")} value={formatDate(order.dueDate, i18n.language)} />
-						</ITGrid>
-						<ITGrid item xs={12} sm={6} lg={4}>
-							<ITStatCard label={t("detail.createdBy")} value={order.createdBy?.name ?? ""} />
-						</ITGrid>
-						<ITGrid item xs={12} sm={6} lg={4}>
-							<ITStatCard label={t("detail.operator")} value={order.operator?.name ?? t("detail.noOperator")} />
-						</ITGrid>
-						{order.validatedBy && (
-							<ITGrid item xs={12} sm={6} lg={4}>
-								<ITStatCard label={t("detail.validatedBy")} value={order.validatedBy.name ?? ""} />
-							</ITGrid>
-						)}
-					</ITGrid>
+					<FactStrip
+						perRow={3}
+						facts={[
+							{ label: t("detail.customer"), value: `${order.customer.code ?? ""} · ${order.customer.name ?? ""}` },
+							{ label: t("detail.warehouse"), value: order.warehouse.code ?? "" },
+							{ label: t("detail.dueDate"), value: formatDate(order.dueDate, i18n.language) },
+							{ label: t("detail.createdBy"), value: order.createdBy?.name ?? "" },
+							{ label: t("detail.operator"), value: order.operator?.name ?? t("detail.noOperator") },
+							...(order.contact ? [{ label: t("detail.contact"), value: order.contact.name ?? "" }] : []),
+							...(order.validatedBy ? [{ label: t("detail.validatedBy"), value: order.validatedBy.name ?? "" }] : []),
+						]}
+					/>
 
 					<ITStack spacing={3}>
 						<ITText as="h2" className="sf:text-title-lg">

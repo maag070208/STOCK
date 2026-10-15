@@ -87,7 +87,8 @@
     "supplier": "Supplier",
     "adjust": "Adjust",
     "noLines": "The invoice has no materials yet.",
-    "notAssigned": "Not assigned"
+    "notAssigned": "Not assigned",
+    "materials": "Materials"
   },
   "assignDialog": {
     "title": "Assign {{product}}",

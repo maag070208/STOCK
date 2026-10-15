@@ -27,7 +27,9 @@ test("an administrator creates a supplier, sees a wrong RFC next to its field, a
 
 	await form.getByLabel(/^RFC/).fill("ADN010203AB1");
 	await form.getByRole("button", { name: "Guardar" }).click();
-	await expect(page.getByRole("heading", { name: `${code} · Aceros del Norte` })).toBeVisible();
+	// The record is titled by its code, and the name is its subtitle.
+	await expect(page.getByRole("heading", { name: code })).toBeVisible();
+	await expect(page.getByText("Aceros del Norte").first()).toBeVisible();
 	await expect(page.getByText("Jalisco", { exact: false }).first()).toBeVisible();
 	await expect(page.getByText(terms.label, { exact: false }).first()).toBeVisible();
 
