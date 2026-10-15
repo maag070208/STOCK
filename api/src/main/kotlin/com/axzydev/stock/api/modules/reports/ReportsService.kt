@@ -127,6 +127,11 @@ class ReportsService(
 		val params = MapSqlParameterSource().addValue("product", filters.productId).addValue("warehouse", filters.warehouseId)
 		filters.from?.let { where.append(" and m.occurred_at >= :from"); params.addValue("from", Timestamp.from(it)) }
 		filters.to?.let { where.append(" and m.occurred_at < :to"); params.addValue("to", Timestamp.from(it)) }
+		return movementRows(where.toString(), params, language)
+	}
+
+	// The movements a report reads, with the names of what they touch. One query, so every report lists them the same way.
+	private fun movementRows(where: String, params: MapSqlParameterSource, language: String): List<MovementReportRow> {
 		val raw = jdbc.query("select m.* from stock_movement_rows m$where order by m.seq", params) { rs, _ ->
 			RawMovement(
 				seq = rs.getLong("seq"),
@@ -212,6 +217,76 @@ class ReportsService(
 		runCatching { LocalDate.parse(value) }.getOrElse { throw ValidationException(listOf(FieldError("filters.$field", ErrorCode.FORMAT_INVALID))) }
 
 	private fun zone(): ZoneId = ZoneId.of(BusinessTime.ZONE)
+
+
+	// The movements report (F6-03): the movements of the warehouses the reader reaches, in the order they happened,
+	// filtered by period, material, type and user, with the totals of what came in and what went out.
+	@Transactional(readOnly = true)
+	fun movements(user: CurrentUser, request: TableRequest, language: String): MovementsPage {
+		val filters = movementFilters(request)
+		val scoped = scope(user, filters.warehouseId)
+		if (scoped != null && filters.warehouseId != null && filters.warehouseId !in scoped) throw ApiException(ErrorCode.NOT_FOUND)
+		if (scoped != null && scoped.isEmpty()) {
+			return MovementsPage(emptyList(), 0, page(request), page(request) - 1, 0, 0, limit(request), false, false, BigDecimal.ZERO, BigDecimal.ZERO, emptyList())
+		}
+		// The warehouse, the period and the material narrow the query; the type and the user finish the filter, so every
+		// one of them combines with AND (MovementReportRules).
+		val where = StringBuilder(" where 1 = 1")
+		val params = MapSqlParameterSource()
+		scoped?.let { where.append(" and m.warehouse_id in (:warehouses)"); params.addValue("warehouses", it) }
+		filters.warehouseId?.let { where.append(" and m.warehouse_id = :warehouse"); params.addValue("warehouse", it) }
+		filters.productId?.let { where.append(" and m.product_id = :product"); params.addValue("product", it) }
+		filters.from?.let { where.append(" and m.occurred_at >= :from"); params.addValue("from", Timestamp.from(it)) }
+		filters.to?.let { where.append(" and m.occurred_at < :to"); params.addValue("to", Timestamp.from(it)) }
+		val found = movementRows(where.toString(), params, language).filter { MovementReportRules.matches(it, filters) }
+		val ordered = found.sortedWith(movementOrder(request))
+		val totals = MovementReportRules.totals(ordered)
+		val limit = limit(request)
+		val page = page(request)
+		return MovementsPage(
+			data = ordered.drop((page - 1) * limit).take(limit),
+			total = ordered.size.toLong(),
+			page = page,
+			pageIndex = page - 1,
+			totalPages = pages(ordered.size, limit),
+			totalCount = ordered.size.toLong(),
+			limit = limit,
+			hasPreviousPage = page > 1,
+			hasNextPage = page < pages(ordered.size, limit),
+			incoming = totals.incoming,
+			outgoing = totals.outgoing,
+			typeTotals = totals.byType,
+		)
+	}
+
+	// The movements report lists the most recent first, unless another order is asked for.
+	private fun movementOrder(request: TableRequest): Comparator<MovementReportRow> {
+		val key = request.sort?.key ?: MOVEMENT_DEFAULT_SORT
+		if (key !in MOVEMENT_SORTS) throw ValidationException(listOf(FieldError("sort.key", ErrorCode.FORMAT_INVALID)))
+		val direction = if (request.sort?.direction.equals("asc", ignoreCase = true)) 1 else -1
+		val comparator = when (key) {
+			"date" -> compareBy<MovementReportRow> { it.occurredAt }
+			"type" -> compareBy { it.type }
+			"warehouse" -> compareBy { it.warehouse.code }
+			"product" -> compareBy { it.product.code }
+			else -> compareBy { it.quantity }
+		}
+		return (comparator.thenBy { it.seq }).let { if (direction < 0) it.reversed() else it }
+	}
+
+	private fun movementFilters(request: TableRequest): MovementFilters {
+		val filters = request.filters.orEmpty()
+		val unknown = filters.keys - MOVEMENT_FILTERS
+		if (unknown.isNotEmpty()) throw ValidationException(unknown.map { FieldError("filters.$it", ErrorCode.UNKNOWN_FIELD) })
+		return MovementFilters(
+			warehouseId = filters["warehouseId"]?.toString()?.takeIf { it.isNotBlank() }?.let { uuid("warehouseId", it) },
+			productId = filters["productId"]?.toString()?.takeIf { it.isNotBlank() }?.let { uuid("productId", it) },
+			type = filters["type"]?.toString()?.takeIf { it.isNotBlank() },
+			userId = filters["userId"]?.toString()?.takeIf { it.isNotBlank() }?.let { uuid("userId", it) },
+			from = filters["from"]?.toString()?.takeIf { it.isNotBlank() }?.let { date("from", it).atStartOfDay(zone()).toInstant() },
+			to = filters["to"]?.toString()?.takeIf { it.isNotBlank() }?.let { date("to", it).plusDays(1).atStartOfDay(zone()).toInstant() },
+		)
+	}
 
 	private data class KardexFilters(val productId: UUID, val warehouseId: UUID, val from: Instant? = null, val to: Instant? = null)
 
@@ -374,5 +449,8 @@ class ReportsService(
 		val STOCK_FILTERS = setOf("warehouseId", "aisle", "rack", "location", "product", "belowMinimum")
 		val STOCK_SORTS = setOf("warehouse", "location", "product", "quantity")
 		val KARDEX_FILTERS = setOf("productId", "warehouseId", "from", "to")
+		val MOVEMENT_FILTERS = setOf("warehouseId", "productId", "type", "userId", "from", "to")
+		val MOVEMENT_SORTS = setOf("date", "type", "warehouse", "product", "quantity")
+		const val MOVEMENT_DEFAULT_SORT = "date"
 	}
 }
