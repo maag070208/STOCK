@@ -23,7 +23,7 @@ All under `/api/v1`, with the headers and checks of [identity.md](identity.md) s
 | `POST /stock/opening/dry-run` | `stock.opening` | A form with `file` (the legacy .xlsx) and `warehouseId`. Writes nothing |
 | `POST /stock/opening` | `stock.opening` | The same form, with `checksum` (the dry run's). Writes the opening inventory |
 
-The lists read two database views the stock module owns (`stock_balance_rows`, `stock_product_totals`), because a list of stock needs the warehouse, the location and the material of each row. The views only read; every change still goes through the service of the module that owns the table.
+The lists read three database views the stock module owns: `stock_balance_rows` and `stock_product_totals`, because a list of stock needs the warehouse, the location and the material of each row, and `stock_movement_rows` (F6), because a report of movements needs the same names and the direction of the type. The views only read; every change still goes through the service of the module that owns the table.
 
 ## 3. Opening inventory
 

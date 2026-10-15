@@ -40,5 +40,17 @@
 
 ## Open questions
 
-- Minimum stock per product: is it a field on the product, and does it differ by warehouse? Needed for the products-below-minimum report.
-- Which columns the owner wants on the kardex and the exports.
+Both were answered by the owner on 2026-10-14, before the work started, and they are written down in the contract
+([reports.md](../modules/reports.md)):
+
+1. ~~Minimum stock per product~~ Decided: one number on the material, in its unit, `0` when none was set
+   (`products.minimum`, migration V18), edited on the material's form. It does not differ by warehouse, and the current
+   stock report compares each material's total over the warehouses the reader reaches with it, listing what is missing.
+2. ~~Which columns the kardex and the exports carry~~ Decided: the columns of
+   [reports.md](../modules/reports.md) section 3, with the file carrying the same columns as the screen.
+
+Still open after F6:
+
+- **Retention of the exported files.** Nothing is kept: a file is built when it is asked for. Whether the owner wants
+  them stored is a decision of F7, with the backups.
+- **Scheduled reports** (a report sent by itself, daily or weekly) are not in this phase.

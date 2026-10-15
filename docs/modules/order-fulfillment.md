@@ -124,6 +124,12 @@ Rules:
 - The target order of option 2 must be open.
 - Who: `ADMIN`, `OFFICE` and `WAREHOUSE_MANAGER`, within their warehouses (`orders.reassign`).
 
+**What moved is kept (decided 2026-10-14):** every move of option 2 and every return of option 3 writes a row in
+`order_reassignments` — the source order and line, the target order and line (or the location of a return), the kind
+(`TRANSFER` or `RETURN`), the quantity, the note, who and when — in the same transaction as the picks. The picks
+themselves only change line, so without this record the report of orders could not count what was moved. It is not a
+substitute for the audit log: the log keeps the same facts for people, and this keeps them for the reports.
+
 ## 9. Open questions
 
 3. **Shortage during picking.** If the operator finds less than the balance shows, is the order blocked, or is the shortage recorded and the rest reassigned?

@@ -11,6 +11,16 @@ Phase: [F6-reports.md](../F6-reports.md).
 | F6-05 | XLSX and PDF export | API | F6-01 to F6-04 | |
 | F6-06 | Report screens and kardex screen | Web | F6-01, F6-02, F6-05 | |
 
+**Progress, 2026-10-14:** F6-01 to F6-05 are done in the API, test first: the current stock report with its totals and the
+materials below their minimum (`StockReportTest`), the kardex with the two running balances (`KardexReportTest`), the
+movements report (`MovementsReportTest`), the orders and entries reports (`SalesReportTest`) and the XLSX and PDF exports
+(`ReportsExportTest`, `ReportsExportServiceTest`), with the unit rules of each in `StockReportRulesTest`,
+`KardexRulesTest`, `MovementReportRulesTest` and `SalesReportRulesTest`. The contract is
+[reports.md](../../modules/reports.md), and the two open questions were answered by the owner before the work started:
+the columns are the ones in that document, and the minimum stock is one number on the material (`products.minimum`,
+migration V18). The views the reports read are `stock_movement_rows` (V19) and `order_report_rows` /
+`invoice_report_rows` (V20), and the reassignment of an order now keeps its own record (`order_reassignments`, V20).
+
 ## F6-01 · Current stock report · API · after F4-06
 - Unit (red): the report total equals the sum of the balances it lists; the aisle and rack groups add up to their warehouse.
 - E2E (red): after the opening inventory, the total is 10,914,130; a user with `AREA` scope gets totals over their rows only.
