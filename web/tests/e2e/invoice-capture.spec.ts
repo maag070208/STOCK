@@ -122,6 +122,11 @@ test.describe("the modal", () => {
 	});
 });
 
+// The row of one material in the lines table: the kit builds the table, so a line is a row of it.
+function lineOf(page: Page, product: { code: string }) {
+	return page.getByRole("row", { name: new RegExp(`^${product.code}`) });
+}
+
 test.describe("the detail", () => {
 	test("five materials are captured with Enter, a repeated one adds to its line, and the invoice closes by hand", async ({ page }) => {
 		const f = await entriesFixture();
@@ -138,24 +143,23 @@ test.describe("the detail", () => {
 
 		for (const [index, product] of products.entries()) {
 			await captureMaterial(page, product, String((index + 1) * 10));
-			await expect(page.getByTestId("invoice-lines").locator(`[data-line="${product.code}"]`)).toBeVisible();
+			await expect(lineOf(page, product)).toBeVisible();
 		}
-		await expect(page.getByTestId("invoice-summary")).toContainText("5 líneas");
-		await expect(page.getByTestId("invoice-summary")).toContainText("150");
+		await expect(page.getByText("5 líneas · 150 piezas")).toBeVisible();
 
 		// The same material again adds to the line that exists: five lines, and the quantity grows.
 		await captureMaterial(page, products[0], "5");
-		await expect(page.getByTestId("invoice-summary")).toContainText("5 líneas");
-		await expect(page.getByTestId("invoice-lines").locator(`[data-line="${products[0].code}"]`)).toContainText("15");
+		await expect(page.getByText("5 líneas · 155 piezas")).toBeVisible();
+		await expect(lineOf(page, products[0])).toContainText("15");
 
 		// Quitar takes a line away.
-		await page.getByTestId("invoice-lines").locator(`[data-line="${products[4].code}"]`).getByRole("button", { name: "Quitar" }).click();
-		await expect(page.getByTestId("invoice-summary")).toContainText("4 líneas");
+		await lineOf(page, products[4]).getByRole("button", { name: "Quitar" }).click();
+		await expect(page.getByText("4 líneas · 105 piezas")).toBeVisible();
 
 		// Closing by hand leaves the invoice closed and read only.
 		await page.getByRole("button", { name: "Cerrar factura" }).click();
 		await expect(page.getByText("Factura cerrada").first()).toBeVisible();
-		await expect(page.getByTestId("invoice-header")).toContainText("Cerrada");
+		await expect(page.getByText("Cerrada").first()).toBeVisible();
 		await expect(page.getByTestId("quick-capture")).toHaveCount(0);
 		await expect(page.getByRole("button", { name: "Cerrar factura" })).toHaveCount(0);
 	});

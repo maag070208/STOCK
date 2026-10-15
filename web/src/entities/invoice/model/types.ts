@@ -36,6 +36,7 @@ export interface InvoiceLine {
 	unit: UnitRef | null;
 	quantity: number;
 	assignments: Assignment[];
+	[key: string]: unknown;
 }
 
 export type InvoiceStatus = "OPEN" | "PENDING" | "IN_ASSIGNMENT" | "CLOSED";

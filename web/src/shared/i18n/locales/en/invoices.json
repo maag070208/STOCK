@@ -16,7 +16,7 @@
     "remembered": "We remember the last warehouse you used.",
     "save": "Save",
     "saveAndAdd": "Save and add materials",
-    "saving": "Saving\u2026",
+    "saving": "Saving…",
     "created": "Invoice {{number}} created",
     "addMaterials": "Add materials",
     "network": "Could not save. Try again.",
@@ -94,7 +94,8 @@
     "warehouse": "Warehouse",
     "supplier": "Supplier",
     "adjust": "Adjust",
-    "noLines": "The invoice has no materials yet."
+    "noLines": "The invoice has no materials yet.",
+    "reception": "Receipt by operator"
   },
   "assignDialog": {
     "title": "Assign {{product}}",

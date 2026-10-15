@@ -26,7 +26,7 @@ test("office creates an invoice in the modal and assigns its line from the detai
 	await page.getByRole("button", { name: "Guardar y agregar materiales" }).click();
 	await expect(page.getByRole("heading", { name: new RegExp(number) })).toBeVisible();
 	await captureMaterial(page, screws, "100");
-	await expect(page.getByTestId("invoice-summary")).toContainText("1 línea");
+	await expect(page.getByText("1 línea · 100 piezas")).toBeVisible();
 
 	// The assignment from the line: a split that does not add up is blocked before it is sent.
 	await page.getByRole("button", { name: "Asignar" }).click();
@@ -41,11 +41,10 @@ test("office creates an invoice in the modal and assigns its line from the detai
 	await dialog.locator('input[name="share-1"]').fill("40");
 	await dialog.getByRole("button", { name: "Guardar" }).click();
 
-	// The invoice is pending, and each share is on its line.
-	await expect(page.getByTestId("invoice-header")).toContainText("Pendiente");
-	const lines = page.getByTestId("invoice-lines");
-	await expect(lines.locator(`[data-assignment="${a.name}"]`)).toContainText("60");
-	await expect(lines.locator(`[data-assignment="${b.name}"]`)).toContainText("40");
+	// The invoice is pending, and each share is a row of the reception, with what its operator has to receive.
+	await expect(page.getByText("Pendiente")).toBeVisible();
+	await expect(page.getByRole("row", { name: new RegExp(a.name) })).toContainText("60");
+	await expect(page.getByRole("row", { name: new RegExp(b.name) })).toContainText("40");
 });
 
 test("a discrepancy is adjusted by the warehouse's manager or by office, and not by someone without the permission", async ({ page, browser }) => {
@@ -72,7 +71,7 @@ test("a discrepancy is adjusted by the warehouse's manager or by office, and not
 	const readerPage = await browser.newPage();
 	await signInAs(readerPage, reader);
 	await readerPage.goto(`/#/invoices/${created.id}`);
-	await expect(readerPage.getByTestId("invoice-lines")).toContainText("Diferencia");
+	await expect(readerPage.getByText(/Diferencia -20/)).toBeVisible();
 	await expect(readerPage.getByRole("button", { name: "Ajustar" })).toHaveCount(0);
 	await readerPage.goto("/#/discrepancies");
 	await expect(readerPage.getByTestId("forbidden")).toBeVisible();
@@ -92,5 +91,6 @@ test("a discrepancy is adjusted by the warehouse's manager or by office, and not
 	await dialog.getByRole("button", { name: "Ajustar" }).click();
 	await expect(page.getByTestId("discrepancies").getByRole("row").filter({ hasText: created.number })).toHaveCount(0);
 	await page.goto(`/#/invoices/${created.id}`);
-	await expect(page.getByTestId("invoice-header")).toContainText("En asignación");
+	await expect(page.getByText("En asignación")).toBeVisible();
+	await expect(page.getByRole("row", { name: new RegExp(a.name) })).toContainText("80");
 });

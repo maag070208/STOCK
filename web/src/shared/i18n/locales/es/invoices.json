@@ -16,7 +16,7 @@
     "remembered": "Recordamos el último almacén que usaste.",
     "save": "Guardar",
     "saveAndAdd": "Guardar y agregar materiales",
-    "saving": "Guardando\u2026",
+    "saving": "Guardando…",
     "created": "Factura {{number}} creada",
     "addMaterials": "Agregar materiales",
     "network": "No se pudo guardar. Intenta de nuevo.",
@@ -26,9 +26,9 @@
   "capture": {
     "title": "Captura rápida",
     "add": "Agregar",
-    "empty": "A\u00fan no has capturado materiales. Empieza con el material y la cantidad.",
-    "summaryLines_one": "{{count}} l\u00ednea",
-    "summaryLines_other": "{{count}} l\u00edneas",
+    "empty": "Aún no has capturado materiales. Empieza con el material y la cantidad.",
+    "summaryLines_one": "{{count}} línea",
+    "summaryLines_other": "{{count}} líneas",
     "summaryPieces_one": "{{count}} pieza",
     "summaryPieces_other": "{{count}} piezas"
   },
@@ -36,7 +36,7 @@
     "button": "Cerrar factura",
     "done": "Factura cerrada",
     "refused": "No se pudo cerrar la factura.",
-    "readOnly": "La factura est\u00e1 cerrada: solo se consulta."
+    "readOnly": "La factura está cerrada: solo se consulta."
   },
   "columns": {
     "number": "Número",
@@ -94,7 +94,8 @@
     "warehouse": "Almacén",
     "supplier": "Proveedor",
     "adjust": "Ajustar",
-    "noLines": "La factura aún no tiene materiales."
+    "noLines": "La factura aún no tiene materiales.",
+    "reception": "Recepción por operador"
   },
   "assignDialog": {
     "title": "Asignar {{product}}",
