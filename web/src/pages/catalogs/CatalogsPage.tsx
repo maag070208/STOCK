@@ -1,6 +1,8 @@
 import { ITBadget, ITButton, ITCheckbox, ITFlex, ITGrid, ITInput, ITPage, ITSearchSelect, ITStack, ITText, type Column } from "@axzydev/axzy_ui_system";
+import { trail } from "@shared/lib/breadcrumbs";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 import { IconButton } from "@shared/ui/IconButton";
 import { FaEdit } from "react-icons/fa";
 import { catalogApi, type Catalog, type CatalogItem } from "@entities/catalog";
@@ -17,6 +19,7 @@ type CatalogRow = Record<string, unknown> & { id: string; item: CatalogItem };
 // The value catalogs: statuses, units and the ones an administrator adds. Codes never change; values are deactivated, not deleted.
 // The selector, the table and the dialog are the kit's (web.md section 8).
 export function CatalogsPage() {
+	const navigate = useNavigate();
 	const { t } = useTranslation(["catalogs", "common"]);
 	const canManage = useCan("catalogs.manage");
 	const [catalogs, setCatalogs] = useState<Catalog[]>([]);
@@ -84,7 +87,7 @@ export function CatalogsPage() {
 	];
 
 	return (
-		<ITPage
+		<ITPage breadcrumbs={trail(t("common:nav.home"), navigate, { label: t("title") })}
 			title={t("title")}
 			description={t("description")}
 			noPadding

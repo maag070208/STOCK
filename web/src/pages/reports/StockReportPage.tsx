@@ -1,6 +1,8 @@
 import { type Column, type ColumnFilters, ITDataTable, ITFlex, ITPage, ITText } from "@axzydev/axzy_ui_system";
+import { trail } from "@shared/lib/breadcrumbs";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 import { reportApi, warehouseOptionsOf, type ReportRef, type StockReportPage as StockPage, type StockReportRow } from "@entities/report";
 import { formatQuantity } from "@shared/lib/format";
 import { BelowMinimumFilter, ExportButtons, ReportError, ReportTotals, WarehouseFilter, totalEntries } from "./ReportParts";
@@ -9,6 +11,7 @@ import { ReportTabs } from "./ReportTabs";
 // The current stock (reports.md section 3): every balance of the warehouses the reader reaches, with the totals by
 // warehouse, by aisle and rack, and the grand total, which is always the sum of the rows listed.
 export function StockReportPage() {
+	const navigate = useNavigate();
 	const { t, i18n } = useTranslation(["reports", "common"]);
 	const [page, setPage] = useState<StockPage | null>(null);
 	// The filters of the last answer: the export takes exactly these, so the file and the screen cannot disagree.
@@ -40,7 +43,7 @@ export function StockReportPage() {
 	];
 
 	return (
-		<ITPage title={t("stock.title")} description={t("stock.description")} noPadding actions={<ExportButtons kind="stock" filters={filters} />}>
+		<ITPage breadcrumbs={trail(t("common:nav.home"), navigate, { label: t("common:nav.reports"), onClick: () => navigate("/reports") }, { label: t("stock.title") })} title={t("stock.title")} description={t("stock.description")} noPadding actions={<ExportButtons kind="stock" filters={filters} />}>
 			<ReportTabs />
 			<ITFlex wrap="wrap" align="end" gap={3} className="sf:mb-4">
 				<WarehouseFilter options={warehouses} value={warehouseId} onChange={setWarehouseId} />

@@ -1,6 +1,8 @@
 import { type Column, type ColumnFilters, ITDataTable, ITGrid, ITPage, ITText } from "@axzydev/axzy_ui_system";
+import { trail } from "@shared/lib/breadcrumbs";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 import { ProductPicker, type Product } from "@entities/product";
 import { kardexClosing, kardexRows, reportApi, warehouseOptionsOf, type KardexPage as KardexAnswer, type KardexRow, type ReportRef } from "@entities/report";
 import { formatDateTime, formatQuantity } from "@shared/lib/format";
@@ -10,6 +12,7 @@ import { ReportTabs } from "./ReportTabs";
 // The kardex of one material in one warehouse (reports.md section 3): its movements in order, with the running balance of
 // the location and of the warehouse as the API computed them. The screen never adds quantities up.
 export function KardexPage() {
+	const navigate = useNavigate();
 	const { t, i18n } = useTranslation(["reports", "common"]);
 	const [answer, setAnswer] = useState<KardexAnswer | null>(null);
 	const [filters, setFilters] = useState<ColumnFilters>({});
@@ -84,7 +87,7 @@ export function KardexPage() {
 	const closing = kardexClosing(answer);
 
 	return (
-		<ITPage title={t("kardex.title")} description={t("kardex.description")} noPadding actions={<ExportButtons kind="kardex" filters={filters} />}>
+		<ITPage breadcrumbs={trail(t("common:nav.home"), navigate, { label: t("common:nav.reports"), onClick: () => navigate("/reports") }, { label: t("kardex.title") })} title={t("kardex.title")} description={t("kardex.description")} noPadding actions={<ExportButtons kind="kardex" filters={filters} />}>
 			<ReportTabs />
 			<ITGrid container spacing={3} className="sf:mb-4 sf:items-end">
 				<ITGrid item xs={12} md={4}>

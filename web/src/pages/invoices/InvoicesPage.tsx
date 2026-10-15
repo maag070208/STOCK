@@ -1,4 +1,5 @@
 import { type Column, ITBadget, ITButton, ITChip, ITDataTable, type ITDataTableFetchParams, ITEmptyState, ITFlex, ITInput, ITPage, ITStack, ITText } from "@axzydev/axzy_ui_system";
+import { trail } from "@shared/lib/breadcrumbs";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { FaSearch } from "react-icons/fa";
@@ -107,7 +108,7 @@ export function InvoicesPage() {
 		<ITPage
 			title={t("title")}
 			description={t("description")}
-			breadcrumbs={[{ label: t("title") }]}
+			breadcrumbs={trail(t("common:nav.home"), navigate, { label: t("title") })}
 			noPadding
 			actions={canCreate ? <ITButton label={t("new")} onClick={() => setCreating(true)} /> : undefined}
 		>

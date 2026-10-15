@@ -1,5 +1,7 @@
 import { type Column, ITDataTable, ITPage } from "@axzydev/axzy_ui_system";
+import { trail } from "@shared/lib/breadcrumbs";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 import { auditApi, type AuditRecord } from "@entities/audit";
 import type { TableParams } from "@shared/api/table";
 import { dyn } from "@shared/i18n";
@@ -9,6 +11,7 @@ const TARGETS = ["user", "role", "policy", "catalog", "catalog_item", "access"];
 
 // What changed, who changed it and when; every denied access too. Read-only: nobody can change or delete a record.
 export function AuditPage() {
+	const navigate = useNavigate();
 	const { t, i18n } = useTranslation(["audit", "common"]);
 	const actions = Object.keys(i18n.getResourceBundle("es", "audit")?.actions ?? {});
 
@@ -45,7 +48,7 @@ export function AuditPage() {
 	];
 
 	return (
-		<ITPage title={t("title")} description={t("description")} noPadding>
+		<ITPage breadcrumbs={trail(t("common:nav.home"), navigate, { label: t("title") })} title={t("title")} description={t("description")} noPadding>
 			<ITDataTable<AuditRecord>
 				defaultItemsPerPage={25}
 				itemsPerPageOptions={[25, 50, 100]}

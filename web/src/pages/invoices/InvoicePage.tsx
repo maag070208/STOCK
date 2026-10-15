@@ -1,4 +1,5 @@
 import { type Column, ITAlert, ITBadget, ITButton, ITCard, ITEmptyState, ITFlex, ITGrid, ITPage, ITStack, ITStatCard, ITText } from "@axzydev/axzy_ui_system";
+import { trail } from "@shared/lib/breadcrumbs";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { FaBalanceScale, FaExchangeAlt, FaTrash } from "react-icons/fa";
@@ -49,7 +50,7 @@ export function InvoicePage() {
 		return (
 			<ITPage
 				title={t("title")}
-				breadcrumbs={[{ label: t("title"), onClick: () => navigate("/invoices") }]}
+				breadcrumbs={trail(t("common:nav.home"), navigate, { label: t("title"), onClick: () => navigate("/invoices") })}
 				noPadding
 				actions={<ITButton variant="outlined" label={t("detail.back")} onClick={() => navigate("/invoices")} />}
 			>
@@ -154,7 +155,7 @@ export function InvoicePage() {
 	return (
 		<ITPage
 			title={invoice ? `${invoice.number} · ${invoice.supplier.name ?? ""}` : t("title")}
-			breadcrumbs={[{ label: t("title"), onClick: () => navigate("/invoices") }, { label: invoice?.number ?? t("title") }]}
+			breadcrumbs={trail(t("common:nav.home"), navigate, { label: t("title"), onClick: () => navigate("/invoices") }, { label: invoice?.number ?? t("title") })}
 			loading={!invoice}
 			noPadding
 			// The state, and the one action that changes it, live together at the top of the page.

@@ -1,6 +1,8 @@
 import { type Column, ITBadget, ITButton, ITConfirmDialog, ITDataTable, ITDialog, ITDropdownMenu, type ITDropdownMenuItem, ITFlex, ITPage, ITText } from "@axzydev/axzy_ui_system";
+import { trail } from "@shared/lib/breadcrumbs";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 import { FaEllipsisV } from "react-icons/fa";
 import { accessApi, roleLabel, type PermissionDefinition, type Role } from "@entities/permission";
 import { useCan, userApi, type User } from "@entities/user";
@@ -16,6 +18,7 @@ import { ApiError } from "@shared/api/client";
 type Confirm = { kind: "resetPassword" | "deactivate" | "reactivate"; user: User };
 
 export function UsersPage() {
+	const navigate = useNavigate();
 	const { t, i18n } = useTranslation(["users", "common"]);
 	const can = { create: useCan("users.create"), edit: useCan("users.edit"), remove: useCan("users.delete"), access: useCan("users.permissions") };
 	const [reload, setReload] = useState(0);
@@ -102,7 +105,7 @@ export function UsersPage() {
 	}
 
 	return (
-		<ITPage
+		<ITPage breadcrumbs={trail(t("common:nav.home"), navigate, { label: t("title") })}
 			title={t("title")}
 			description={t("description")}
 			noPadding

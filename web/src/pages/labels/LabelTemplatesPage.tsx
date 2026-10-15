@@ -1,4 +1,5 @@
 import { type Column, ITBadget, ITButton, ITPage } from "@axzydev/axzy_ui_system";
+import { trail } from "@shared/lib/breadcrumbs";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
@@ -36,7 +37,7 @@ export function LabelTemplatesPage() {
 	];
 
 	return (
-		<ITPage
+		<ITPage breadcrumbs={trail(t("common:nav.home"), navigate, { label: t("common:nav.labels"), onClick: () => navigate("/labels") }, { label: t("templates.title") })}
 			title={t("templates.title")}
 			description={t("templates.description")}
 			noPadding

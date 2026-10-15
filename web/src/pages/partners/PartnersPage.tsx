@@ -1,4 +1,5 @@
 import { type Column, ITBadget, ITButton, ITConfirmDialog, ITDataTable, ITDropdownMenu, type ITDropdownMenuItem, ITPage } from "@axzydev/axzy_ui_system";
+import { trail } from "@shared/lib/breadcrumbs";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { FaEllipsisV } from "react-icons/fa";
@@ -62,7 +63,7 @@ export function PartnersPage({ kind }: { kind: PartnerKind }) {
 	}
 
 	return (
-		<ITPage title={t(`${kind}.title`)} description={t(`${kind}.description`)} noPadding actions={canManage ? <ITButton label={t(`${kind}.new`)} onClick={() => navigate(`/${kind}/new`)} /> : undefined}>
+		<ITPage breadcrumbs={trail(t("common:nav.home"), navigate, { label: t(`${kind}.title`) })} title={t(`${kind}.title`)} description={t(`${kind}.description`)} noPadding actions={canManage ? <ITButton label={t(`${kind}.new`)} onClick={() => navigate(`/${kind}/new`)} /> : undefined}>
 			<ITDataTable<Partner>
 				defaultItemsPerPage={25}
 				itemsPerPageOptions={[25, 50, 100]}

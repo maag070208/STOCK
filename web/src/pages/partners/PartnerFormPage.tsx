@@ -1,4 +1,5 @@
 import { ITAlert, ITButton, ITFlex, ITGrid, ITInput, ITPage, ITSearchSelect, ITStack, ITText } from "@axzydev/axzy_ui_system";
+import { trail } from "@shared/lib/breadcrumbs";
 import { useEffect, useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
@@ -102,7 +103,7 @@ export function PartnerFormPage({ kind }: { kind: PartnerKind }) {
 	const title = t(id ? `${kind}.edit` : `${kind}.new`);
 
 	return (
-		<ITPage title={title} breadcrumbs={[{ label: t(`${kind}.title`), onClick: () => navigate(`/${kind}`) }, { label: title }]} noPadding>
+		<ITPage title={title} breadcrumbs={trail(t("common:nav.home"), navigate, { label: t(`${kind}.title`), onClick: () => navigate(`/${kind}`) }, { label: title })} noPadding>
 			<form onSubmit={(e) => void save(e)} noValidate aria-label={title}>
 				<ITStack spacing={6} className="sf:max-w-3xl">
 					<ITStack spacing={3}>

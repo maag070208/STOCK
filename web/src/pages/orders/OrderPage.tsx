@@ -1,4 +1,5 @@
 import { type Column, ITAlert, ITBadget, ITButton, ITFlex, ITGrid, ITPage, ITStack, ITStatCard, ITText } from "@axzydev/axzy_ui_system";
+import { trail } from "@shared/lib/breadcrumbs";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
@@ -46,7 +47,7 @@ export function OrderPage() {
 
 	if (missing) {
 		return (
-			<ITPage title={t("title")} breadcrumbs={[{ label: t("title"), onClick: () => navigate("/orders") }]} noPadding>
+			<ITPage title={t("title")} breadcrumbs={trail(t("common:nav.home"), navigate, { label: t("title"), onClick: () => navigate("/orders") })} noPadding>
 				<ITAlert variant="error">{t("common:errors.notFound")}</ITAlert>
 			</ITPage>
 		);
@@ -97,7 +98,7 @@ export function OrderPage() {
 			title={order ? `${order.number} · ${order.customer.name ?? ""}` : t("title")}
 			noPadding
 			loading={!order}
-			breadcrumbs={[{ label: t("title"), onClick: () => navigate("/orders") }, { label: order?.number ?? "" }]}
+			breadcrumbs={trail(t("common:nav.home"), navigate, { label: t("title"), onClick: () => navigate("/orders") }, { label: order?.number ?? "" })}
 			actions={
 				<ITFlex wrap="wrap" align="center" gap={2}>
 					{order && <ITBadget color={STATUS_COLOR[order.status.code]} label={order.status.label ?? order.status.code} />}

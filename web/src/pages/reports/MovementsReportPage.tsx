@@ -1,6 +1,8 @@
 import { type Column, type ColumnFilters, ITDataTable, ITGrid, ITPage, ITText } from "@axzydev/axzy_ui_system";
+import { trail } from "@shared/lib/breadcrumbs";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 import { catalogApi, type CatalogItem } from "@entities/catalog";
 import { ProductPicker, type Product } from "@entities/product";
 import { reportApi, warehouseOptionsOf, type MovementReportRow, type MovementsPage as MovementsAnswer, type ReportRef } from "@entities/report";
@@ -11,6 +13,7 @@ import { ReportTabs } from "./ReportTabs";
 // The movements of the warehouses the reader reaches (reports.md section 3): what came in, what went out, by period,
 // type, material and warehouse, with the totals of each.
 export function MovementsReportPage() {
+	const navigate = useNavigate();
 	const { t, i18n } = useTranslation(["reports", "common"]);
 	const [answer, setAnswer] = useState<MovementsAnswer | null>(null);
 	const [filters, setFilters] = useState<ColumnFilters>({});
@@ -51,7 +54,7 @@ export function MovementsReportPage() {
 	];
 
 	return (
-		<ITPage title={t("movements.title")} description={t("movements.description")} noPadding actions={<ExportButtons kind="movements" filters={filters} />}>
+		<ITPage breadcrumbs={trail(t("common:nav.home"), navigate, { label: t("common:nav.reports"), onClick: () => navigate("/reports") }, { label: t("movements.title") })} title={t("movements.title")} description={t("movements.description")} noPadding actions={<ExportButtons kind="movements" filters={filters} />}>
 			<ReportTabs />
 			<ITGrid container spacing={3} className="sf:mb-4 sf:items-end">
 				<ITGrid item xs={12} md={4}>

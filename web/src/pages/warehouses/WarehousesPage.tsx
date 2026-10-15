@@ -1,4 +1,5 @@
 import { type Column, ITBadget, ITButton, ITConfirmDialog, ITDataTable, ITDropdownMenu, type ITDropdownMenuItem, ITPage } from "@axzydev/axzy_ui_system";
+import { trail } from "@shared/lib/breadcrumbs";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { FaEllipsisV } from "react-icons/fa";
@@ -63,7 +64,7 @@ export function WarehousesPage() {
 	}
 
 	return (
-		<ITPage title={t("title")} description={t("description")} noPadding actions={canManage ? <ITButton label={t("new")} onClick={() => setEditing({ warehouse: null })} /> : undefined}>
+		<ITPage breadcrumbs={trail(t("common:nav.home"), navigate, { label: t("title") })} title={t("title")} description={t("description")} noPadding actions={canManage ? <ITButton label={t("new")} onClick={() => setEditing({ warehouse: null })} /> : undefined}>
 			<ITDataTable<Warehouse>
 				defaultItemsPerPage={25}
 				itemsPerPageOptions={[25, 50, 100]}

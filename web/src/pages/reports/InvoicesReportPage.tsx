@@ -1,6 +1,8 @@
 import { type Column, type ColumnFilters, ITDataTable, ITGrid, ITPage, ITText } from "@axzydev/axzy_ui_system";
+import { trail } from "@shared/lib/breadcrumbs";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 import { catalogApi, type CatalogItem } from "@entities/catalog";
 import { reportApi, warehouseOptionsOf, type InvoiceReportPage as InvoicesAnswer, type InvoiceReportRow, type ReportRef } from "@entities/report";
 import { formatDate, formatQuantity } from "@shared/lib/format";
@@ -10,6 +12,7 @@ import { ReportTabs } from "./ReportTabs";
 // The invoices and entries of the warehouses the reader reaches (reports.md section 3): what was expected, counted and
 // placed, by period, supplier and status, with the counted quantity of each status.
 export function InvoicesReportPage() {
+	const navigate = useNavigate();
 	const { t, i18n } = useTranslation(["reports", "common"]);
 	const [answer, setAnswer] = useState<InvoicesAnswer | null>(null);
 	const [filters, setFilters] = useState<ColumnFilters>({});
@@ -51,7 +54,7 @@ export function InvoicesReportPage() {
 	];
 
 	return (
-		<ITPage title={t("invoices.title")} description={t("invoices.description")} noPadding actions={<ExportButtons kind="invoices" filters={filters} />}>
+		<ITPage breadcrumbs={trail(t("common:nav.home"), navigate, { label: t("common:nav.reports"), onClick: () => navigate("/reports") }, { label: t("invoices.title") })} title={t("invoices.title")} description={t("invoices.description")} noPadding actions={<ExportButtons kind="invoices" filters={filters} />}>
 			<ReportTabs />
 			<ITGrid container spacing={3} className="sf:mb-4 sf:items-end">
 				<ITGrid item xs={12} md={4}>

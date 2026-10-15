@@ -1,4 +1,5 @@
 import { ITAlert, ITSearchSelect, ITButton, ITCard, ITDatePicker, ITFlex, ITGrid, ITInput, ITPage, ITStack, ITText } from "@axzydev/axzy_ui_system";
+import { trail } from "@shared/lib/breadcrumbs";
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
@@ -101,7 +102,7 @@ export function OrderFormPage() {
 	}
 
 	return (
-		<ITPage title={t("new")} breadcrumbs={[{ label: t("title"), onClick: () => navigate("/orders") }, { label: t("new") }]} noPadding>
+		<ITPage title={t("new")} breadcrumbs={trail(t("common:nav.home"), navigate, { label: t("title"), onClick: () => navigate("/orders") }, { label: t("new") })} noPadding>
 			<form onSubmit={(e) => void save(e)} noValidate aria-label={t("new")} className="sf:flex sf:max-w-4xl sf:flex-col sf:gap-6">
 				<ITStack spacing={3}>
 					<ITText as="h2" className="sf:text-title-md">

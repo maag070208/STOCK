@@ -1,4 +1,5 @@
 import { type Column, ITButton, ITDataTable, ITPage, ITTabs, ITText } from "@axzydev/axzy_ui_system";
+import { trail } from "@shared/lib/breadcrumbs";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
@@ -60,7 +61,7 @@ export function StockPage() {
 	];
 
 	return (
-		<ITPage
+		<ITPage breadcrumbs={trail(t("common:nav.home"), navigate, { label: t("title") })}
 			title={t("title")}
 			description={t("description")}
 			noPadding

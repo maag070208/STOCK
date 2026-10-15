@@ -1,6 +1,8 @@
 import { ITPage, ITTabs } from "@axzydev/axzy_ui_system";
+import { trail } from "@shared/lib/breadcrumbs";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 import { accessApi, type MatrixCell, type PermissionDefinition, type Policy, type PolicyAction, type Role } from "@entities/permission";
 import { MatrixPanel } from "@features/permission/MatrixPanel";
 import { PoliciesPanel } from "@features/permission/PoliciesPanel";
@@ -10,6 +12,7 @@ import { toast } from "@app/store";
 
 // The access console (roles.manage only): roles, the matrix, policies, and what each role sees.
 export function AccessPage() {
+	const navigate = useNavigate();
 	const { t } = useTranslation(["access", "common"]);
 	const [data, setData] = useState<{ roles: Role[]; permissions: PermissionDefinition[]; cells: MatrixCell[]; policies: Policy[]; actions: PolicyAction[] } | null>(null);
 	const [error, setError] = useState<string | null>(null);
@@ -35,7 +38,7 @@ export function AccessPage() {
 	const failed = (message: string) => toast(message, "error");
 
 	return (
-		<ITPage title={t("title")} description={t("description")} loading={!data && !error} error={error} onRetry={() => void load()} noPadding>
+		<ITPage breadcrumbs={trail(t("common:nav.home"), navigate, { label: t("title") })} title={t("title")} description={t("description")} loading={!data && !error} error={error} onRetry={() => void load()} noPadding>
 			{data && (
 				<ITTabs
 					variant="line"

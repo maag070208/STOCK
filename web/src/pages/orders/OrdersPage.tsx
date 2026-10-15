@@ -1,4 +1,5 @@
 import { type Column, ITBadget, ITButton, ITDataTable, ITPage, ITStack, ITText } from "@axzydev/axzy_ui_system";
+import { trail } from "@shared/lib/breadcrumbs";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
@@ -52,7 +53,7 @@ export function OrdersPage() {
 	];
 
 	return (
-		<ITPage title={t("title")} description={t("description")} noPadding actions={canCreate ? <ITButton label={t("new")} onClick={() => navigate("/orders/new")} /> : undefined}>
+		<ITPage breadcrumbs={trail(t("common:nav.home"), navigate, { label: t("title") })} title={t("title")} description={t("description")} noPadding actions={canCreate ? <ITButton label={t("new")} onClick={() => navigate("/orders/new")} /> : undefined}>
 			{alerts.length > 0 && (
 				<ITStack spacing={1} className="sf:mb-4">
 					<ITText as="h2" className="sf:text-title-md">

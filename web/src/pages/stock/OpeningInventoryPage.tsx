@@ -1,4 +1,5 @@
 import { ITAlert, ITBadget, ITButton, ITFlex, ITGrid, ITPage, ITStack, ITStatCard, ITText } from "@axzydev/axzy_ui_system";
+import { trail } from "@shared/lib/breadcrumbs";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
@@ -57,7 +58,7 @@ export function OpeningInventoryPage() {
 		<ITPage
 			title={t("opening.title")}
 			description={t("opening.description")}
-			breadcrumbs={[{ label: t("common:nav.stock"), onClick: () => navigate("/stock") }, { label: t("opening.title") }]}
+			breadcrumbs={trail(t("common:nav.home"), navigate, { label: t("common:nav.stock"), onClick: () => navigate("/stock") }, { label: t("opening.title") })}
 			noPadding
 		>
 			<ITStack spacing={6} className="sf:max-w-4xl">

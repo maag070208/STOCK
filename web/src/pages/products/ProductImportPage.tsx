@@ -1,4 +1,5 @@
 import { type Column, ITAlert, ITBadget, ITButton, ITFlex, ITGrid, ITPage, ITStack, ITStatCard, ITText } from "@axzydev/axzy_ui_system";
+import { trail } from "@shared/lib/breadcrumbs";
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
@@ -50,7 +51,7 @@ export function ProductImportPage() {
 		<ITPage
 			title={t("importPage.title")}
 			description={t("importPage.description")}
-			breadcrumbs={[{ label: t("title"), onClick: () => navigate("/products") }, { label: t("importPage.title") }]}
+			breadcrumbs={trail(t("common:nav.home"), navigate, { label: t("title"), onClick: () => navigate("/products") }, { label: t("importPage.title") })}
 			noPadding
 		>
 			<ITStack spacing={6} className="sf:max-w-4xl">

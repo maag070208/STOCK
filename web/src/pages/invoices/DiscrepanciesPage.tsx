@@ -1,4 +1,5 @@
 import { type Column, ITDataTable, ITPage, ITText } from "@axzydev/axzy_ui_system";
+import { trail } from "@shared/lib/breadcrumbs";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { IconButton } from "@shared/ui/IconButton";
@@ -38,7 +39,7 @@ export function DiscrepanciesPage() {
 	];
 
 	return (
-		<ITPage title={t("discrepancies.title")} description={t("discrepancies.description")} breadcrumbs={[{ label: t("discrepancies.title") }]} noPadding>
+		<ITPage title={t("discrepancies.title")} description={t("discrepancies.description")} breadcrumbs={trail(t("common:nav.home"), navigate, { label: t("discrepancies.title") })} noPadding>
 			<ITDataTable<Discrepancy>
 				defaultItemsPerPage={25}
 				itemsPerPageOptions={[25, 50, 100]}
