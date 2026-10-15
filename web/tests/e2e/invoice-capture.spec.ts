@@ -21,7 +21,7 @@ async function invoice(f: EntriesFixture, lines: { productId: string; quantity: 
 const heading = (page: Page, number: string) => page.getByRole("heading", { name: new RegExp(number) });
 
 // The chips of the list live in their own group: the empty state carries a button of its own.
-const chip = (page: Page, name: string) => page.getByRole("group", { name: "Estado" }).getByRole("button", { name });
+const chip = (page: Page, name: string) => page.getByRole("button", { name, exact: true });
 
 test.describe("the list", () => {
 	test("one search box and the status chips filter together, and a row opens with the keyboard", async ({ page }) => {

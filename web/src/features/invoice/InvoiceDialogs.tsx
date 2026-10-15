@@ -1,4 +1,4 @@
-import { ITTextarea } from "@axzydev/axzy_ui_system";
+import { ITStack, ITText, ITTextarea } from "@axzydev/axzy_ui_system";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { canAdjust, invoiceApi, receivingApi, sharesError, type InvoiceLine, type ShareInput, type StaffMember } from "@entities/invoice";
@@ -36,10 +36,10 @@ export function AssignDialog(props: { invoiceId: string; line: InvoiceLine | nul
 
 	return (
 		<FormDialog isOpen title={t("assignDialog.title", { product: line.product.name ?? "" })} onClose={props.onClose} onSubmit={() => void save()} submitting={submit.submitting || (tried && blocked)} error={submit.error}>
-			<p className="sf:text-body-md">{t("assignDialog.line", { quantity: formatQuantity(line.quantity, line.unit?.decimalPlaces, i18n.language) })}</p>
-			<div className="sf:min-w-[30rem]">
+			<ITText>{t("assignDialog.line", { quantity: formatQuantity(line.quantity, line.unit?.decimalPlaces, i18n.language) })}</ITText>
+			<ITStack className="sf:min-w-[30rem]">
 				<SharesEditor line={String(line.quantity)} decimals={line.unit?.decimalPlaces ?? null} staff={props.staff} shares={shares} onChange={setShares} showErrors={tried} />
-			</div>
+			</ITStack>
 		</FormDialog>
 	);
 }
@@ -74,10 +74,10 @@ export function AdjustDialog(props: { assignmentId: string | null; summary: { ex
 			error={submit.error}
 			submitLabel={t("adjustDialog.confirm")}
 		>
-			{props.summary && <p className="sf:text-body-md">{t("adjustDialog.body", props.summary)}</p>}
-			<div className="sf:min-w-[28rem]">
+			{props.summary && <ITText>{t("adjustDialog.body", props.summary)}</ITText>}
+			<ITStack className="sf:min-w-[28rem]">
 				<ITTextarea name="note" label={t("adjustDialog.note")} value={note} onChange={setNote} placeholder={t("adjustDialog.noteHint")} rows={3} maxLength={500} />
-			</div>
+			</ITStack>
 		</FormDialog>
 	);
 }

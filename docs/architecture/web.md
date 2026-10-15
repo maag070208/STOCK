@@ -160,6 +160,9 @@ a defect: `div`, `span`, `p`, `dl`, `dt`, `dd`, `table`, `thead`, `tbody`, `tr`,
 `src/entities` and `src/widgets`, and the lint fails on them. Only `<form>` is allowed outside the kit, because it carries
 the `onSubmit` of `FormDialog`.
 
+The lint (`no-restricted-syntax` in `eslint.config.js`) enforces it over the screens that are already converted — the
+invoice ones first — and its `files` list grows with each screen, so the rest keep passing while they wait their turn.
+
 | Instead of | Use |
 |---|---|
 | `div`, `span`, `section`, `article` | `ITStack`, `ITFlex`, `ITGrid`, `ITCard`, `ITDivider` |

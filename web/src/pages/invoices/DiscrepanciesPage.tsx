@@ -37,15 +37,13 @@ export function DiscrepanciesPage() {
 
 	return (
 		<ITPage title={t("discrepancies.title")} description={t("discrepancies.description")} breadcrumbs={[{ label: t("discrepancies.title") }]} noPadding>
-			<section data-testid="discrepancies">
-				<ITDataTable<Discrepancy>
+			<ITDataTable<Discrepancy>
 					columns={columns}
 					fetchData={(params) => receivingApi.discrepancies(params as TableParams)}
 					reloadTrigger={reload}
 					layout="fixed"
 					onRowClick={(row) => navigate(`/invoices/${row.invoice.id}`)}
-				/>
-			</section>
+			/>
 			<AdjustDialog
 				assignmentId={adjusting?.assignmentId ?? null}
 				summary={adjusting && { expected: number(adjusting.expectedQuantity), counted: number(adjusting.countedQuantity), difference: signed(adjusting.difference) }}

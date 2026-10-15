@@ -1,7 +1,6 @@
-import { ITButton, ITDatePicker, ITDialog, ITInput, ITSelect } from "@axzydev/axzy_ui_system";
-import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
+import { ITAlert, ITButton, ITDatePicker, ITDialog, ITFlex, ITInput, ITSelect, ITStack, ITText } from "@axzydev/axzy_ui_system";
+import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { useTranslation } from "react-i18next";
-import { FaTimes } from "react-icons/fa";
 import {
 	hasRememberedWorkspace,
 	invoiceApi,
@@ -28,7 +27,6 @@ export function NewInvoiceDialog(props: {
 	onCreated: (invoice: Invoice, action: "save" | "materials") => void;
 }) {
 	const { t } = useTranslation(["invoices", "common"]);
-	const titleId = useId();
 	const form = useRef<HTMLFormElement>(null);
 	const opener = useRef<Element | null>(null);
 	const [number, setNumber] = useState("");
@@ -118,84 +116,77 @@ export function NewInvoiceDialog(props: {
 	if (!props.isOpen) return null;
 
 	return (
-		<ITDialog isOpen onClose={close}>
+		<ITDialog isOpen onClose={close} title={t("modal.title")}>
+			{/* The kit's dialog does not name itself as one: the role and the label are set here (web.md section 8). */}
 			<form
 				ref={form}
 				role="dialog"
 				aria-modal="true"
-				aria-labelledby={titleId}
+				aria-label={t("modal.title")}
 				onKeyDown={onKeyDown}
 				onSubmit={(event) => {
 					event.preventDefault();
 					void save("materials");
 				}}
 				noValidate
-				className="sf:flex sf:w-[30rem] sf:flex-col sf:gap-4"
 				data-testid="new-invoice"
 			>
-				<div className="sf:flex sf:items-center sf:justify-between sf:gap-2">
-					<h2 id={titleId} className="sf:text-title-md">
-						{t("modal.title")}
-					</h2>
-					<button type="button" aria-label={t("modal.close")} onClick={close} className="sf:rounded-md sf:p-2 sf:text-on-surface-muted">
-						<FaTimes aria-hidden />
-					</button>
-				</div>
+				<ITStack spacing={4} className="sf:w-[30rem]">
+					<ITInput
+						name="number"
+						label={t("form.number")}
+						value={number}
+						onChange={(event) => setNumber(String(event.target.value).toUpperCase())}
+						error={fieldError("number")}
+						touched={Boolean(fieldError("number"))}
+						required
+					/>
+					<SupplierPicker
+						name="supplierId"
+						label={t("form.supplier")}
+						value={supplierId}
+						onChange={(supplier) => {
+							const chosen = supplier?.id ?? "";
+							setSupplierId(chosen);
+							rememberWorkspace({ supplierId: chosen, warehouseId });
+						}}
+						error={fieldError("supplierId")}
+						required
+					/>
+					<ITDatePicker
+						name="invoiceDate"
+						label={t("form.date")}
+						value={invoiceDate ?? businessToday()}
+						onChange={(event) => event.target.value instanceof Date && setInvoiceDate(event.target.value)}
+						error={fieldError("invoiceDate")}
+						touched={Boolean(fieldError("invoiceDate"))}
+						required
+					/>
+					<ITSelect
+						name="warehouseId"
+						label={t("form.warehouse")}
+						value={warehouseId}
+						onChange={(event) => {
+							setWarehouseId(event.target.value);
+							rememberWorkspace({ supplierId, warehouseId: event.target.value });
+						}}
+						options={props.warehouses.map((warehouse) => ({ value: warehouse.id, label: `${warehouse.code ?? ""} · ${warehouse.name ?? ""}` }))}
+						valueField="value"
+						labelField="label"
+						error={fieldError("warehouseId")}
+						touched={Boolean(fieldError("warehouseId"))}
+						required
+					/>
+					{prefilled && <ITText muted>{t("modal.remembered")}</ITText>}
 
-				<ITInput
-					name="number"
-					label={t("form.number")}
-					value={number}
-					onChange={(event) => setNumber(String(event.target.value).toUpperCase())}
-					error={fieldError("number")}
-					touched={Boolean(fieldError("number"))}
-					required
-				/>
-				<SupplierPicker
-					name="supplierId"
-					label={t("form.supplier")}
-					value={supplierId}
-					onChange={(supplier) => {
-						const chosen = supplier?.id ?? "";
-						setSupplierId(chosen);
-						rememberWorkspace({ supplierId: chosen, warehouseId });
-					}}
-					error={fieldError("supplierId")}
-					required
-				/>
-				<ITDatePicker
-					name="invoiceDate"
-					label={t("form.date")}
-					value={invoiceDate ?? businessToday()}
-					onChange={(event) => event.target.value instanceof Date && setInvoiceDate(event.target.value)}
-					error={fieldError("invoiceDate")}
-					touched={Boolean(fieldError("invoiceDate"))}
-					required
-				/>
-				<ITSelect
-					name="warehouseId"
-					label={t("form.warehouse")}
-					value={warehouseId}
-					onChange={(event) => {
-						setWarehouseId(event.target.value);
-						rememberWorkspace({ supplierId, warehouseId: event.target.value });
-					}}
-					options={props.warehouses.map((warehouse) => ({ value: warehouse.id, label: `${warehouse.code ?? ""} · ${warehouse.name ?? ""}` }))}
-					valueField="value"
-					labelField="label"
-					error={fieldError("warehouseId")}
-					touched={Boolean(fieldError("warehouseId"))}
-					required
-				/>
-				{prefilled && <p className="sf:text-body-md sf:text-on-surface-muted">{t("modal.remembered")}</p>}
+					{submit.error && <ITAlert variant="error">{submit.error}</ITAlert>}
 
-				{submit.error && <p className="sf:text-body-md sf:text-danger">{submit.error}</p>}
-
-				<div className="sf:flex sf:flex-wrap sf:justify-end sf:gap-2">
-					<ITButton variant="outlined" label={t("common:actions.cancel")} onClick={close} />
-					<ITButton variant="outlined" label={t("modal.save")} onClick={() => void save("save")} disabled={submit.submitting} />
-					<ITButton type="submit" label={submit.submitting ? t("modal.saving") : t("modal.saveAndAdd")} disabled={submit.submitting} />
-				</div>
+					<ITFlex justify="end" wrap="wrap" gap={2}>
+						<ITButton variant="outlined" label={t("common:actions.cancel")} onClick={close} />
+						<ITButton variant="outlined" label={t("modal.save")} onClick={() => void save("save")} disabled={submit.submitting} />
+						<ITButton type="submit" label={submit.submitting ? t("modal.saving") : t("modal.saveAndAdd")} disabled={submit.submitting} />
+					</ITFlex>
+				</ITStack>
 			</form>
 		</ITDialog>
 	);

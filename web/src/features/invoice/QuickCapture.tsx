@@ -1,12 +1,13 @@
-import { ITButton, ITInput } from "@axzydev/axzy_ui_system";
-import { useEffect, useRef, useState, type KeyboardEvent } from "react";
+import { ITAlert, ITButton, ITGrid, ITInput, ITStack } from "@axzydev/axzy_ui_system";
+import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { addedQuantity, captureTarget, invoiceApi, type InvoiceLine } from "@entities/invoice";
 import { ProductPicker, type Product } from "@entities/product";
 import { ApiError } from "@shared/api/client";
 
 // The quick capture bar of the detail (F8-07): material and quantity, and Enter adds. A repeated material adds to the
-// line that exists, and a missing field takes the focus instead of an error: the flow never stops the keyboard.
+// line that exists, and a missing field takes the focus instead of an error: the flow never stops the keyboard. The bar
+// is a form, so Enter is what the button does, and every piece of it is a component of the UI kit (web.md section 8).
 export function QuickCapture(props: {
 	invoiceId: string;
 	lines: InvoiceLine[];
@@ -14,19 +15,19 @@ export function QuickCapture(props: {
 	onSaved: () => void;
 }) {
 	const { t } = useTranslation(["invoices", "common"]);
-	const material = useRef<HTMLDivElement>(null);
-	const quantity = useRef<HTMLDivElement>(null);
+	const bar = useRef<HTMLFormElement>(null);
 	const [product, setProduct] = useState<Product | null>(null);
 	const [value, setValue] = useState("");
 	const [busy, setBusy] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 
-	const focusMaterial = () => material.current?.querySelector<HTMLInputElement>("input")?.focus();
-	const focusQuantity = () => quantity.current?.querySelector<HTMLInputElement>("input")?.focus();
+	const focusField = (name: string) => bar.current?.querySelector<HTMLInputElement>(`[name="${name}"]`)?.focus();
+	const focusMaterial = () => focusField("capture-product");
+	const focusQuantity = () => focusField("capture-quantity");
 
 	// Arriving from `Guardar y agregar materiales`, the material is waiting with the focus on it.
 	useEffect(() => {
-		if (props.autoFocus) focusMaterial();
+		if (props.autoFocus) bar.current?.querySelector<HTMLInputElement>('[name="capture-product"]')?.focus();
 	}, [props.autoFocus]);
 
 	async function add() {
@@ -62,7 +63,7 @@ export function QuickCapture(props: {
 
 	// Enter adds from anywhere in the bar. In the material picker it adds only once a material is chosen: without one it
 	// is the picker's own Enter, which walks its list.
-	const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+	const onKeyDown = (event: KeyboardEvent<HTMLFormElement>) => {
 		const target = event.target as HTMLElement;
 		if (event.key !== "Enter" || target.tagName === "TEXTAREA") return;
 		if (target.getAttribute("name") === "capture-product" && !product) return;
@@ -71,23 +72,30 @@ export function QuickCapture(props: {
 	};
 
 	return (
-		<div className="sf:flex sf:flex-col sf:gap-2" onKeyDown={onKeyDown} data-testid="quick-capture">
-			<div className="sf:grid sf:grid-cols-1 sf:items-end sf:gap-3 sf:md:grid-cols-[1fr_9rem_auto]">
-				<div ref={material}>
-					<ProductPicker name="capture-product" label={t("form.product")} value={product?.id ?? ""} onChange={setProduct} />
-				</div>
-				<div ref={quantity}>
-					<ITInput
-						name="capture-quantity"
-						type="number"
-						label={t("form.quantity")}
-						value={value}
-						onChange={(event) => setValue(String(event.target.value))}
-					/>
-				</div>
-				<ITButton label={t("capture.add")} onClick={() => void add()} disabled={busy} />
-			</div>
-			{error && <p className="sf:text-body-md sf:text-danger">{error}</p>}
-		</div>
+		<form
+			ref={bar}
+			data-testid="quick-capture"
+			noValidate
+			onKeyDown={onKeyDown}
+			onSubmit={(event: FormEvent) => {
+				event.preventDefault();
+				void add();
+			}}
+		>
+			<ITStack spacing={2}>
+				<ITGrid container spacing={3}>
+					<ITGrid item xs={12} md={7}>
+						<ProductPicker name="capture-product" label={t("form.product")} value={product?.id ?? ""} onChange={setProduct} />
+					</ITGrid>
+					<ITGrid item xs={12} md={3}>
+						<ITInput name="capture-quantity" type="number" label={t("form.quantity")} value={value} onChange={(event) => setValue(String(event.target.value))} />
+					</ITGrid>
+					<ITGrid item xs={12} md={2}>
+						<ITButton type="submit" label={t("capture.add")} disabled={busy} />
+					</ITGrid>
+				</ITGrid>
+				{error && <ITAlert variant="error">{error}</ITAlert>}
+			</ITStack>
+		</form>
 	);
 }

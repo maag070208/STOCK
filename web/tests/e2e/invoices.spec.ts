@@ -82,14 +82,14 @@ test("a discrepancy is adjusted by the warehouse's manager or by office, and not
 	await call("PUT", `/users/${manager.id}/warehouses`, { token: f.token, body: { warehouseIds: [f.warehouse.id] } });
 	await signInAs(page, manager);
 	await page.goto("/#/discrepancies");
-	const row = page.getByTestId("discrepancies").getByRole("row").filter({ hasText: created.number });
+	const row = page.getByRole("table").getByRole("row").filter({ hasText: created.number });
 	await expect(row).toContainText("-20");
 	await row.getByRole("button", { name: "Ajustar" }).click();
 	const dialog = page.getByRole("dialog");
 	await expect(dialog.getByRole("button", { name: "Ajustar" })).toBeDisabled();
 	await dialog.getByLabel("Nota").fill("El proveedor envió 80");
 	await dialog.getByRole("button", { name: "Ajustar" }).click();
-	await expect(page.getByTestId("discrepancies").getByRole("row").filter({ hasText: created.number })).toHaveCount(0);
+	await expect(page.getByRole("table").getByRole("row").filter({ hasText: created.number })).toHaveCount(0);
 	await page.goto(`/#/invoices/${created.id}`);
 	await expect(page.getByText("En asignación")).toBeVisible();
 	await expect(page.getByRole("row", { name: new RegExp(a.name) })).toContainText("80");

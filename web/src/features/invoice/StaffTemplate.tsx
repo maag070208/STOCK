@@ -1,4 +1,4 @@
-import { ITButton, ITCheckbox } from "@axzydev/axzy_ui_system";
+import { ITButton, ITCheckbox, ITChip, ITFlex, ITStack, ITText } from "@axzydev/axzy_ui_system";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { staffApi, type StaffMember } from "@entities/invoice";
@@ -6,7 +6,8 @@ import { FormDialog } from "@shared/ui/FormDialog";
 import { useSubmit } from "@shared/ui/useSubmit";
 
 // The staff template of a warehouse (material-entry.md, question 4): the operators its entries are shared among.
-// Who assigns sees it; who manages it chooses, from the active operators who work in the warehouse.
+// Who assigns sees it; who manages it chooses, from the active operators who work in the warehouse. The section holds
+// the UI kit and nothing else (web.md section 8), and each member is one of the kit's chips.
 export function StaffTemplate(props: { warehouseId: string; canManage: boolean; onSaved: () => void }) {
 	const { t } = useTranslation(["invoices", "common"]);
 	const [members, setMembers] = useState<StaffMember[]>([]);
@@ -45,34 +46,34 @@ export function StaffTemplate(props: { warehouseId: string; canManage: boolean; 
 	});
 
 	return (
-		<section aria-label={t("staff.title")} className="sf:flex sf:flex-col sf:gap-3" data-testid="staff-template">
-			<div className="sf:flex sf:items-center sf:justify-between">
-				<div>
-					<h2 className="sf:text-title-md">{t("staff.title")}</h2>
-					<p className="sf:text-body-md sf:text-on-surface-muted">{t("staff.description")}</p>
-				</div>
-				{props.canManage && <ITButton size="sm" variant="outlined" label={t("staff.edit")} onClick={() => void open()} />}
-			</div>
-			{members.length === 0 ? (
-				<p className="sf:text-body-md sf:text-on-surface-muted">{t("staff.none")}</p>
-			) : (
-				<ul className="sf:flex sf:flex-wrap sf:gap-2">
-					{members.map((member) => (
-						<li key={member.id} className="sf:rounded-full sf:border sf:border-outline-variant sf:px-3 sf:py-1 sf:text-body-md">
-							{member.name}
-						</li>
-					))}
-				</ul>
-			)}
-			<FormDialog isOpen={editing} title={t("staff.edit")} onClose={() => setEditing(false)} onSubmit={() => void save()} submitting={submit.submitting} error={submit.error}>
-				<p className="sf:text-label-md">{t("staff.candidates")}</p>
-				{candidates.length === 0 && <p className="sf:text-body-md sf:text-on-surface-muted">{t("staff.noCandidates")}</p>}
-				<div className="sf:flex sf:min-w-80 sf:flex-col sf:gap-2">
-					{candidates.map((candidate) => (
-						<ITCheckbox key={candidate.id} name={`staff-${candidate.id}`} label={`${candidate.name} (${candidate.username})`} checked={chosen.has(candidate.id)} onChange={(on) => toggle(candidate.id, on)} />
-					))}
-				</div>
+		<ITStack spacing={3}>
+				<ITFlex justify="between" align="start" wrap="wrap" gap={2}>
+					<ITStack spacing={1}>
+						<ITText as="h2" className="sf:text-title-md">
+							{t("staff.title")}
+						</ITText>
+						<ITText muted>{t("staff.description")}</ITText>
+					</ITStack>
+					{props.canManage && <ITButton size="sm" variant="outlined" label={t("staff.edit")} onClick={() => void open()} />}
+				</ITFlex>
+				{members.length === 0 ? (
+					<ITText muted>{t("staff.none")}</ITText>
+				) : (
+					<ITFlex wrap="wrap" gap={2}>
+						{members.map((member) => (
+							<ITChip key={member.id} label={member.name} />
+						))}
+					</ITFlex>
+				)}
+				<FormDialog isOpen={editing} title={t("staff.edit")} onClose={() => setEditing(false)} onSubmit={() => void save()} submitting={submit.submitting} error={submit.error}>
+					<ITText className="sf:text-label-md">{t("staff.candidates")}</ITText>
+					{candidates.length === 0 && <ITText muted>{t("staff.noCandidates")}</ITText>}
+					<ITStack spacing={2} className="sf:min-w-80">
+						{candidates.map((candidate) => (
+							<ITCheckbox key={candidate.id} name={`staff-${candidate.id}`} label={`${candidate.name} (${candidate.username})`} checked={chosen.has(candidate.id)} onChange={(on) => toggle(candidate.id, on)} />
+						))}
+					</ITStack>
 			</FormDialog>
-		</section>
+		</ITStack>
 	);
 }

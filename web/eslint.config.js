@@ -55,4 +55,18 @@ export default tseslint.config(
       "react-hooks/exhaustive-deps": "warn",
     },
   },
+  {
+    // A screen is built from the UI kit: no markup of our own (web.md section 8). The rule covers the screens that are
+    // converted already — the invoices, first — and grows with each one, so the rest keep working while they wait.
+    files: ["src/pages/invoices/**/*.tsx", "src/features/invoice/**/*.tsx"],
+    rules: {
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector: "JSXOpeningElement[name.name=/^(div|span|p|h[1-6]|table|thead|tbody|tr|td|th|dl|dt|dd|ul|ol|li)$/]",
+          message: "Use the UI kit (ITStack, ITFlex, ITGrid, ITText, ITTable…) instead of markup of our own: web.md section 8.",
+        },
+      ],
+    },
+  },
 );
