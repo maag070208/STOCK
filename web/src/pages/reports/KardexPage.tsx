@@ -103,14 +103,15 @@ export function KardexPage() {
 				<ITDataTable<KardexRow>
 					columns={columns}
 					fetchData={(params) => {
-						setFilters(chosen);
+						const asked = { ...params.filters, ...chosen };
+						setFilters(asked);
 						// Without the material and its warehouse there is no kardex to ask for.
 						if (!product || !warehouseId) {
 							setAnswer(null);
 							return Promise.resolve({ data: [], total: 0 });
 						}
 						return reportApi
-							.kardex({ page: params.page, limit: params.limit, filters: chosen })
+							.kardex({ page: params.page, limit: params.limit, filters: asked })
 							.then((page) => {
 								const list = kardexRows(page);
 								setAnswer(page);

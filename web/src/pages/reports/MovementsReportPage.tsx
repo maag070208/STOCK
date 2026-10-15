@@ -73,10 +73,13 @@ export function MovementsReportPage() {
 			<section data-testid="movements-report">
 				<ITDataTable<MovementReportRow>
 					columns={columns}
+					// The filters this screen manages travel as external filters: the table merges them with its own
+					// before asking, and the export takes exactly the filters of the last answer.
+					externalFilters={chosen}
 					fetchData={(params) => {
-						setFilters({ ...params.filters, ...chosen });
+						setFilters(params.filters);
 						return reportApi
-							.movements({ page: params.page, limit: params.limit, filters: { ...params.filters, ...chosen }, sort: params.sort })
+							.movements({ page: params.page, limit: params.limit, filters: params.filters, sort: params.sort })
 							.then((page) => {
 								setAnswer(page);
 								setError(null);

@@ -60,10 +60,13 @@ export function StockReportPage() {
 			<section data-testid="stock-report">
 				<ITDataTable<StockReportRow>
 					columns={columns}
+					// The filters this screen manages travel as external filters: the table merges them with its own
+					// before asking, and the export takes exactly the filters of the last answer.
+					externalFilters={external}
 					fetchData={(params) => {
 						setFilters(params.filters);
 						return reportApi
-							.stock({ page: params.page, limit: params.limit, filters: { ...params.filters, ...external }, sort: params.sort })
+							.stock({ page: params.page, limit: params.limit, filters: params.filters, sort: params.sort })
 							.then((answer) => {
 								setPage(answer);
 								setError(null);

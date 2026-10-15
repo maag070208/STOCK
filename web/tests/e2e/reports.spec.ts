@@ -27,8 +27,21 @@ test("the office filters the current stock, exports it, and reads the kardex of 
 	// The total the screen groups by is the sum of the rows it lists.
 	await expect(page.getByTestId("stock-total")).toContainText("40");
 
-	// The export is the file the API builds from the same filters, never one the browser writes.
+	// The filter this screen manages itself, the one a column filter does not carry. The screen asks again with it.
+	await Promise.all([
+		page.waitForResponse((response) => response.url().endsWith("/reports/stock") && response.request().postData()?.includes(f.warehouse.id) === true),
+		page.locator('select[name="warehouseId"]').selectOption(f.warehouse.id),
+	]);
+	await expect(page.getByTestId("stock-total")).toContainText("40");
+
+	// The export is the file the API builds from the same filters, never one the browser writes: the filters of the
+	// screen travel with the request, so a file can never hold rows the screen left out.
+	const asked: string[] = [];
+	page.on("request", (request) => {
+		if (request.url().includes("export")) asked.push(`${request.method()} ${request.url()} ${request.postData() ?? "<sin cuerpo>"}`);
+	});
 	const [xlsx] = await Promise.all([page.waitForEvent("download"), page.getByRole("button", { name: "XLSX" }).click()]);
+	expect(asked.filter((body) => body.includes(f.warehouse.id)).length, asked.join("\n")).toBeGreaterThan(0);
 	expect(xlsx.suggestedFilename()).toMatch(/\.xlsx$/);
 	const [pdf] = await Promise.all([page.waitForEvent("download"), page.getByRole("button", { name: "PDF" }).click()]);
 	expect(pdf.suggestedFilename()).toMatch(/\.pdf$/);

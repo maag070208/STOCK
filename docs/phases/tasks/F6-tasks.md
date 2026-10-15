@@ -21,6 +21,14 @@ the columns are the ones in that document, and the minimum stock is one number o
 migration V18). The views the reports read are `stock_movement_rows` (V19) and `order_report_rows` /
 `invoice_report_rows` (V20), and the reassignment of an order now keeps its own record (`order_reassignments`, V20).
 
+**Progress, 2026-10-15:** F6-06 is done in the web: one page per report with its own URL
+(`/reports/stock`, `/kardex`, `/movements`, `/orders`, `/invoices`), one "Reportes" entry in the menu (`reports.view`) with
+tabs, and the export buttons (XLSX and PDF) in the page's actions, shown only with `reports.export`. The file is the one
+the API builds, asked for by POST with the very filters of the last answer, so a screen and its file cannot disagree. The
+kardex screen shows the running balances the API sent and never adds them up (`web/tests/unit/report.spec.ts`), and
+someone without `reports.view` sees the forbidden page. `web/tests/e2e/reports.spec.ts` opens the current stock, filters
+it — a column filter and the page's own — exports it, and reads the kardex of a material.
+
 ## F6-01 · Current stock report · API · after F4-06
 - Unit (red): the report total equals the sum of the balances it lists; the aisle and rack groups add up to their warehouse.
 - E2E (red): after the opening inventory, the total is 10,914,130; a user with `AREA` scope gets totals over their rows only.

@@ -69,6 +69,12 @@ Redux holds only cross-cutting state: `auth`, `toast`, `notifications`. Everythi
 
 Lists use `POST …/query` with `{ page, limit, filters, sort }`. `tableRequest` and `tableQuery` in `@shared/api/table` send that shape, and they serialize dates as an ISO range in the local time zone. `makeClientTableFetch` gives the same behavior for full client-side lists and is reused by the PDF and CSV exports.
 
+`ITDataTable` takes the filters a screen manages as `externalFilters`, and it merges them with the columns' own before
+calling `fetchData`; `reloadTrigger` asks it to read again when one of them changes. A screen that holds the filters of
+its last answer — the reports do — can hand exactly those to another call, which is how an export is asked for with the
+same filters as the screen ([reports.md](../modules/reports.md) section 4). The file itself is always the API's:
+`downloadPost` saves the bytes it answers, with the name from its `Content-Disposition`.
+
 The API contract for this shape is defined in the API docs, which come next.
 
 ## 6. i18n

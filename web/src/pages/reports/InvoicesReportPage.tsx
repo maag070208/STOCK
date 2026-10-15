@@ -75,10 +75,13 @@ export function InvoicesReportPage() {
 			<section data-testid="invoices-report">
 				<ITDataTable<InvoiceReportRow>
 					columns={columns}
+					// The filters this screen manages travel as external filters: the table merges them with its own
+					// before asking, and the export takes exactly the filters of the last answer.
+					externalFilters={chosen}
 					fetchData={(params) => {
-						setFilters({ ...params.filters, ...chosen });
+						setFilters(params.filters);
 						return reportApi
-							.invoices({ page: params.page, limit: params.limit, filters: { ...params.filters, ...chosen }, sort: params.sort })
+							.invoices({ page: params.page, limit: params.limit, filters: params.filters, sort: params.sort })
 							.then((page) => {
 								setAnswer(page);
 								setError(null);
