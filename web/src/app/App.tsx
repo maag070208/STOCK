@@ -13,7 +13,6 @@ import { ProductImportPage } from "@pages/products/ProductImportPage";
 import { ProductPage } from "@pages/products/ProductPage";
 import { ProductsPage } from "@pages/products/ProductsPage";
 import { DiscrepanciesPage } from "@pages/invoices/DiscrepanciesPage";
-import { InvoiceFormPage } from "@pages/invoices/InvoiceFormPage";
 import { InvoicePage } from "@pages/invoices/InvoicePage";
 import { InvoicesPage } from "@pages/invoices/InvoicesPage";
 import { OrderFormPage } from "@pages/orders/OrderFormPage";
@@ -64,7 +63,6 @@ export function App() {
 						<Route path="/products/import" element={<RequirePermission anyOf={["products.manage"]}><ProductImportPage /></RequirePermission>} />
 						<Route path="/products/:id" element={guarded("products", <ProductPage />)} />
 						<Route path="/invoices" element={guarded("invoices", <InvoicesPage />)} />
-						<Route path="/invoices/new" element={<RequirePermission anyOf={["invoices.create"]}><InvoiceFormPage /></RequirePermission>} />
 						<Route path="/invoices/:id" element={guarded("invoices", <InvoicePage />)} />
 						<Route path="/orders" element={guarded("orders", <OrdersPage />)} />
 						<Route path="/orders/new" element={<RequirePermission anyOf={["orders.create"]}><OrderFormPage /></RequirePermission>} />

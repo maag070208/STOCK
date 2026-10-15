@@ -2,6 +2,42 @@
   "title": "Invoices",
   "description": "The supplier invoices that bring material to the warehouse, with their lines and who receives each one.",
   "new": "New invoice",
+  "list": {
+    "search": "Search by number or supplier",
+    "statusFilter": "Status",
+    "chipAll": "All",
+    "chipOpen": "Open",
+    "chipClosed": "Closed",
+    "empty": "No invoices match that filter.",
+    "clearFilters": "Clear filters"
+  },
+  "modal": {
+    "title": "New invoice",
+    "remembered": "We remember the last warehouse you used.",
+    "save": "Save",
+    "saveAndAdd": "Save and add materials",
+    "saving": "Saving\u2026",
+    "created": "Invoice {{number}} created",
+    "addMaterials": "Add materials",
+    "network": "Could not save. Try again.",
+    "close": "Close the form",
+    "supplierSearch": "Search by the supplier's code or name"
+  },
+  "capture": {
+    "title": "Quick capture",
+    "add": "Add",
+    "empty": "You have not captured materials yet. Start with the material and the quantity.",
+    "summaryLines_one": "{{count}} line",
+    "summaryLines_other": "{{count}} lines",
+    "summaryPieces_one": "{{count}} piece",
+    "summaryPieces_other": "{{count}} pieces"
+  },
+  "closing": {
+    "button": "Close invoice",
+    "done": "Invoice closed",
+    "refused": "The invoice could not be closed.",
+    "readOnly": "The invoice is closed: read only."
+  },
   "columns": {
     "number": "Number",
     "supplier": "Supplier",
@@ -24,8 +60,6 @@
     "quantity": "Quantity",
     "unit": "Unit",
     "remove": "Remove",
-    "assignNow": "Assign now",
-    "shares": "Who receives",
     "addShare": "Add operator",
     "operator": "Operator",
     "share": "Quantity",
@@ -65,9 +99,6 @@
   "assignDialog": {
     "title": "Assign {{product}}",
     "line": "Line quantity: {{quantity}}"
-  },
-  "addLineDialog": {
-    "title": "Add material"
   },
   "discrepancies": {
     "title": "Discrepancies",

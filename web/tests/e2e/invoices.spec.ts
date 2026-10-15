@@ -1,22 +1,12 @@
-// F4-20 and F4-21 · e2e: office creates an invoice and assigns it after saving (path A), then another assigned before
-// saving (path B); the detail shows the status. Discrepancies are adjusted by who may resolve them, and only them.
+// F4-20, F4-21 and F8: office captures an invoice in the modal over the list, adds its materials in the quick bar and
+// assigns them from the detail (the mock leaves the assignment out of the creation). Discrepancies are adjusted by who
+// may resolve them, and only them.
 import { test, expect, type Page } from "@playwright/test";
 import { businessDate, call, newUser, signInAs, uniqueName } from "../support/api";
 import { entriesFixture } from "../support/entries";
+import { captureMaterial, fillNewInvoice } from "../support/invoices";
 
-async function pickProduct(page: Page, index: number, product: { code: string; name: string }) {
-	const line = page.locator(`[data-line="${index}"]`);
-	await line.getByPlaceholder("Busca por código o nombre").fill(product.code);
-	await page.getByText(`${product.code} · ${product.name}`).first().click();
-}
-
-async function header(page: Page, number: string, supplierId: string, warehouseId: string) {
-	await page.getByLabel(/^Número de factura/).fill(number);
-	await page.locator('select[name="supplierId"]').selectOption(supplierId);
-	await page.locator('select[name="warehouseId"]').selectOption(warehouseId);
-}
-
-test("office creates an invoice and assigns it after saving, then another one assigned before saving", async ({ page }) => {
+test("office creates an invoice in the modal and assigns its line from the detail", async ({ page }) => {
 	const f = await entriesFixture();
 	const [a, b] = f.operators;
 	const screws = await f.product("Tornillo de prueba");
@@ -25,18 +15,20 @@ test("office creates an invoice and assigns it after saving, then another one as
 	await page.goto("/#/invoices");
 	await page.getByRole("button", { name: "Nueva factura" }).click();
 
-	// An inactive supplier is not offered for a new invoice.
-	await expect(page.locator('select[name="supplierId"] option', { hasText: f.inactiveSupplier.name })).toHaveCount(0);
-	const numberA = uniqueName("FA-").toUpperCase();
-	await header(page, numberA, f.supplier.id, f.warehouse.id);
-	await page.getByRole("button", { name: "Agregar material" }).click();
-	await pickProduct(page, 0, screws);
-	await page.locator('input[name="quantity-0"]').fill("100");
-	await page.getByRole("button", { name: "Guardar factura" }).click();
+	// An inactive supplier is not offered for a new invoice: its code is searched and nothing matches.
+	await page.locator('[name="supplierId"]').fill(f.inactiveSupplier.code);
+	await expect(page.locator("div.max-h-60").getByText(f.inactiveSupplier.name)).toHaveCount(0);
 
-	// Path A: saved OPEN, assigned on the detail.
-	const status = page.getByTestId("invoice-header");
-	await expect(status).toContainText("Abierta");
+	const number = uniqueName("FA-").toUpperCase();
+	await fillNewInvoice(page, { number, supplier: f.supplier, warehouseId: f.warehouse.id });
+
+	// The primary action lands on the detail, where the materials are captured.
+	await page.getByRole("button", { name: "Guardar y agregar materiales" }).click();
+	await expect(page.getByRole("heading", { name: new RegExp(number) })).toBeVisible();
+	await captureMaterial(page, screws, "100");
+	await expect(page.getByTestId("invoice-summary")).toContainText("1 línea");
+
+	// The assignment from the line: a split that does not add up is blocked before it is sent.
 	await page.getByRole("button", { name: "Asignar" }).click();
 	const dialog = page.getByRole("dialog");
 	await dialog.locator('select[name="operator-0"]').selectOption(a.id);
@@ -45,26 +37,15 @@ test("office creates an invoice and assigns it after saving, then another one as
 	await dialog.locator('select[name="operator-1"]').selectOption(b.id);
 	await dialog.locator('input[name="share-1"]').fill("30");
 	await dialog.getByRole("button", { name: "Guardar" }).click();
-	// The split does not add up to the line: it is blocked before it is sent.
 	await expect(dialog.getByText("Las cantidades deben sumar la cantidad de la línea.")).toBeVisible();
 	await dialog.locator('input[name="share-1"]').fill("40");
 	await dialog.getByRole("button", { name: "Guardar" }).click();
-	await expect(status).toContainText("Pendiente");
+
+	// The invoice is pending, and each share is on its line.
+	await expect(page.getByTestId("invoice-header")).toContainText("Pendiente");
 	const lines = page.getByTestId("invoice-lines");
 	await expect(lines.locator(`[data-assignment="${a.name}"]`)).toContainText("60");
 	await expect(lines.locator(`[data-assignment="${b.name}"]`)).toContainText("40");
-
-	// Path B: assigned before saving, saved once.
-	await page.goto("/#/invoices/new");
-	await header(page, uniqueName("FB-").toUpperCase(), f.supplier.id, f.warehouse.id);
-	await page.getByRole("button", { name: "Agregar material" }).click();
-	await pickProduct(page, 0, screws);
-	await page.locator('input[name="quantity-0"]').fill("100");
-	await page.getByText("Asignar ahora").click();
-	await page.locator('[data-testid="shares-0"] select[name="operator-0"]').selectOption(a.id);
-	await page.getByRole("button", { name: "Guardar factura" }).click();
-	await expect(status).toContainText("Pendiente");
-	await expect(lines.locator(`[data-assignment="${a.name}"]`)).toContainText("100");
 });
 
 test("a discrepancy is adjusted by the warehouse's manager or by office, and not by someone without the permission", async ({ page, browser }) => {

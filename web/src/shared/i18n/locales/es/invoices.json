@@ -2,6 +2,42 @@
   "title": "Facturas",
   "description": "Las facturas de proveedor que traen material al almacén, con sus líneas y quién recibe cada una.",
   "new": "Nueva factura",
+  "list": {
+    "search": "Buscar por número o proveedor",
+    "statusFilter": "Estado",
+    "chipAll": "Todas",
+    "chipOpen": "Abiertas",
+    "chipClosed": "Cerradas",
+    "empty": "No hay facturas con ese filtro.",
+    "clearFilters": "Limpiar filtros"
+  },
+  "modal": {
+    "title": "Nueva factura",
+    "remembered": "Recordamos el último almacén que usaste.",
+    "save": "Guardar",
+    "saveAndAdd": "Guardar y agregar materiales",
+    "saving": "Guardando\u2026",
+    "created": "Factura {{number}} creada",
+    "addMaterials": "Agregar materiales",
+    "network": "No se pudo guardar. Intenta de nuevo.",
+    "close": "Cerrar el formulario",
+    "supplierSearch": "Busca por código o nombre del proveedor"
+  },
+  "capture": {
+    "title": "Captura rápida",
+    "add": "Agregar",
+    "empty": "A\u00fan no has capturado materiales. Empieza con el material y la cantidad.",
+    "summaryLines_one": "{{count}} l\u00ednea",
+    "summaryLines_other": "{{count}} l\u00edneas",
+    "summaryPieces_one": "{{count}} pieza",
+    "summaryPieces_other": "{{count}} piezas"
+  },
+  "closing": {
+    "button": "Cerrar factura",
+    "done": "Factura cerrada",
+    "refused": "No se pudo cerrar la factura.",
+    "readOnly": "La factura est\u00e1 cerrada: solo se consulta."
+  },
   "columns": {
     "number": "Número",
     "supplier": "Proveedor",
@@ -24,8 +60,6 @@
     "quantity": "Cantidad",
     "unit": "Unidad",
     "remove": "Quitar",
-    "assignNow": "Asignar ahora",
-    "shares": "Quién recibe",
     "addShare": "Agregar operador",
     "operator": "Operador",
     "share": "Cantidad",
@@ -65,9 +99,6 @@
   "assignDialog": {
     "title": "Asignar {{product}}",
     "line": "Cantidad de la línea: {{quantity}}"
-  },
-  "addLineDialog": {
-    "title": "Agregar material"
   },
   "discrepancies": {
     "title": "Diferencias",

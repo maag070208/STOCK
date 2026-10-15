@@ -1,8 +1,7 @@
-import { ITInput, ITTextarea } from "@axzydev/axzy_ui_system";
+import { ITTextarea } from "@axzydev/axzy_ui_system";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { canAdjust, invoiceApi, receivingApi, sharesError, type InvoiceLine, type ShareInput, type StaffMember } from "@entities/invoice";
-import { ProductPicker } from "@entities/product";
 import { formatQuantity } from "@shared/lib/format";
 import { FormDialog } from "@shared/ui/FormDialog";
 import { useSubmit } from "@shared/ui/useSubmit";
@@ -40,51 +39,6 @@ export function AssignDialog(props: { invoiceId: string; line: InvoiceLine | nul
 			<p className="sf:text-body-md">{t("assignDialog.line", { quantity: formatQuantity(line.quantity, line.unit?.decimalPlaces, i18n.language) })}</p>
 			<div className="sf:min-w-[30rem]">
 				<SharesEditor line={String(line.quantity)} decimals={line.unit?.decimalPlaces ?? null} staff={props.staff} shares={shares} onChange={setShares} showErrors={tried} />
-			</div>
-		</FormDialog>
-	);
-}
-
-// A material added on the detail of a saved invoice.
-export function AddLineDialog(props: { invoiceId: string; isOpen: boolean; onClose: () => void; onSaved: () => void }) {
-	const { t } = useTranslation(["invoices", "common"]);
-	const [productId, setProductId] = useState("");
-	const [quantity, setQuantity] = useState("");
-	const [tried, setTried] = useState(false);
-	const submit = useSubmit();
-
-	useEffect(() => {
-		if (props.isOpen) {
-			setProductId("");
-			setQuantity("");
-			setTried(false);
-			submit.reset();
-		}
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [props.isOpen]);
-
-	async function save() {
-		setTried(true);
-		if (!productId || !(Number(quantity) > 0)) return;
-		const saved = await submit.run(() => invoiceApi.addLine(props.invoiceId, { productId, quantity: Number(quantity) }));
-		if (saved) props.onSaved();
-	}
-
-	const required = t("common:validation.required");
-	return (
-		<FormDialog isOpen={props.isOpen} title={t("addLineDialog.title")} onClose={props.onClose} onSubmit={() => void save()} submitting={submit.submitting} error={submit.error}>
-			<div className="sf:grid sf:min-w-[30rem] sf:grid-cols-[1fr_8rem] sf:gap-3">
-				<ProductPicker name="productId" label={t("form.product")} value={productId} onChange={(p) => setProductId(p?.id ?? "")} error={submit.fieldErrors.productId ?? (tried && !productId ? required : undefined)} required />
-				<ITInput
-					name="quantity"
-					type="number"
-					label={t("form.quantity")}
-					value={quantity}
-					onChange={(e) => setQuantity(e.target.value)}
-					error={submit.fieldErrors.quantity ?? (tried && !(Number(quantity) > 0) ? required : undefined)}
-					touched={tried || !!submit.fieldErrors.quantity}
-					required
-				/>
 			</div>
 		</FormDialog>
 	);
