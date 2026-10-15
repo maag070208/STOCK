@@ -3,6 +3,8 @@
 **Goal:** creating a supplier invoice and capturing its materials takes seconds, with the keyboard and without leaving the
 list.
 
+**Status:** Done, 2026-10-15. F8-01 to F8-04 in the API, F8-05 to F8-08 in the web; the app does not change.
+
 **Depends on:** F4 (invoices, counts, placement) and F5 (the screens it follows). It is a redesign of the invoice screens
 of F4, decided by the owner on 2026-10-15 from the mock `stockflow-facturas-mock.html`; the reception flow of the
 operators (`/receipts/mine`, counts, adjustments, placement) does not change.

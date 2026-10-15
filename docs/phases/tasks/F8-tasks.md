@@ -61,3 +61,12 @@ form and detail with it.
 - Unit (red): the modal keeps the focus inside while it is open and returns it to the button that opened it.
 - E2E (red): the whole flow runs with the keyboard, and the dialog has its `role`, its `aria-modal` and its label.
 - Accept: `prefers-reduced-motion` is respected and the controls have visible labels.
+
+**Progress, 2026-10-15:** F8-05 to F8-08 are done in the web: the list with one box and the chips (the chip lives in the
+address), the modal with the four fields and the two ways out, the detail with the quick capture that sums into an
+existing line and the hand closing, and the keyboard and screen-reader work (focus trapped and given back, `role`,
+`aria-modal`, reduced motion). `tests/unit/invoice-capture.spec.ts` (8 cases) and `tests/e2e/invoice-capture.spec.ts`
+(6 cases) prove them, `web/tests/e2e/invoices.spec.ts` was rewritten for the modal (its two cases now assign from the
+detail), and the whole web suite passes: 74 unit, `tsc`, `lint` and the e2e with the two pre-existing failures of
+`design.spec.ts` only. The list asks the status as a list of codes, which is the one thing F8-05 needed from the API and
+F8-02 did not have: the invoice filter now takes one code or several, as the orders one does.
