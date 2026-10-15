@@ -142,18 +142,42 @@ export async function stockIn({ warehouseId, locationId, operator, product, quan
   if (placed.status !== 200) throw new Error(`placement failed: ${JSON.stringify(placed.json)}`);
 }
 
-// An order for a material, assigned to the operator who fulfills it. Creation takes an Idempotency-Key.
-export async function newOrder({ warehouseId, customerId, product, quantity, operatorId }) {
+// An order for a material, assigned to the operator who fulfills it by default, with the due date the test needs.
+// Creation takes an Idempotency-Key.
+export async function newOrder({ warehouseId, customerId, product, quantity, operatorId, dueDate, assign = true }) {
   const number = "ORD-" + randomUUID().slice(0, 8).toUpperCase();
   const created = await call("POST", "/orders", {
     token: await adminToken(),
     headers: { "Idempotency-Key": randomUUID() },
-    body: { number, warehouseId, customerId, dueDate: new Date(Date.now() + 3 * 86400000).toISOString().slice(0, 10), lines: [{ productId: product.id, quantity }] },
+    body: { number, warehouseId, customerId, dueDate: dueDate ?? new Date(Date.now() + 3 * 86400000).toISOString().slice(0, 10), lines: [{ productId: product.id, quantity }] },
   });
   if (created.status !== 201) throw new Error(`order creation failed: ${JSON.stringify(created.json)}`);
-  const assigned = await call("PUT", `/orders/${created.json.id}/assignment`, { token: await adminToken(), body: { operatorId } });
-  if (assigned.status !== 200) throw new Error(`order assignment failed: ${JSON.stringify(assigned.json)}`);
+  if (assign) {
+    const assigned = await call("PUT", `/orders/${created.json.id}/assignment`, { token: await adminToken(), body: { operatorId } });
+    if (assigned.status !== 200) throw new Error(`order assignment failed: ${JSON.stringify(assigned.json)}`);
+  }
   return created.json;
+}
+
+// The date an order is due, as the API reads it: ISO 8601, today plus the days asked for.
+export const dueIn = (days) => new Date(Date.now() + days * 86400000).toISOString().slice(0, 10);
+
+// One pick of a line, out of a location, as the operator on the app does it. The API answers the order as it stands.
+export async function pick(operator, orderId, lineId, locationId, quantity) {
+  const picked = await call("POST", `/orders/${orderId}/picks`, {
+    token: operator.token,
+    channel: "app",
+    body: { lineId, locationId, quantity: String(quantity) },
+  });
+  if (picked.status !== 200) throw new Error(`pick failed: ${JSON.stringify(picked.json)}`);
+  return picked.json;
+}
+
+// The due date alerts of one person, on the channel their roles allow.
+export async function alerts(operator, channel = "app") {
+  const read = await call("GET", "/orders/alerts", { token: operator.token, channel });
+  if (read.status !== 200) throw new Error(`alerts failed: ${JSON.stringify(read.json)}`);
+  return read.json.alerts;
 }
 
 export async function order(id) {

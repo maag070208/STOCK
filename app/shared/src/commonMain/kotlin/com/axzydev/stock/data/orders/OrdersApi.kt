@@ -56,6 +56,25 @@ data class Order(
 	}
 }
 
+// One alert of one order to the signed-in person (order-fulfillment.md section 7a): why it is raised, and the order.
+@Serializable
+data class OrderAlert(
+	val id: String,
+	val order: Order,
+	// BEFORE (the day before the due date), DUE (on it) or OVERDUE (after it).
+	val kind: String,
+	val raisedOn: String,
+) {
+	companion object {
+		const val BEFORE = "BEFORE"
+		const val DUE = "DUE"
+		const val OVERDUE = "OVERDUE"
+	}
+}
+
+@Serializable
+private data class AlertsResponse(val alerts: List<OrderAlert> = emptyList())
+
 // The filters of the orders table: the assigned operator, and one or more status codes (the API takes a list).
 @Serializable
 private data class OrderFilters(val operatorId: String, val status: List<String>)
@@ -63,11 +82,23 @@ private data class OrderFilters(val operatorId: String, val status: List<String>
 @Serializable
 private data class OrdersQuery(val filters: OrderFilters, val limit: Int = PAGE_LIMIT, val sort: TableSort? = null)
 
+// The open orders of one warehouse: where a reassignment looks for the order that needs the material.
+@Serializable
+private data class WarehouseFilters(val warehouseId: String, val status: List<String>)
+
+@Serializable
+private data class WarehouseOrdersQuery(val filters: WarehouseFilters, val limit: Int = PAGE_LIMIT, val sort: TableSort? = null)
+
 // The pick of one line, out of one location. The quantity travels as text, so no digit is lost on the way.
 @Serializable
 private data class PickBody(val lineId: String, val locationId: String, val quantity: String)
 
-// The order endpoints the app uses: the open orders assigned to the operator, and the pick of a line.
+// Picked quantities moving to another open order, with the note the action needs.
+@Serializable
+private data class TransferBody(val lineId: String, val targetOrderId: String, val quantity: String, val note: String)
+
+// The order endpoints the app uses: the open orders assigned to the operator, the alerts of the day, the pick of a line,
+// and the reassignment of what is already picked.
 class OrdersApi(engine: HttpClientEngine, private val baseUrl: String, private val language: () -> Language) {
 
 	private val http = apiClient(engine)
@@ -80,12 +111,33 @@ class OrdersApi(engine: HttpClientEngine, private val baseUrl: String, private v
 			setBody(OrdersQuery(OrderFilters(operatorId, OPEN), sort = TableSort("dueDate", "asc")))
 		}.bodyOrThrow<Page<Order>>().data
 
+	// The due date alerts of the signed-in person (order-fulfillment.md section 7a), the most recent day first.
+	suspend fun alerts(token: String): List<OrderAlert> =
+		http.get("$baseUrl/orders/alerts") { fromApp(language(), token) }.bodyOrThrow<AlertsResponse>().alerts
+
+	// The open orders of one warehouse, the most urgent due date first: the candidates of a reassignment.
+	suspend fun openInWarehouse(token: String, warehouseId: String): List<Order> =
+		http.post("$baseUrl/orders/query") {
+			fromApp(language(), token)
+			jsonBody()
+			setBody(WarehouseOrdersQuery(WarehouseFilters(warehouseId, OPEN), sort = TableSort("dueDate", "asc")))
+		}.bodyOrThrow<Page<Order>>().data
+
 	// One pick: how much of a line left a location. The API answers the order as it stands after the pick.
 	suspend fun pick(token: String, orderId: String, lineId: String, locationId: String, quantity: String): Order =
 		http.post("$baseUrl/orders/$orderId/picks") {
 			fromApp(language(), token)
 			jsonBody()
 			setBody(PickBody(lineId, locationId, quantity))
+		}.bodyOrThrow()
+
+	// Picked quantities of a line moving to another open order of the same warehouse and material: no stock changes
+	// (order-fulfillment.md section 8, option 2). The API answers the source order as it stands after the move.
+	suspend fun transfer(token: String, orderId: String, lineId: String, targetOrderId: String, quantity: String, note: String): Order =
+		http.post("$baseUrl/orders/$orderId/reassignments/transfer") {
+			fromApp(language(), token)
+			jsonBody()
+			setBody(TransferBody(lineId, targetOrderId, quantity, note))
 		}.bodyOrThrow()
 
 	suspend fun order(token: String, orderId: String): Order =

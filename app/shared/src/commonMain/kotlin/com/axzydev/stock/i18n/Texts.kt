@@ -89,6 +89,24 @@ enum class Text {
 	PICK_ABOVE_LINE,
 	PRODUCT_NOT_IN_ORDER,
 	LOCATION_EMPTY,
+	// F5-19: the alerts of the day, and moving picked material to another order.
+	PAGE_REASSIGNMENT,
+	PAGE_REASSIGNMENT_HINT,
+	REASSIGN_ALERTS,
+	ALERT_BEFORE,
+	ALERT_DUE,
+	ALERT_OVERDUE,
+	REASSIGN_SCAN,
+	REASSIGN_PICKED,
+	REASSIGN_TARGETS,
+	REASSIGN_QUANTITY,
+	REASSIGN_NOTE,
+	REASSIGN_SAVE,
+	REASSIGN_SAVED,
+	REASSIGN_ANOTHER,
+	REASSIGN_NOTHING,
+	REASSIGN_ABOVE_PICKED,
+	REASSIGN_ABOVE_TARGET,
 	COMING_SOON,
 	COMING_SOON_HINT,
 	BACK_HOME,
@@ -221,6 +239,23 @@ fun textFor(key: Text, language: Language): String =
 			Text.PICK_ABOVE_LINE -> "Es más de lo que falta de la línea."
 			Text.PRODUCT_NOT_IN_ORDER -> "Este material no está en la orden."
 			Text.LOCATION_EMPTY -> "La ubicación no tiene este material."
+			Text.PAGE_REASSIGNMENT -> "Reasignar"
+			Text.PAGE_REASSIGNMENT_HINT -> "Mueve material ya surtido a otra orden."
+			Text.REASSIGN_ALERTS -> "Órdenes por vencer"
+			Text.ALERT_BEFORE -> "Vence mañana"
+			Text.ALERT_DUE -> "Vence hoy"
+			Text.ALERT_OVERDUE -> "Vencida"
+			Text.REASSIGN_SCAN -> "Escanea el material surtido"
+			Text.REASSIGN_PICKED -> "Surtido: {quantity}"
+			Text.REASSIGN_TARGETS -> "Órdenes que necesitan el material"
+			Text.REASSIGN_QUANTITY -> "Cantidad a traspasar"
+			Text.REASSIGN_NOTE -> "Nota"
+			Text.REASSIGN_SAVE -> "Traspasar"
+			Text.REASSIGN_SAVED -> "Traspaso registrado."
+			Text.REASSIGN_ANOTHER -> "Reasignar otro material"
+			Text.REASSIGN_NOTHING -> "La orden no tiene material surtido de ese código."
+			Text.REASSIGN_ABOVE_PICKED -> "Es más de lo que está surtido."
+			Text.REASSIGN_ABOVE_TARGET -> "La orden destino no necesita esa cantidad."
 			Text.COMING_SOON -> "Próximamente"
 			Text.COMING_SOON_HINT -> "Esta sección todavía no está lista."
 			Text.BACK_HOME -> "Inicio"
@@ -348,6 +383,23 @@ fun textFor(key: Text, language: Language): String =
 			Text.PICK_ABOVE_LINE -> "That is more than the line still needs."
 			Text.PRODUCT_NOT_IN_ORDER -> "This material is not in the order."
 			Text.LOCATION_EMPTY -> "The location does not hold this material."
+			Text.PAGE_REASSIGNMENT -> "Reassign"
+			Text.PAGE_REASSIGNMENT_HINT -> "Move material that is already picked to another order."
+			Text.REASSIGN_ALERTS -> "Orders falling due"
+			Text.ALERT_BEFORE -> "Due tomorrow"
+			Text.ALERT_DUE -> "Due today"
+			Text.ALERT_OVERDUE -> "Overdue"
+			Text.REASSIGN_SCAN -> "Scan the picked material"
+			Text.REASSIGN_PICKED -> "Picked: {quantity}"
+			Text.REASSIGN_TARGETS -> "Orders that need the material"
+			Text.REASSIGN_QUANTITY -> "Quantity to move"
+			Text.REASSIGN_NOTE -> "Note"
+			Text.REASSIGN_SAVE -> "Move"
+			Text.REASSIGN_SAVED -> "Move recorded."
+			Text.REASSIGN_ANOTHER -> "Reassign another material"
+			Text.REASSIGN_NOTHING -> "The order has nothing picked for that code."
+			Text.REASSIGN_ABOVE_PICKED -> "That is more than is picked."
+			Text.REASSIGN_ABOVE_TARGET -> "The target order does not need that much."
 			Text.COMING_SOON -> "Coming soon"
 			Text.COMING_SOON_HINT -> "This section is not ready yet."
 			Text.BACK_HOME -> "Home"

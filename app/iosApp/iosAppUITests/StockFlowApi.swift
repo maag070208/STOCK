@@ -193,19 +193,37 @@ enum StockFlowApi {
         guard placed.status == 200 else { throw Failure(description: "placement failed (\(placed.status)): \(placed.json)") }
     }
 
-    // An order for a material, assigned to the operator who fulfills it. Creation takes an Idempotency-Key.
-    static func newOrder(warehouseId: String, customerId: String, product: TestProduct, quantity: Int, operatorId: String) async throws -> TestOrder {
+    // An order for a material, assigned to the operator who fulfills it by default, with the due date the test needs.
+    // Creation takes an Idempotency-Key.
+    static func newOrder(warehouseId: String, customerId: String, product: TestProduct, quantity: Int, operatorId: String, dueIn days: Int = 3, assign: Bool = true) async throws -> TestOrder {
         let number = "ORD-" + randomPart().uppercased()
-        let due = ISO8601DateFormatter.string(from: Date().addingTimeInterval(3 * 86400), timeZone: .current, formatOptions: [.withFullDate])
+        let due = ISO8601DateFormatter.string(from: Date().addingTimeInterval(Double(days) * 86400), timeZone: .current, formatOptions: [.withFullDate])
         let created = try await call("POST", "/orders", token: try await adminToken(), body: [
             "number": number, "warehouseId": warehouseId, "customerId": customerId, "dueDate": due, "lines": [["productId": product.id, "quantity": quantity]],
         ], headers: ["Idempotency-Key": UUID().uuidString])
         guard created.status == 201, let id = created.json["id"] as? String else {
             throw Failure(description: "order creation failed (\(created.status)): \(created.json)")
         }
-        let assigned = try await call("PUT", "/orders/\(id)/assignment", token: try await adminToken(), body: ["operatorId": operatorId])
-        guard assigned.status == 200 else { throw Failure(description: "order assignment failed (\(assigned.status)): \(assigned.json)") }
+        if assign {
+            let assigned = try await call("PUT", "/orders/\(id)/assignment", token: try await adminToken(), body: ["operatorId": operatorId])
+            guard assigned.status == 200 else { throw Failure(description: "order assignment failed (\(assigned.status)): \(assigned.json)") }
+        }
         return TestOrder(id: id, number: number)
+    }
+
+    // One pick of a line, out of a location, as the operator on the app does it.
+    static func pick(_ user: TestUser, orderId: String, lineId: String, locationId: String, quantity: Int) async throws {
+        let picked = try await call("POST", "/orders/\(orderId)/picks", token: user.token, body: ["lineId": lineId, "locationId": locationId, "quantity": String(quantity)], channel: "app")
+        guard picked.status == 200 else { throw Failure(description: "pick failed (\(picked.status)): \(picked.json)") }
+    }
+
+    // The due date alerts of one person, on the channel their roles allow.
+    static func alerts(_ user: TestUser, channel: String = "app") async throws -> [[String: Any]] {
+        let read = try await call("GET", "/orders/alerts", token: user.token, channel: channel)
+        guard read.status == 200, let alerts = read.json["alerts"] as? [[String: Any]] else {
+            throw Failure(description: "alerts failed (\(read.status)): \(read.json)")
+        }
+        return alerts
     }
 
     static func order(_ id: String) async throws -> [String: Any] {

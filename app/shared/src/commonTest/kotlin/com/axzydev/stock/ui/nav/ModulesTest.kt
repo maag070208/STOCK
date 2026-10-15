@@ -90,6 +90,15 @@ class ModulesTest {
 	}
 
 	@Test
+	fun whoeverReassignsOpensTheAlertsAndReassignmentPage() {
+		val orders = moduleById("orders")!!
+		assertEquals(listOf("orders.reassign"), orders.pages.associateBy { it.id }.getValue("reassignment").anyOf)
+		val entry = visibleModulesWithPages(permissions("orders.reassign" to "AREA")).single { it.module.id == "orders" }
+		assertEquals(listOf("reassignment"), entry.pages.map { it.id })
+		assertFalse(entry.comingSoon)
+	}
+
+	@Test
 	fun ordersIsNotComingSoonOnceOneOfItsPagesOpens() {
 		val entry = visibleModulesWithPages(permissions("catalogs.view" to "ALL")).single { it.module.id == "orders" }
 		assertEquals(listOf("order-status"), entry.pages.map { it.id })

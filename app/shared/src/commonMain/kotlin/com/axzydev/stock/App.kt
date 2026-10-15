@@ -33,6 +33,7 @@ import com.axzydev.stock.data.warehouses.WarehouseApi
 import com.axzydev.stock.feature.customers.CustomersViewModel
 import com.axzydev.stock.feature.lookup.LookupViewModel
 import com.axzydev.stock.feature.orders.OrderPickViewModel
+import com.axzydev.stock.feature.orders.OrderReassignmentViewModel
 import com.axzydev.stock.feature.orders.OrderStatusesViewModel
 import com.axzydev.stock.feature.receipts.CountViewModel
 import com.axzydev.stock.feature.receipts.DiscrepanciesViewModel
@@ -56,6 +57,7 @@ import com.axzydev.stock.ui.nav.AppBackHandler
 import com.axzydev.stock.ui.nav.visibleModulesWithPages
 import com.axzydev.stock.ui.orders.MyOrdersScreen
 import com.axzydev.stock.ui.orders.OrderStatusesScreen
+import com.axzydev.stock.ui.orders.ReassignmentScreen
 import com.axzydev.stock.ui.receipts.CountScreen
 import com.axzydev.stock.ui.receipts.DiscrepanciesScreen
 import com.axzydev.stock.ui.receipts.MyReceiptsScreen
@@ -133,6 +135,19 @@ fun App(
 	val customers = viewModel { CustomersViewModel(customersApi, session, noConnection) }
 	val orderStatuses = viewModel { OrderStatusesViewModel(catalogsApi, session, noConnection) }
 	val ordersApi = remember { OrdersApi(platformEngine(), apiBaseUrl) { currentLanguage } }
+	val reassign = viewModel {
+		OrderReassignmentViewModel(
+			ordersApi,
+			products,
+			session,
+			{ textFor(Text.FIELD_REQUIRED, currentLanguage) },
+			{ textFor(Text.QUANTITY_INVALID, currentLanguage) },
+			{ textFor(Text.REASSIGN_NOTHING, currentLanguage) },
+			{ textFor(Text.REASSIGN_ABOVE_PICKED, currentLanguage) },
+			{ textFor(Text.REASSIGN_ABOVE_TARGET, currentLanguage) },
+			noConnection,
+		)
+	}
 	val pick = viewModel {
 		OrderPickViewModel(
 			ordersApi,
@@ -186,9 +201,11 @@ fun App(
 							AppBackHandler(enabled = entry != null) {
 								val onPlacementForm = entry?.module?.id == "receipts" && page?.id == PLACEMENT && placement.state.value.target != null
 								val onPickForm = entry?.module?.id == "orders" && page?.id == MY_ORDERS && pick.state.value.order != null
+								val onReassignmentForm = entry?.module?.id == "orders" && page?.id == REASSIGNMENT && reassign.state.value.order != null
 								when {
 									onPlacementForm -> placement.back()
 									onPickForm -> pick.back()
+									onReassignmentForm -> reassign.back()
 									page != null -> pageId = null
 									else -> moduleId = null
 								}
@@ -235,6 +252,10 @@ fun App(
 											pick.clear()
 											pageId = null
 										}
+										REASSIGNMENT -> ReassignmentScreen(reassign) {
+											reassign.clear()
+											pageId = null
+										}
 										else -> ModuleMenuScreen(entry, onBack = { moduleId = null }, onOpenPage = { pageId = it.id })
 									}
 
@@ -255,3 +276,4 @@ private const val PLACEMENT = "placement"
 private const val CUSTOMERS = "customers"
 private const val ORDER_STATUS = "order-status"
 private const val MY_ORDERS = "my-orders"
+private const val REASSIGNMENT = "reassignment"

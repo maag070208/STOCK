@@ -95,6 +95,8 @@ val MODULES: List<Module> = listOf(
 			ModulePage("customers", Text.PAGE_CUSTOMERS, Text.PAGE_CUSTOMERS_HINT, AppIcon.USER, anyOf = listOf("customers.view")),
 			ModulePage("order-status", Text.PAGE_ORDER_STATUS, Text.PAGE_ORDER_STATUS_HINT, AppIcon.CLIPBOARD, anyOf = listOf("catalogs.view")),
 			ModulePage("my-orders", Text.PAGE_ORDERS, Text.PAGE_ORDERS_HINT, AppIcon.CLIPBOARD, anyOf = listOf("orders.fulfill")),
+			// F5-19: the alerts of the day, and moving picked material to another order.
+			ModulePage("reassignment", Text.PAGE_REASSIGNMENT, Text.PAGE_REASSIGNMENT_HINT, AppIcon.ALERT, anyOf = listOf("orders.reassign")),
 		),
 	),
 )
