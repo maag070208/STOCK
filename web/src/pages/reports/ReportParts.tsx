@@ -1,4 +1,4 @@
-import { type ColumnFilters, ITAlert, ITButton, ITCheckbox, ITDatePicker, ITFlex, ITSelect, ITText } from "@axzydev/axzy_ui_system";
+import { ITAlert, ITButton, ITCheckbox, ITDatePicker, ITFlex, ITSearchSelect, ITText, type ColumnFilters } from "@axzydev/axzy_ui_system";
 import { useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { PartnerPicker, type PartnerKind } from "@entities/partner";
@@ -13,11 +13,11 @@ export function WarehouseFilter({ options, value, onChange, required = false }: 
 	const { t } = useTranslation(["reports", "common"]);
 	const choices = options.map((option) => ({ value: option.id, label: `${option.code ?? ""} · ${option.name ?? ""}` }));
 	return (
-		<ITSelect
+		<ITSearchSelect
 			name="warehouseId"
 			label={t("filters.warehouse")}
 			value={value}
-			onChange={(event) => onChange(event.target.value)}
+			onChange={(value) => onChange(String(value))}
 			options={required ? choices : [{ value: "", label: t("filters.allWarehouses") }, ...choices]}
 			valueField="value"
 			labelField="label"

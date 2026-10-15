@@ -15,8 +15,8 @@ export default defineConfig({
   },
   projects: [
     { name: "unit", testMatch: /unit\/.*\.spec\.ts/, use: { baseURL: undefined } },
-    // An end-to-end test builds its own data through the API and drives the app: the default 30 s is tight when the
-    // whole suite runs at once, and a heavy fixture is not a slow screen (testing.md).
-    { name: "e2e", testMatch: /e2e\/.*\.spec\.ts/, timeout: 60_000, use: { ...devices["Desktop Chrome"] } },
+    // An end-to-end test builds its own data through the API and drives the app. 30 s, and it fails fast: a suite nobody
+    // waits for is a suite nobody runs (testing.md).
+    { name: "e2e", testMatch: /e2e\/.*\.spec\.ts/, timeout: 30_000, use: { ...devices["Desktop Chrome"] } },
   ],
 });

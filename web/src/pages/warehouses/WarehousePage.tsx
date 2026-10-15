@@ -177,7 +177,16 @@ export function WarehousePage() {
 							</>
 						)}
 					</ITFlex>
-					<ITDataTable<Location> showViewToggle={false} columns={columns} externalFilters={filters} fetchData={(params) => locationApi.query(params as TableParams)} reloadTrigger={reload} layout="fixed" />
+					<ITDataTable<Location>
+						defaultItemsPerPage={25}
+						itemsPerPageOptions={[25, 50, 100]}
+						layout="fixed"
+						density="compact"
+						virtualized
+						virtualizedMaxHeight={400}
+						rowHeight={50}
+						showViewToggle={false} columns={columns} externalFilters={filters} fetchData={(params) => locationApi.query(params as TableParams)} reloadTrigger={reload}
+					/>
 				</ITStack>
 			</ITStack>
 

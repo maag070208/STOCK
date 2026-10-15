@@ -1,4 +1,4 @@
-import { ITInput, ITSelect, ITText } from "@axzydev/axzy_ui_system";
+import { ITInput, ITSearchSelect, ITText } from "@axzydev/axzy_ui_system";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { copiesError, printApi, type PrintablePrinter } from "@entities/label";
@@ -77,11 +77,11 @@ export function PrintDialog(props: { target: PrintTarget | null; onClose: () => 
 			{empty ? (
 				<ITText muted>{target?.kind === "LOCATION" ? t("print.noPrintersHere") : t("print.noPrinters")}</ITText>
 			) : (
-				<ITSelect
+				<ITSearchSelect
 					name="printerId"
 					label={t("print.printer")}
 					value={printerId}
-					onChange={(e) => setPrinterId(e.target.value)}
+					onChange={(value) => setPrinterId(String(value))}
 					options={(printers ?? []).map((p) => ({ value: p.id, label: p.warehouseCode ? `${p.name} · ${p.warehouseCode}` : p.name }))}
 					valueField="value"
 					labelField="label"

@@ -1,4 +1,4 @@
-import { ITInput, ITSelect, ITStack, ITText, ITTextarea } from "@axzydev/axzy_ui_system";
+import { ITInput, ITSearchSelect, ITStack, ITText, ITTextarea } from "@axzydev/axzy_ui_system";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { orderApi, type Order, type OrderLine, type OrderOperator } from "@entities/order";
@@ -45,11 +45,11 @@ export function AssignOrderDialog(props: { order: Order | null; isOpen: boolean;
 			error={submit.error}
 		>
 			<ITStack className="sf:min-w-[24rem]">
-				<ITSelect
+				<ITSearchSelect
 					name="operatorId"
 					label={t("assignDialog.operator")}
 					value={operatorId}
-					onChange={(e) => setOperatorId(e.target.value)}
+					onChange={(value) => setOperatorId(String(value))}
 					options={operators.map((operator) => ({ value: operator.id, label: operator.name }))}
 					valueField="value"
 					labelField="label"
@@ -94,11 +94,11 @@ export function ReassignOperatorDialog(props: { order: Order | null; isOpen: boo
 		<FormDialog isOpen={props.isOpen} title={t("reassignDialog.title")} onClose={props.onClose} onSubmit={() => void save()} submitting={submit.submitting} error={submit.error}>
 			<ITText>{t("reassignDialog.body")}</ITText>
 			<ITStack spacing={3} className="sf:min-w-[26rem]">
-				<ITSelect
+				<ITSearchSelect
 					name="operatorId"
 					label={t("reassignDialog.operator")}
 					value={operatorId}
-					onChange={(e) => setOperatorId(e.target.value)}
+					onChange={(value) => setOperatorId(String(value))}
 					options={operators.map((operator) => ({ value: operator.id, label: operator.name }))}
 					valueField="value"
 					labelField="label"
@@ -283,11 +283,11 @@ export function TransferPicksDialog(props: { order: Order | null; isOpen: boolea
 		<FormDialog isOpen={props.isOpen} title={t("transferDialog.title")} onClose={props.onClose} onSubmit={() => void save()} submitting={submit.submitting} error={submit.error} submitLabel={t("transferDialog.confirm")}>
 			<ITText>{t("transferDialog.body")}</ITText>
 			<ITStack spacing={3} className="sf:min-w-[32rem]">
-				<ITSelect
+				<ITSearchSelect
 					name="lineId"
 					label={t("transferDialog.line")}
 					value={lineId}
-					onChange={(e) => setLineId(e.target.value)}
+					onChange={(value) => setLineId(String(value))}
 					options={lines.map((candidate) => ({ value: candidate.id, label: `${candidate.product.code} · ${candidate.product.name} (${t("detail.picked")} ${formatQuantity(candidate.pickedQuantity, candidate.unit?.decimalPlaces, i18n.language)})` }))}
 					valueField="value"
 					labelField="label"
@@ -295,11 +295,11 @@ export function TransferPicksDialog(props: { order: Order | null; isOpen: boolea
 					touched={tried}
 					required
 				/>
-				<ITSelect
+				<ITSearchSelect
 					name="targetOrderId"
 					label={t("transferDialog.target")}
 					value={targetId}
-					onChange={(e) => setTargetId(e.target.value)}
+					onChange={(value) => setTargetId(String(value))}
 					options={orders.map((target) => ({ value: target.id, label: `${target.number} · ${target.customer.name ?? ""}` }))}
 					valueField="value"
 					labelField="label"
@@ -379,11 +379,11 @@ export function ReturnPicksDialog(props: { order: Order | null; isOpen: boolean;
 		<FormDialog isOpen={props.isOpen} title={t("returnDialog.title")} onClose={props.onClose} onSubmit={() => void save()} submitting={submit.submitting} error={submit.error} submitLabel={t("returnDialog.confirm")}>
 			<ITText>{t("returnDialog.body")}</ITText>
 			<ITStack spacing={3} className="sf:min-w-[32rem]">
-				<ITSelect
+				<ITSearchSelect
 					name="lineId"
 					label={t("returnDialog.line")}
 					value={lineId}
-					onChange={(e) => setLineId(e.target.value)}
+					onChange={(value) => setLineId(String(value))}
 					options={lines.map((candidate) => ({ value: candidate.id, label: `${candidate.product.code} · ${candidate.product.name} (${t("detail.picked")} ${formatQuantity(candidate.pickedQuantity, candidate.unit?.decimalPlaces, i18n.language)})` }))}
 					valueField="value"
 					labelField="label"
@@ -391,11 +391,11 @@ export function ReturnPicksDialog(props: { order: Order | null; isOpen: boolean;
 					touched={tried}
 					required
 				/>
-				<ITSelect
+				<ITSearchSelect
 					name="locationId"
 					label={t("returnDialog.location")}
 					value={locationId}
-					onChange={(e) => setLocationId(e.target.value)}
+					onChange={(value) => setLocationId(String(value))}
 					options={locations.map((location) => ({ value: location.id, label: location.code }))}
 					valueField="value"
 					labelField="label"

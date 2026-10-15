@@ -78,28 +78,34 @@ export function MovementsReportPage() {
 			)}
 			<ITText as="section" data-testid="movements-report">
 				<ITDataTable<MovementReportRow>
-				showViewToggle={false}
-					columns={columns}
-					// The filters this screen manages travel as external filters: the table merges them with its own
-					// before asking, and the export takes exactly the filters of the last answer.
-					externalFilters={chosen}
-					fetchData={(params) => {
-						setFilters(params.filters);
-						return reportApi
-							.movements({ page: params.page, limit: params.limit, filters: params.filters, sort: params.sort })
-							.then((page) => {
-								setAnswer(page);
-								setError(null);
-								setWarehouses((current) => warehouseOptionsOf(current, page.data.map((movement) => movement.warehouse)));
-								return page;
-							})
-							.catch((failure: Error) => {
-								setError(failure.message);
-								return { data: [], total: 0 };
-							});
-					}}
-					reloadTrigger={reload}
+					defaultItemsPerPage={25}
+					itemsPerPageOptions={[25, 50, 100]}
 					layout="fixed"
+					density="compact"
+					virtualized
+					virtualizedMaxHeight={400}
+					rowHeight={50}
+					showViewToggle={false}
+ columns={columns}
+ // The filters this screen manages travel as external filters: the table merges them with its own
+ // before asking, and the export takes exactly the filters of the last answer.
+ externalFilters={chosen}
+ fetchData={(params) => {
+ setFilters(params.filters);
+ return reportApi
+ .movements({ page: params.page, limit: params.limit, filters: params.filters, sort: params.sort })
+ .then((page) => {
+ setAnswer(page);
+ setError(null);
+ setWarehouses((current) => warehouseOptionsOf(current, page.data.map((movement) => movement.warehouse)));
+ return page;
+ })
+ .catch((failure: Error) => {
+ setError(failure.message);
+ return { data: [], total: 0 };
+ });
+ }}
+ reloadTrigger={reload}
 				/>
 			</ITText>
 		</ITPage>

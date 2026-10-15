@@ -1,4 +1,4 @@
-import { type Column, ITBadget, ITButton, ITCheckbox, ITFlex, ITGrid, ITInput, ITPage, ITSelect, ITStack, ITText } from "@axzydev/axzy_ui_system";
+import { ITBadget, ITButton, ITCheckbox, ITFlex, ITGrid, ITInput, ITPage, ITSearchSelect, ITStack, ITText, type Column } from "@axzydev/axzy_ui_system";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { IconButton } from "@shared/ui/IconButton";
@@ -100,14 +100,12 @@ export function CatalogsPage() {
 			<ITStack spacing={4}>
 				<ITGrid container spacing={4}>
 					<ITGrid item xs={12} sm={6} md={4}>
-						<ITSelect
+						<ITSearchSelect
 							name="catalog"
 							label={t("catalog")}
 							value={selected}
-							onChange={(e) => setSelected(e.target.value)}
+							onChange={(value) => setSelected(String(value))}
 							options={catalogs.map((c) => ({ value: c.code, label: c.isSystem ? `${c.code} · ${t("system")}` : c.code }))}
-							valueField="value"
-							labelField="label"
 						/>
 					</ITGrid>
 					<ITGrid item xs={12} sm={6} md={4}>

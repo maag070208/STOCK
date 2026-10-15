@@ -115,31 +115,37 @@ export function KardexPage() {
 			)}
 			<ITText as="section" data-testid="kardex-report">
 				<ITDataTable<KardexRow>
-				showViewToggle={false}
-					columns={columns}
-					fetchData={(params) => {
-						const asked = { ...params.filters, ...chosen };
-						setFilters(asked);
-						// Without the material and its warehouse there is no kardex to ask for.
-						if (!product || !warehouseId) {
-							setAnswer(null);
-							return Promise.resolve({ data: [], total: 0 });
-						}
-						return reportApi
-							.kardex({ page: params.page, limit: params.limit, filters: asked })
-							.then((page) => {
-								const list = kardexRows(page);
-								setAnswer(page);
-								setError(null);
-								return { data: list, total: page.total };
-							})
-							.catch((failure: Error) => {
-								setError(failure.message);
-								return { data: [], total: 0 };
-							});
-					}}
-					reloadTrigger={reload}
+					defaultItemsPerPage={25}
+					itemsPerPageOptions={[25, 50, 100]}
 					layout="fixed"
+					density="compact"
+					virtualized
+					virtualizedMaxHeight={400}
+					rowHeight={50}
+					showViewToggle={false}
+ columns={columns}
+ fetchData={(params) => {
+ const asked = { ...params.filters, ...chosen };
+ setFilters(asked);
+ // Without the material and its warehouse there is no kardex to ask for.
+ if (!product || !warehouseId) {
+ setAnswer(null);
+ return Promise.resolve({ data: [], total: 0 });
+ }
+ return reportApi
+ .kardex({ page: params.page, limit: params.limit, filters: asked })
+ .then((page) => {
+ const list = kardexRows(page);
+ setAnswer(page);
+ setError(null);
+ return { data: list, total: page.total };
+ })
+ .catch((failure: Error) => {
+ setError(failure.message);
+ return { data: [], total: 0 };
+ });
+ }}
+ reloadTrigger={reload}
 				/>
 			</ITText>
 		</ITPage>

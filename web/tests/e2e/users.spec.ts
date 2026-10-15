@@ -1,6 +1,7 @@
 // F1-02 and F1-18 · e2e: an administrator manages users from the web.
 import { test, expect, type Page } from "@playwright/test";
 import { adminToken, call, e2eAdmin, newUser, signInAs, uniqueName } from "../support/api";
+import { pickSearchOption } from "../support/forms";
 
 
 async function openUsers(page: Page) {
@@ -72,7 +73,7 @@ test("an administrator gives a person an exception with a reason, and changes th
 	await page.getByRole("menuitem", { name: "Acceso" }).click();
 
 	const dialog = page.getByRole("dialog");
-	await dialog.locator('select[name="permission"]').selectOption("audit.view");
+	await pickSearchOption(page, "permission", "bitácora", /bitácora/i);
 	await dialog.getByLabel("Motivo", { exact: true }).fill("Revisión mensual");
 	await dialog.getByRole("button", { name: "Agregar excepción" }).click();
 	await expect(dialog.getByRole("row").filter({ hasText: "Revisión mensual" })).toBeVisible();

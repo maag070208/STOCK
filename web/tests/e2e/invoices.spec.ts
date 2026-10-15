@@ -5,6 +5,7 @@ import { test, expect, type Page } from "@playwright/test";
 import { businessDate, call, newUser, signInAs, uniqueName } from "../support/api";
 import { entriesFixture } from "../support/entries";
 import { captureMaterial, fillNewInvoice } from "../support/invoices";
+import { pickSearchOption } from "../support/forms";
 
 test("office creates an invoice in the modal and assigns its line from the detail", async ({ page }) => {
 	const f = await entriesFixture();
@@ -20,7 +21,7 @@ test("office creates an invoice in the modal and assigns its line from the detai
 	await expect(page.locator("div.max-h-60").getByText(f.inactiveSupplier.name)).toHaveCount(0);
 
 	const number = uniqueName("FA-").toUpperCase();
-	await fillNewInvoice(page, { number, supplier: f.supplier, warehouseId: f.warehouse.id });
+	await fillNewInvoice(page, { number, supplier: f.supplier, warehouse: f.warehouse });
 
 	// The primary action lands on the detail, where the materials are captured.
 	await page.getByRole("button", { name: "Guardar", exact: true }).click();
@@ -31,10 +32,10 @@ test("office creates an invoice in the modal and assigns its line from the detai
 	// The assignment from the line: a split that does not add up is blocked before it is sent.
 	await page.getByRole("button", { name: "Asignar" }).click();
 	const dialog = page.getByRole("dialog");
-	await dialog.locator('select[name="operator-0"]').selectOption(a.id);
+	await pickSearchOption(page, "operator-0", a.name, a.name);
 	await dialog.locator('input[name="share-0"]').fill("60");
 	await dialog.getByRole("button", { name: "Agregar operador" }).click();
-	await dialog.locator('select[name="operator-1"]').selectOption(b.id);
+	await pickSearchOption(page, "operator-1", b.name, b.name);
 	await dialog.locator('input[name="share-1"]').fill("30");
 	await dialog.getByRole("button", { name: "Guardar" }).click();
 	await expect(dialog.getByText("Las cantidades deben sumar la cantidad de la línea.")).toBeVisible();

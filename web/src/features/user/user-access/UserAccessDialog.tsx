@@ -1,4 +1,4 @@
-import { type Column, ITAlert, ITButton, ITDialog, ITFlex, ITGrid, ITInput, ITMultiSelect, ITSelect, ITStack, ITText } from "@axzydev/axzy_ui_system";
+import { ITAlert, ITButton, ITDialog, ITFlex, ITGrid, ITInput, ITMultiSelect, ITSearchSelect, ITSelect, ITStack, ITText, type Column } from "@axzydev/axzy_ui_system";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { IconButton } from "@shared/ui/IconButton";
@@ -113,11 +113,11 @@ export function UserAccessDialog(props: { user: User | null; roles: Role[]; perm
 					)}
 					<ITGrid container spacing={3}>
 						<ITGrid item xs={12} sm={6}>
-							<ITSelect
+							<ITSearchSelect
 								name="permission"
 								label={t("access.permission")}
 								value={draft.permission}
-								onChange={(e) => setDraft((d) => ({ ...d, permission: e.target.value, scope: "ALL" }))}
+								onChange={(value) => setDraft((d) => ({ ...d, permission: String(value), scope: "ALL" }))}
 								options={[{ value: "", label: "—" }, ...props.permissions.map((p) => ({ value: p.key, label: permissionName(p.key) }))]}
 								valueField="value"
 								labelField="label"

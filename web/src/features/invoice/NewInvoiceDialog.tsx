@@ -1,4 +1,4 @@
-import { ITDatePicker, ITInput, ITSelect, ITStack, ITText } from "@axzydev/axzy_ui_system";
+import { ITDatePicker, ITInput, ITStack, ITText } from "@axzydev/axzy_ui_system";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -13,6 +13,7 @@ import {
 	type Ref,
 } from "@entities/invoice";
 import { PartnerPicker } from "@entities/partner";
+import { WarehousePicker } from "@entities/warehouse";
 import { firstInvalidField } from "@shared/lib/focusTrap";
 import { businessToday, isoDate } from "@shared/lib/format";
 import { FormDialog } from "@shared/ui/FormDialog";
@@ -127,19 +128,17 @@ export function NewInvoiceDialog(props: {
 					touched={Boolean(fieldError("invoiceDate"))}
 					required
 				/>
-				<ITSelect
+				<WarehousePicker
+					// The warehouses this screen may see: its own options endpoint, which the office can read.
+					options={props.warehouses}
 					name="warehouseId"
 					label={t("form.warehouse")}
 					value={warehouseId}
-					onChange={(event) => {
-						setWarehouseId(event.target.value);
-						rememberWorkspace({ supplierId, warehouseId: event.target.value });
+					onChange={(chosen) => {
+						setWarehouseId(chosen);
+						rememberWorkspace({ supplierId, warehouseId: chosen });
 					}}
-					options={props.warehouses.map((warehouse) => ({ value: warehouse.id, label: `${warehouse.code ?? ""} · ${warehouse.name ?? ""}` }))}
-					valueField="value"
-					labelField="label"
 					error={fieldError("warehouseId")}
-					touched={Boolean(fieldError("warehouseId"))}
 					required
 				/>
 				{prefilled && <ITText muted>{t("modal.remembered")}</ITText>}

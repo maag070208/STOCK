@@ -1,9 +1,10 @@
-import { ITAlert, ITButton, ITCard, ITDatePicker, ITFlex, ITGrid, ITInput, ITPage, ITSelect, ITStack, ITText } from "@axzydev/axzy_ui_system";
+import { ITAlert, ITSearchSelect, ITButton, ITCard, ITDatePicker, ITFlex, ITGrid, ITInput, ITPage, ITStack, ITText } from "@axzydev/axzy_ui_system";
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { availableOf, lineError, orderApi, type AvailabilityItem, type OrderInput, type Ref } from "@entities/order";
-import { partnerApi, type Partner } from "@entities/partner";
+import { PartnerPicker, partnerApi, type Partner } from "@entities/partner";
+import { WarehousePicker } from "@entities/warehouse";
 import { ProductPicker, type Product } from "@entities/product";
 import { dyn } from "@shared/i18n";
 import { businessToday, formatQuantity, isoDate } from "@shared/lib/format";
@@ -27,6 +28,7 @@ export function OrderFormPage() {
 	const customersApi = partnerApi("customers");
 	// One key for this form: a repeated submission of the same order creates it once.
 	const key = useRef(newId());
+	const [warehouses, setWarehouses] = useState<Ref[]>([]);
 	const [number, setNumber] = useState("");
 	const [warehouseId, setWarehouseId] = useState("");
 	const [customerId, setCustomerId] = useState("");
@@ -34,18 +36,14 @@ export function OrderFormPage() {
 	// The day the business is in, not the browser's: the API refuses a due date before its own today.
 	const [dueDate, setDueDate] = useState(businessToday());
 	const [lines, setLines] = useState<LineState[]>([]);
-	const [warehouses, setWarehouses] = useState<Ref[]>([]);
-	const [customers, setCustomers] = useState<Partner[]>([]);
 	const [customer, setCustomer] = useState<Partner | null>(null);
 	const [availability, setAvailability] = useState<AvailabilityItem[]>([]);
 	const [tried, setTried] = useState(false);
 	const submit = useSubmit();
 
-	// Only active customers are offered for a new order (order-fulfillment.md section 3).
 	useEffect(() => {
-		void customersApi.query({ page: 1, limit: 200, filters: { active: "true" } }).then((page) => setCustomers(page.data));
-		void orderApi.warehouseOptions().then(setWarehouses);
-		// eslint-disable-next-line react-hooks/exhaustive-deps
+		// The warehouses this screen may use, from the module's own options endpoint.
+		void orderApi.warehouseOptions().then(setWarehouses).catch(() => setWarehouses([]));
 	}, []);
 
 	useEffect(() => {
@@ -134,43 +132,38 @@ export function OrderFormPage() {
 							/>
 						</ITGrid>
 						<ITGrid item xs={12} md={6}>
-							<ITSelect
+							<PartnerPicker
+								kind="customers"
 								name="customerId"
-							label={t("form.customer")}
-							value={customerId}
-							onChange={(e) => setCustomerId(e.target.value)}
-							options={customers.map((found) => ({ value: found.id, label: `${found.code} · ${found.name}` }))}
-							valueField="value"
-							labelField="label"
+								label={t("form.customer")}
+								value={customerId}
+								onChange={(chosen) => {
+									setCustomerId(chosen?.id ?? "");
+									setContactId("");
+								}}
 								error={submit.fieldErrors.customerId ?? (tried && !customerId ? required : undefined)}
-								touched={tried || !!submit.fieldErrors.customerId}
 								required
 							/>
 						</ITGrid>
 						<ITGrid item xs={12} md={6}>
-							<ITSelect
+							<ITSearchSelect
 								name="contactId"
-							label={t("form.contact")}
-							value={contactId}
-							onChange={(e) => setContactId(e.target.value)}
-							options={[{ value: "", label: t("form.noContact") }, ...(customer?.contacts ?? []).filter((found) => found.active).map((found) => ({ value: found.id, label: found.name }))]}
-							valueField="value"
-							labelField="label"
+								label={t("form.contact")}
+								value={contactId}
+								onChange={(value) => setContactId(String(value))}
+								options={(customer?.contacts ?? []).filter((found) => found.active).map((found) => ({ value: found.id, label: found.name }))}
 								error={submit.fieldErrors.contactId}
 								touched={!!submit.fieldErrors.contactId}
 							/>
 						</ITGrid>
 						<ITGrid item xs={12} md={6}>
-							<ITSelect
+							<WarehousePicker
+								options={warehouses}
 								name="warehouseId"
-							label={t("form.warehouse")}
-							value={warehouseId}
-							onChange={(e) => setWarehouseId(e.target.value)}
-							options={warehouses.map((found) => ({ value: found.id, label: `${found.code} · ${found.name}` }))}
-							valueField="value"
-							labelField="label"
+								label={t("form.warehouse")}
+								value={warehouseId}
+								onChange={(chosen) => setWarehouseId(chosen)}
 								error={submit.fieldErrors.warehouseId ?? (tried && !warehouseId ? required : undefined)}
-								touched={tried || !!submit.fieldErrors.warehouseId}
 								required
 							/>
 						</ITGrid>

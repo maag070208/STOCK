@@ -1,4 +1,4 @@
-import { type Column, ITBadget, ITButton, ITCheckbox, ITConfirmDialog, ITFlex, ITGrid, ITInput, ITMultiSelect, ITSelect, ITStack, ITText } from "@axzydev/axzy_ui_system";
+import { ITBadget, ITButton, ITCheckbox, ITConfirmDialog, ITFlex, ITGrid, ITInput, ITMultiSelect, ITSearchSelect, ITSelect, ITStack, ITText, type Column } from "@axzydev/axzy_ui_system";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { IconButton } from "@shared/ui/IconButton";
@@ -159,11 +159,11 @@ export function PoliciesPanel(props: { policies: Policy[]; actions: PolicyAction
 								<ITInput name="priority" type="number" label={t("policies.priority")} value={editing.draft.priority} onChange={(e) => update({ priority: e.target.value })} error={submit.fieldErrors.priority} touched={!!submit.fieldErrors.priority} required />
 							</ITGrid>
 							<ITGrid item xs={12} sm={6}>
-								<ITSelect
+								<ITSearchSelect
 									name="action"
 									label={t("policies.action")}
 									value={editing.draft.action}
-									onChange={(e) => update({ action: e.target.value, conditions: [] })}
+									onChange={(value) => update({ action: String(value), conditions: [] })}
 									options={props.actions.map((a) => ({ value: a.key, label: a.key }))}
 									valueField="value"
 									labelField="label"
@@ -190,11 +190,11 @@ export function PoliciesPanel(props: { policies: Policy[]; actions: PolicyAction
 								return (
 									<ITGrid key={index} container spacing={2}>
 										<ITGrid item xs={12} sm={6} md={3}>
-											<ITSelect
+											<ITSearchSelect
 												name={`field-${index}`}
 												label={t("policies.field")}
 												value={condition.field}
-												onChange={(e) => set({ field: e.target.value })}
+												onChange={(value) => set({ field: String(value) })}
 												options={[{ value: "", label: "—" }, ...fields.map((f) => ({ value: f, label: f }))]}
 												valueField="value"
 												labelField="label"
@@ -202,11 +202,11 @@ export function PoliciesPanel(props: { policies: Policy[]; actions: PolicyAction
 											/>
 										</ITGrid>
 										<ITGrid item xs={12} sm={6} md={3}>
-											<ITSelect
+											<ITSearchSelect
 												name={`operator-${index}`}
 												label={t("policies.operator")}
 												value={condition.operator}
-												onChange={(e) => set({ operator: e.target.value })}
+												onChange={(value) => set({ operator: String(value) })}
 												options={OPERATORS.map((o) => ({ value: o, label: t(dyn(`policies.operators.${o}`)) }))}
 												valueField="value"
 												labelField="label"

@@ -74,7 +74,16 @@ export function StockPage() {
 						label: t("tabs.byLocation"),
 						content: (
 							<ITText as="div" data-testid="stock-by-location">
-								<ITDataTable<Balance> showViewToggle={false} columns={byLocation} fetchData={(params) => stockApi.balances(params as TableParams)} layout="fixed" />
+								<ITDataTable<Balance>
+									defaultItemsPerPage={25}
+									itemsPerPageOptions={[25, 50, 100]}
+									layout="fixed"
+									density="compact"
+									virtualized
+									virtualizedMaxHeight={400}
+									rowHeight={50}
+									showViewToggle={false} columns={byLocation} fetchData={(params) => stockApi.balances(params as TableParams)}
+								/>
 							</ITText>
 						),
 					},
@@ -83,7 +92,16 @@ export function StockPage() {
 						label: t("tabs.byProduct"),
 						content: (
 							<ITText as="div" data-testid="stock-by-product">
-								<ITDataTable<ProductTotal> columns={byProduct} fetchData={(params) => stockApi.products(params as TableParams)} layout="fixed" />
+								<ITDataTable<ProductTotal>
+									defaultItemsPerPage={25}
+									itemsPerPageOptions={[25, 50, 100]}
+									layout="fixed"
+									density="compact"
+									virtualized
+									virtualizedMaxHeight={400}
+									rowHeight={50}
+									columns={byProduct} fetchData={(params) => stockApi.products(params as TableParams)}
+								/>
 							</ITText>
 						),
 					},

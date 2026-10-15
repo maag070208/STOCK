@@ -40,12 +40,18 @@ export function DiscrepanciesPage() {
 	return (
 		<ITPage title={t("discrepancies.title")} description={t("discrepancies.description")} breadcrumbs={[{ label: t("discrepancies.title") }]} noPadding>
 			<ITDataTable<Discrepancy>
+				defaultItemsPerPage={25}
+				itemsPerPageOptions={[25, 50, 100]}
+				layout="fixed"
+				density="compact"
+				virtualized
+				virtualizedMaxHeight={400}
+				rowHeight={50}
 				showViewToggle={false}
-					columns={columns}
-					fetchData={(params) => receivingApi.discrepancies(params as TableParams)}
-					reloadTrigger={reload}
-					layout="fixed"
-					onRowClick={(row) => navigate(`/invoices/${row.invoice.id}`)}
+ columns={columns}
+ fetchData={(params) => receivingApi.discrepancies(params as TableParams)}
+ reloadTrigger={reload}
+ onRowClick={(row) => navigate(`/invoices/${row.invoice.id}`)}
 			/>
 			<AdjustDialog
 				assignmentId={adjusting?.assignmentId ?? null}

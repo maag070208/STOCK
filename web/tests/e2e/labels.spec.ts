@@ -4,6 +4,7 @@
 import { test, expect } from "@playwright/test";
 import { createServer } from "node:net";
 import { adminToken, call, e2eAdmin, newUser, signInAs, uniqueName } from "../support/api";
+import { pickRemoteOption, pickSearchOption } from "../support/forms";
 
 const PRINTING_PORT = 19100;
 const zpl = "^XA\n^FO30,30^FDEtiqueta^FS\n^PQ{{copies}}\n^XZ";
@@ -68,14 +69,17 @@ test("for a person who reads English, the report is in English", async ({ page }
 });
 
 test("a printer needs a valid address, and its port is 9100", async ({ page }) => {
-	const name = `Zebra ${uniqueName("").slice(0, 6)}`;
+	// The list is paginated and sorted by name: a name that sorts first is on the page the test reads.
+	const name = `A-Zebra ${uniqueName("").slice(0, 6)}`;
+	const token = await adminToken();
+	const warehouse = (await call("POST", "/warehouses", { token, body: { code: uniqueName("W-").toUpperCase(), name: "Almacén de la impresora" } })).json as { id: string; code: string };
 	await signInAs(page, e2eAdmin());
 	await page.goto("/#/printers");
 	await page.getByRole("button", { name: "Nueva impresora" }).click();
 	const dialog = page.getByRole("dialog");
 	await dialog.getByLabel(/^Nombre/).fill(name);
-	// The first option is the kit's empty one.
-	await dialog.getByLabel("Almacén").selectOption({ index: 1 });
+	// The warehouse of the printer is searched: an installation holds hundreds.
+	await pickRemoteOption(page, "warehouseId", warehouse.code, warehouse.code);
 	await dialog.getByLabel(/^Dirección IP/).fill("192.168.1");
 	await dialog.getByRole("button", { name: "Guardar" }).click();
 	await expect(dialog.getByText("No es una dirección IPv4 válida.")).toBeVisible();
@@ -90,7 +94,7 @@ test("a manager prints three copies of a product label, on the printers of their
 	const token = await adminToken();
 	const warehouse = (await call("POST", "/warehouses", { token, body: { code: uniqueName("W-").toUpperCase(), name: "Almacén de etiquetas" } })).json as { id: string; code: string };
 	const other = (await call("POST", "/warehouses", { token, body: { code: uniqueName("W-").toUpperCase(), name: "Otro almacén" } })).json as { id: string };
-	const mine = `Zebra ${uniqueName("").slice(0, 6)}`;
+	const mine = `A-Zebra ${uniqueName("").slice(0, 6)}`;
 	await call("POST", "/printers", { token, body: { name: mine, warehouseId: warehouse.id, ipAddress: "127.0.0.1" } });
 	await call("POST", "/printers", { token, body: { name: `Ajena ${uniqueName("").slice(0, 6)}`, warehouseId: other.id, ipAddress: "127.0.0.1" } });
 	const product = (await call("POST", "/products", { token, body: { code: uniqueName("M").toUpperCase(), name: "Codo galvanizado 1/2\"", unit: "PIECE" } })).json as { id: string };
@@ -101,10 +105,12 @@ test("a manager prints three copies of a product label, on the printers of their
 	await page.goto(`/#/products/${product.id}`);
 	await page.getByRole("button", { name: "Imprimir etiqueta" }).click();
 	const dialog = page.getByRole("dialog");
-	const printer = dialog.getByLabel("Impresora");
-	// Only the printer of the manager's warehouse, chosen since it is the only one.
-	await expect(printer.locator("option")).toHaveText(["Selecciona una opción", `${mine} · ${warehouse.code}`]);
-	await expect(printer.locator("option:checked")).toHaveText(`${mine} · ${warehouse.code}`);
+	// The printer is searched, and only the one of the manager's warehouse is offered.
+	const printer = dialog.locator('input[name="printerId"]');
+	await pickSearchOption(page, "printerId", mine, `${mine} · ${warehouse.code}`);
+	await expect(printer).toHaveValue(`${mine} · ${warehouse.code}`);
+	await printer.fill("Ajena");
+	await expect(page.locator('[data-it-floating="true"]')).toContainText("No se encontraron resultados");
 	await expect(dialog.getByLabel(/^Copias/)).toHaveValue("1");
 	await dialog.getByLabel(/^Copias/).fill("101");
 	await dialog.getByRole("button", { name: "Imprimir" }).click();

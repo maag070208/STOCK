@@ -128,13 +128,19 @@ export function InvoicesPage() {
 				{total === 0 && <ITEmptyState title={t("list.empty")} action={<ITButton variant="outlined" label={t("list.clearFilters")} onClick={clear} />} />}
 				<ITStack className={total === 0 ? "sf:hidden" : undefined}>
 					<ITDataTable<Invoice>
-				showViewToggle={false}
-						columns={columns}
-						fetchData={fetchData}
-						reloadTrigger={`${applied}|${chip}`}
-						variant="striped"
+						defaultItemsPerPage={25}
+						itemsPerPageOptions={[25, 50, 100]}
 						layout="fixed"
-						onRowClick={(invoice) => navigate(`/invoices/${invoice.id}`)}
+						density="compact"
+						virtualized
+						virtualizedMaxHeight={400}
+						rowHeight={50}
+						showViewToggle={false}
+ columns={columns}
+ fetchData={fetchData}
+ reloadTrigger={`${applied}|${chip}`}
+ variant="striped"
+ onRowClick={(invoice) => navigate(`/invoices/${invoice.id}`)}
 					/>
 				</ITStack>
 			</ITStack>

@@ -1,6 +1,7 @@
-import { ITCheckbox, ITInput, ITSelect, ITText } from "@axzydev/axzy_ui_system";
+import { ITCheckbox, ITInput, ITText } from "@axzydev/axzy_ui_system";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { WarehousePicker } from "@entities/warehouse";
 import { isIpAddress, printerApi, type Printer } from "@entities/label";
 import { FormDialog } from "@shared/ui/FormDialog";
 import { useSubmit } from "@shared/ui/useSubmit";
@@ -53,25 +54,16 @@ export function PrinterDialog(props: { printer: Printer | null; warehouses: Ware
 		if (saved) props.onSaved(saved);
 	}
 
-	// An inactive warehouse cannot take a printer, but the one a printer already has stays readable.
-	const options = props.warehouses.map((w) => ({ value: w.id, label: `${w.code} · ${w.name}` }));
-	if (props.printer && !options.some((o) => o.value === props.printer!.warehouseId)) {
-		options.push({ value: props.printer.warehouseId, label: props.printer.warehouseCode ?? props.printer.warehouseId });
-	}
-
 	return (
 		<FormDialog isOpen={props.isOpen} title={props.printer ? t("printers.edit") : t("printers.new")} onClose={props.onClose} onSubmit={() => void save()} submitting={submit.submitting} error={submit.error}>
 			<ITInput name="name" label={t("printers.form.name")} value={name} onChange={(e) => setName(e.target.value)} error={errors.name} touched={!!errors.name} required />
-			<ITSelect
+			<WarehousePicker
 				name="warehouseId"
 				label={t("printers.form.warehouse")}
 				value={warehouseId}
-				onChange={(e) => setWarehouseId(e.target.value)}
-				options={options}
-				valueField="value"
-				labelField="label"
+				onChange={(chosen) => setWarehouseId(chosen)}
 				error={errors.warehouseId}
-				touched={!!errors.warehouseId}
+				required
 			/>
 			<ITInput
 				name="ipAddress"

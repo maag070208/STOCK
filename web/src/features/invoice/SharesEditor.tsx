@@ -1,4 +1,4 @@
-import { ITAlert, ITButton, ITFlex, ITGrid, ITInput, ITSelect, ITStack, ITText } from "@axzydev/axzy_ui_system";
+import { ITAlert, ITButton, ITFlex, ITGrid, ITInput, ITSearchSelect, ITStack, ITText } from "@axzydev/axzy_ui_system";
 import { useTranslation } from "react-i18next";
 import { sharesError, sharesTotal, type ShareInput, type StaffMember } from "@entities/invoice";
 import { formatQuantity } from "@shared/lib/format";
@@ -26,11 +26,11 @@ export function SharesEditor(props: {
 				{props.shares.map((share, index) => (
 					<ITGrid key={index} container spacing={2}>
 						<ITGrid item xs={12} sm={6}>
-							<ITSelect
+							<ITSearchSelect
 								name={`operator-${index}`}
 								label={t("form.operator")}
 								value={share.operatorId}
-								onChange={(e) => set(index, { operatorId: e.target.value })}
+								onChange={(value) => set(index, { operatorId: String(value) })}
 								options={props.staff.map((member) => ({ value: member.id, label: member.name }))}
 								valueField="value"
 								labelField="label"

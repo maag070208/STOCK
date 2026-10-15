@@ -1,16 +1,15 @@
 // The support of the invoice screens: what the tests need to capture a fast invoice without depending on the order in
 // which the API answers.
 import { expect, type Page } from "@playwright/test";
+import { pickRemoteOption } from "./forms";
 
-// The modal of a new invoice asks for its four fields: the supplier is searched by its code, and the warehouse, which is
-// a short list, is waited for before it is chosen.
-export async function fillNewInvoice(page: Page, values: { number: string; supplier: { code: string; name: string }; warehouseId: string }) {
+// The modal of a new invoice asks for its four fields, and the two lists it carries (supplier and warehouse) are
+// searched, because an installation holds hundreds of each.
+export async function fillNewInvoice(page: Page, values: { number: string; supplier: { code: string; name: string }; warehouse: { id: string; code: string } }) {
 	// The number field, by its name: the label carries the required mark, so its text is not the whole name.
 	await page.locator('input[name="number"]').fill(values.number);
-	await page.locator('[name="supplierId"]').fill(values.supplier.code);
-	await page.locator("div.max-h-60").last().getByText(`${values.supplier.code} · ${values.supplier.name}`).click();
-	await expect(page.locator(`select[name="warehouseId"] option[value="${values.warehouseId}"]`)).toHaveCount(1);
-	await page.locator('select[name="warehouseId"]').selectOption(values.warehouseId);
+	await pickRemoteOption(page, "supplierId", values.supplier.code, `${values.supplier.code} · ${values.supplier.name}`);
+	await pickRemoteOption(page, "warehouseId", values.warehouse.code, values.warehouse.code);
 }
 
 // Captures a material in the detail's quick bar: the picker by its code, and the quantity with the keyboard. The options

@@ -1,4 +1,4 @@
-import { ITAlert, ITButton, ITFlex, ITGrid, ITInput, ITPage, ITSelect, ITStack, ITText } from "@axzydev/axzy_ui_system";
+import { ITAlert, ITButton, ITFlex, ITGrid, ITInput, ITPage, ITSearchSelect, ITStack, ITText } from "@axzydev/axzy_ui_system";
 import { useEffect, useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
@@ -74,11 +74,11 @@ export function PartnerFormPage({ kind }: { kind: PartnerKind }) {
 	}
 
 	const select = (field: "state" | "country" | "paymentTerms", label: string, items: CatalogItem[], fieldError?: string) => (
-		<ITSelect
+		<ITSearchSelect
 			name={field}
 			label={label}
 			value={values[field]}
-			onChange={(e) => set(field)(e.target.value)}
+			onChange={(value) => set(field)(String(value))}
 			options={items.map((item) => ({ value: item.code, label: item.label ?? item.code }))}
 			valueField="value"
 			labelField="label"
@@ -92,7 +92,7 @@ export function PartnerFormPage({ kind }: { kind: PartnerKind }) {
 			name={field}
 			label={t(`form.${field}`)}
 			value={values[field]}
-			onChange={(e) => set(field)(e.target.value)}
+			onChange={(event) => set(field)(String(event.target.value))}
 			error={addressError(field) ?? extra.hint}
 			touched={!!addressError(field)}
 			required={extra.required ?? true}

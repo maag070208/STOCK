@@ -1,4 +1,4 @@
-import { ITGrid, ITInput, ITSelect } from "@axzydev/axzy_ui_system";
+import { ITGrid, ITInput, ITSearchSelect } from "@axzydev/axzy_ui_system";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { CatalogItem } from "@entities/catalog";
@@ -66,11 +66,11 @@ export function ProductDialog(props: { product: Product | null; units: CatalogIt
 					/>
 				</ITGrid>
 				<ITGrid item xs={12} sm={6}>
-					<ITSelect
+					<ITSearchSelect
 						name="unit"
 					label={t("form.unit")}
 					value={values.unit}
-					onChange={(e) => set("unit")(e.target.value)}
+					onChange={(value) => set("unit")(String(value))}
 						options={props.units.map((unit) => ({ value: unit.code, label: unit.label ?? unit.code }))}
 						valueField="value"
 						labelField="label"

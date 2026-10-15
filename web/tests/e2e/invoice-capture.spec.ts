@@ -82,7 +82,7 @@ test.describe("the modal", () => {
 		await expect(dialog.locator('input[name="number"]')).toBeVisible();
 		await expect(dialog.locator('[name="supplierId"]')).toBeVisible();
 		await expect(dialog.locator('input[name="invoiceDate"]')).toBeVisible();
-		await expect(dialog.locator('select[name="warehouseId"]')).toBeVisible();
+		await expect(dialog.locator('input[name="warehouseId"]')).toBeVisible();
 		await expect(dialog.getByRole("heading", { name: "Materiales", exact: true })).toHaveCount(0);
 		await page.keyboard.press("Escape");
 		await expect(dialog).toHaveCount(0);
@@ -98,7 +98,7 @@ test.describe("the modal", () => {
 
 		// Enter is the primary action: it saves and goes to the detail, with the focus on the material.
 		const number = uniqueName("FN-").toUpperCase();
-		await fillNewInvoice(page, { number, supplier: f.supplier, warehouseId: f.warehouse.id });
+		await fillNewInvoice(page, { number, supplier: f.supplier, warehouse: f.warehouse });
 		await page.locator('input[name="number"]').press("Enter");
 		await expect(heading(page, number)).toBeVisible();
 		await expect(page.getByTestId("quick-capture").getByPlaceholder("Busca por código o nombre")).toBeFocused();
@@ -117,14 +117,14 @@ test.describe("the modal", () => {
 		await expect(dialog.getByRole("button", { name: "Cancelar" })).toBeVisible();
 		await expect(dialog.getByRole("button", { name: "Guardar", exact: true })).toBeVisible();
 		const discarded = uniqueName("FD-").toUpperCase();
-		await fillNewInvoice(page, { number: discarded, supplier: f.supplier, warehouseId: f.warehouse.id });
+		await fillNewInvoice(page, { number: discarded, supplier: f.supplier, warehouse: f.warehouse });
 		await dialog.getByRole("button", { name: "Cancelar" }).click();
 		await expect(page.getByRole("row").filter({ hasText: discarded })).toHaveCount(0);
 
 		// Saving goes straight to capture the materials of the invoice that was just created.
 		await page.getByRole("button", { name: "Nueva factura" }).click();
 		const number = uniqueName("FG-").toUpperCase();
-		await fillNewInvoice(page, { number, supplier: f.supplier, warehouseId: f.warehouse.id });
+		await fillNewInvoice(page, { number, supplier: f.supplier, warehouse: f.warehouse });
 		await page.getByRole("button", { name: "Guardar", exact: true }).click();
 		await expect(heading(page, number)).toBeVisible();
 		await expect(page.getByTestId("quick-capture").getByPlaceholder("Busca por código o nombre")).toBeFocused();
@@ -207,11 +207,13 @@ test.describe("keyboard and accessibility", () => {
 		await opener.click();
 		const dialog = page.getByRole("dialog", { name: "Nueva factura" });
 		await expect(dialog).toBeVisible();
+		// The modal has settled: the focus is on the first field before the walk begins.
+		await expect(page.locator('input[name="number"]')).toBeFocused();
 
 		// Tab walks the controls of the modal and never leaves it.
 		for (let step = 0; step < 12; step++) {
 			await page.keyboard.press("Tab");
-			expect(await page.evaluate(() => Boolean(document.activeElement?.closest('[role="dialog"]')))).toBe(true);
+			expect(await page.evaluate(() => Boolean(document.activeElement?.closest('[data-it-dialog="true"]')))).toBe(true);
 		}
 		// Shift+Tab goes back, still inside.
 		await page.keyboard.press("Shift+Tab");
@@ -220,7 +222,7 @@ test.describe("keyboard and accessibility", () => {
 		// The controls carry their own visible label.
 		await expect(page.locator('input[name="number"]')).toBeVisible();
 		await expect(page.locator('[name="supplierId"]')).toBeVisible();
-		await expect(page.locator('select[name="warehouseId"]')).toBeVisible();
+		await expect(page.locator('input[name="warehouseId"]')).toBeVisible();
 
 		// Closing with Escape returns the focus to the button that opened it.
 		await page.keyboard.press("Escape");
@@ -229,7 +231,7 @@ test.describe("keyboard and accessibility", () => {
 
 		// And the whole flow still runs with the reduced motion the person asked for.
 		await page.keyboard.press("n");
-		await fillNewInvoice(page, { number: uniqueName("FR-").toUpperCase(), supplier: f.supplier, warehouseId: f.warehouse.id });
+		await fillNewInvoice(page, { number: uniqueName("FR-").toUpperCase(), supplier: f.supplier, warehouse: f.warehouse });
 		await page.getByRole("button", { name: "Guardar", exact: true }).click();
 		await expect(page.getByTestId("quick-capture")).toBeVisible();
 	});

@@ -1,13 +1,14 @@
 // F1-15 and F1-16 · e2e: the catalogs screen. Who can read sees the values; who can manage adds and deactivates them.
 import { test, expect } from "@playwright/test";
 import { e2eAdmin, newUser, signInAs, uniqueName } from "../support/api";
+import { pickSearchOption } from "../support/forms";
 
 
 test("the seed catalogs are there, read-only for an office user", async ({ page }) => {
 	const office = await newUser(["OFFICE"]);
 	await signInAs(page, office);
 	await page.goto("/#/catalogs");
-	await page.locator('select[name="catalog"]').selectOption("INVOICE_STATUS");
+	await pickSearchOption(page, "catalog", "INVOICE_STATUS", /INVOICE_STATUS/);
 	const items = page.getByRole("table");
 	await expect(items.getByText("Abierta")).toBeVisible();
 	await expect(items.getByText("Cerrada")).toBeVisible();
@@ -22,7 +23,7 @@ test("an administrator creates a catalog and a value, and a deactivated value hi
 	await page.getByRole("button", { name: "Nuevo catálogo" }).click();
 	await page.getByRole("dialog").getByLabel(/^Código/).fill(code);
 	await page.getByRole("dialog").getByRole("button", { name: "Crear" }).click();
-	await expect(page.locator('select[name="catalog"]')).toHaveValue(code);
+	await expect(page.locator('input[name="catalog"]')).toHaveValue(new RegExp(code));
 
 	await page.getByRole("button", { name: "Nuevo valor" }).click();
 	let dialog = page.getByRole("dialog");

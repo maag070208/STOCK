@@ -1,15 +1,16 @@
 import { type Column, ITTable } from "@axzydev/axzy_ui_system";
 
-// A table of the rows a screen already has, built with the kit: one page with every row and the table view, because a
-// list the screen holds itself is not paginated (web.md section 8). The kit's table takes its page size once, so it is
-// mounted again when the number of rows changes: that is what makes every row show up once the data has arrived.
+// A table of the rows a screen already has, built with the kit and configured like every other table (web.md section 8):
+// 25 rows a page, the page sizes of the app, the compact density and virtualization. It exists so every table of the app
+// is built and configured the same way, and it is mounted again when the number of rows changes, because the kit's table
+// takes its page size once.
 export function PlainTable<T extends Record<string, unknown>>(props: {
 	columns: Column<T>[];
 	data: T[];
 	size?: "sm" | "md" | "lg";
 	onRowClick?: (row: T) => void;
 }) {
-	const rows = Math.max(props.data.length, 1);
+	const rows = props.data.length;
 	return (
 		<ITTable<T>
 			key={`plain-table-${rows}`}
@@ -17,12 +18,16 @@ export function PlainTable<T extends Record<string, unknown>>(props: {
 			data={props.data}
 			size={props.size}
 			onRowClick={props.onRowClick ? (row: T) => props.onRowClick?.(row) : undefined}
-			// The kit's table offers the cards view and a page size; a screen that holds all its rows needs neither.
+			// Every table of the app is configured the same way (web.md section 8).
 			showViewToggle={false}
-			footerClassName="sf:hidden"
 			defaultView="table"
-			defaultItemsPerPage={rows}
-			itemsPerPageOptions={[rows]}
+			defaultItemsPerPage={25}
+			itemsPerPageOptions={[25, 50, 100]}
+			layout="fixed"
+			density="compact"
+			virtualized
+			virtualizedMaxHeight={400}
+			rowHeight={50}
 			containerClassName="sf:overflow-x-auto"
 		/>
 	);

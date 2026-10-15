@@ -2,6 +2,7 @@
 // a person without roles.manage cannot open it.
 import { test, expect } from "@playwright/test";
 import { adminToken, call, e2eAdmin, newUser, signInAs } from "../support/api";
+import { pickSearchOption } from "../support/forms";
 
 
 test.describe.configure({ mode: "serial" });
@@ -25,6 +26,11 @@ test("an administrator changes a matrix cell, and the change is saved", async ({
 		expect(matrix.json).toContainEqual({ roleKey: role, permissionKey: "audit.view", scope: "ALL" });
 		// "What each role sees" follows the matrix.
 		await page.getByText("Qué ve cada rol", { exact: true }).click();
+		// The table is virtualized: it is scrolled to its end, where the last screen lives.
+		const scroller = page.locator("div.overflow-y-auto").last();
+		await scroller.evaluate((element) => {
+			element.scrollTop = element.scrollHeight;
+		});
 		await expect(page.locator(`[data-screen="audit|${role}"]`)).toHaveText("✓");
 		await expect(page.locator(`[data-screen="users|${role}"]`)).toHaveText("—");
 	} finally {
@@ -55,8 +61,8 @@ test("an administrator creates a policy with a condition, and deletes it", async
 	await dialog.getByRole("button", { name: "Agregar condición" }).click();
 	// The condition names a person who does not exist, so the policy never touches what other tests do.
 	const nobody = crypto.randomUUID();
-	await dialog.locator('select[name="field-0"]').selectOption("target.id");
-	await dialog.locator('select[name="operator-0"]').selectOption("eq");
+	await pickSearchOption(page, "field-0", "target.id", "target.id");
+	await pickSearchOption(page, "operator-0", "igual", "es igual a");
 	await dialog.getByLabel("Valor", { exact: true }).fill(nobody);
 	await dialog.getByRole("button", { name: "Guardar" }).click();
 
@@ -85,6 +91,9 @@ test("what each role sees comes from the screens and the matrix", async ({ page 
 	await signInAs(page, e2eAdmin());
 	await page.goto("/#/roles");
 	await page.getByText("Qué ve cada rol", { exact: true }).click();
+	await page.locator("div.overflow-y-auto").last().evaluate((element) => {
+		element.scrollTop = element.scrollHeight;
+	});
 	await expect(page.locator('[data-screen="audit|ADMIN"]')).toHaveText("✓");
 	await expect(page.locator('[data-screen="catalogs|OFFICE"]')).toHaveText("✓");
 	await expect(page.locator('[data-screen="users|OFFICE"]')).toHaveText("—");

@@ -69,7 +69,16 @@ export function OrdersPage() {
 					))}
 				</ITStack>
 			)}
-			<ITDataTable<Order> showViewToggle={false} columns={columns} fetchData={(params) => orderApi.query(params as TableParams)} layout="fixed" onRowClick={(order) => navigate(`/orders/${order.id}`)} />
+			<ITDataTable<Order>
+				defaultItemsPerPage={25}
+				itemsPerPageOptions={[25, 50, 100]}
+				layout="fixed"
+				density="compact"
+				virtualized
+				virtualizedMaxHeight={400}
+				rowHeight={50}
+				showViewToggle={false} columns={columns} fetchData={(params) => orderApi.query(params as TableParams)} onRowClick={(order) => navigate(`/orders/${order.id}`)}
+			/>
 		</ITPage>
 	);
 }

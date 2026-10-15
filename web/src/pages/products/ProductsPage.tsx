@@ -93,12 +93,18 @@ export function ProductsPage() {
 			}
 		>
 			<ITDataTable<Product>
-				showViewToggle={false}
-				columns={columns}
-				fetchData={(params) => productApi.query(params as TableParams)}
-				reloadTrigger={reload}
+				defaultItemsPerPage={25}
+				itemsPerPageOptions={[25, 50, 100]}
 				layout="fixed"
-				onRowClick={(product) => navigate(`/products/${product.id}`)}
+				density="compact"
+				virtualized
+				virtualizedMaxHeight={400}
+				rowHeight={50}
+				showViewToggle={false}
+ columns={columns}
+ fetchData={(params) => productApi.query(params as TableParams)}
+ reloadTrigger={reload}
+ onRowClick={(product) => navigate(`/products/${product.id}`)}
 			/>
 			<ProductDialog
 				isOpen={!!editing}

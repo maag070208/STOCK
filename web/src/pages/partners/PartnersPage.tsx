@@ -64,12 +64,18 @@ export function PartnersPage({ kind }: { kind: PartnerKind }) {
 	return (
 		<ITPage title={t(`${kind}.title`)} description={t(`${kind}.description`)} noPadding actions={canManage ? <ITButton label={t(`${kind}.new`)} onClick={() => navigate(`/${kind}/new`)} /> : undefined}>
 			<ITDataTable<Partner>
-				showViewToggle={false}
-				columns={columns}
-				fetchData={(params) => api.query(params as TableParams)}
-				reloadTrigger={reload}
+				defaultItemsPerPage={25}
+				itemsPerPageOptions={[25, 50, 100]}
 				layout="fixed"
-				onRowClick={(partner) => navigate(`/${kind}/${partner.id}`)}
+				density="compact"
+				virtualized
+				virtualizedMaxHeight={400}
+				rowHeight={50}
+				showViewToggle={false}
+ columns={columns}
+ fetchData={(params) => api.query(params as TableParams)}
+ reloadTrigger={reload}
+ onRowClick={(partner) => navigate(`/${kind}/${partner.id}`)}
 			/>
 			<ITConfirmDialog
 				isOpen={!!confirm}

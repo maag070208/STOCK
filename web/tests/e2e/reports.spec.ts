@@ -4,6 +4,7 @@
 import { test, expect, type Page } from "@playwright/test";
 import { adminToken, call, newUser, signInAs, uniqueName } from "../support/api";
 import { ordersFixture } from "../support/orders";
+import { pickSearchOption } from "../support/forms";
 
 // The search box a column's filter draws in the header, as the kit renders it.
 function filterOf(page: Page, testId: string, column: RegExp) {
@@ -30,7 +31,7 @@ test("the office filters the current stock, exports it, and reads the kardex of 
 	// The filter this screen manages itself, the one a column filter does not carry. The screen asks again with it.
 	await Promise.all([
 		page.waitForResponse((response) => response.url().endsWith("/reports/stock") && response.request().postData()?.includes(f.warehouse.id) === true),
-		page.locator('select[name="warehouseId"]').selectOption(f.warehouse.id),
+		pickSearchOption(page, "warehouseId", f.warehouse.code, f.warehouse.code),
 	]);
 	await expect(page.getByTestId("stock-total")).toContainText("40");
 

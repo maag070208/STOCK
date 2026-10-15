@@ -58,7 +58,6 @@ export function AppShell({ children }: { children: ReactNode }) {
 	return (
 		<ITLayout
 			className="sf-shell"
-			// Every screen ends with room to breathe: the layout owns the bottom margin, so no page carries it.
 			contentClassName="sf:max-w-(--sf-layout-container-max) sf:pb-12"
 			sidebarFullHeight
 			topBar={{
@@ -74,9 +73,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 			}}
 			sidebar={{
 				navigationItems,
-				// The shell is dark in both modes, so it always carries the glyph drawn for dark backgrounds.
 				brand: { text: t("app.name"), logo: <img src="/brand/stockflow-glyph-dark.svg" alt="" className="sf:size-10" /> },
-				expandOnHover: true,
 			}}
 		>
 			{children}

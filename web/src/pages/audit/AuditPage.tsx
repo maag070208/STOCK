@@ -46,7 +46,16 @@ export function AuditPage() {
 
 	return (
 		<ITPage title={t("title")} description={t("description")} noPadding>
-			<ITDataTable<AuditRecord> showViewToggle={false} columns={columns} fetchData={(params) => auditApi.query(params as TableParams)} layout="fixed" />
+			<ITDataTable<AuditRecord>
+				defaultItemsPerPage={25}
+				itemsPerPageOptions={[25, 50, 100]}
+				layout="fixed"
+				density="compact"
+				virtualized
+				virtualizedMaxHeight={400}
+				rowHeight={50}
+				showViewToggle={false} columns={columns} fetchData={(params) => auditApi.query(params as TableParams)}
+			/>
 		</ITPage>
 	);
 }

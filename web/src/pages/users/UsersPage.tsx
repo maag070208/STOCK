@@ -108,7 +108,16 @@ export function UsersPage() {
 			noPadding
 			actions={can.create ? <ITButton label={t("new")} onClick={() => setCreating(true)} /> : undefined}
 		>
-			<ITDataTable<User> showViewToggle={false} columns={columns} fetchData={(params) => userApi.query(params as TableParams)} reloadTrigger={reload} layout="fixed" />
+			<ITDataTable<User>
+				defaultItemsPerPage={25}
+				itemsPerPageOptions={[25, 50, 100]}
+				layout="fixed"
+				density="compact"
+				virtualized
+				virtualizedMaxHeight={400}
+				rowHeight={50}
+				showViewToggle={false} columns={columns} fetchData={(params) => userApi.query(params as TableParams)} reloadTrigger={reload}
+			/>
 
 			<CreateUserDialog
 				isOpen={creating}

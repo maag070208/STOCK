@@ -4,6 +4,7 @@
 import { test, expect, type Page } from "@playwright/test";
 import { newUser, signInAs, uniqueName } from "../support/api";
 import { ordersFixture } from "../support/orders";
+import { pickRemoteOption, pickSearchOption } from "../support/forms";
 
 async function pickProduct(page: Page, index: number, product: { code: string; name: string }) {
 	// The material of a line: the picker is reached by the name the screen gives it, one per line.
@@ -26,8 +27,8 @@ test("office creates an order with two lines, assigns it and sees it in the list
 
 	const number = uniqueName("ORD-").toUpperCase();
 	await page.getByLabel(/^Número de orden/).fill(number);
-	await page.locator('select[name="customerId"]').selectOption(f.customer.id);
-	await page.locator('select[name="warehouseId"]').selectOption(f.warehouse.id);
+	await pickRemoteOption(page, "customerId", f.customer.code, f.customer.code);
+	await pickRemoteOption(page, "warehouseId", f.warehouse.code, f.warehouse.code);
 
 	// The first line shows what the warehouse has, and a quantity above it never reaches the API.
 	await page.getByRole("button", { name: "Agregar material" }).click();
@@ -53,7 +54,7 @@ test("office creates an order with two lines, assigns it and sees it in the list
 	await expect(page.getByRole("row").filter({ hasText: nails.code })).toContainText("20");
 	await page.getByRole("button", { name: "Asignar" }).click();
 	const dialog = page.getByRole("dialog");
-	await dialog.locator('select[name="operatorId"]').selectOption(operator.id);
+	await pickSearchOption(page, "operatorId", operator.name, operator.name);
 	await dialog.getByRole("button", { name: "Guardar" }).click();
 	await expect(page.getByText(operator.name).first()).toBeVisible();
 
@@ -119,8 +120,8 @@ test("a validated order keeps only its receipt, and picked material moves or the
 	await page.goto(`/#/orders/${source.id}`);
 	await page.getByRole("button", { name: "Pasar a otra orden" }).click();
 	const transfer = page.getByRole("dialog");
-	await transfer.locator('select[name="lineId"]').selectOption(sourceLine.id);
-	await transfer.locator('select[name="targetOrderId"]').selectOption(target.id);
+	await pickSearchOption(page, "lineId", sourceLine.product.code, sourceLine.product.code);
+	await pickSearchOption(page, "targetOrderId", target.number, target.number);
 	await transfer.locator('input[name="quantity"]').fill("20");
 	await transfer.locator('textarea[name="note"]').fill("El cliente cambió de orden");
 	await transfer.getByRole("button", { name: "Pasar" }).click();

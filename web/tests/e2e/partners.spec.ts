@@ -2,6 +2,7 @@
 // shows the API's error next to its field; an office user sees the lists and cannot open the form.
 import { test, expect } from "@playwright/test";
 import { e2eAdmin, newUser, signInAs, testPaymentTerms, uniqueName } from "../support/api";
+import { pickSearchOption } from "../support/forms";
 
 test("an administrator creates a supplier, sees a wrong RFC next to its field, and adds a contact", async ({ page }) => {
 	const terms = await testPaymentTerms();
@@ -13,13 +14,13 @@ test("an administrator creates a supplier, sees a wrong RFC next to its field, a
 	await form.getByLabel(/^Código\s*\*?$/).fill(code);
 	await form.getByLabel(/^RFC/).fill("ADN011303AB1");
 	await form.getByLabel(/^Nombre o razón social/).fill("Aceros del Norte");
-	await form.locator('select[name="paymentTerms"]').selectOption(terms.code);
+	await pickSearchOption(page, "paymentTerms", terms.label, terms.label);
 	await form.getByLabel(/^Calle/).fill("Av. Juárez");
 	await form.getByLabel(/^Número exterior/).fill("120");
 	await form.getByLabel(/^Colonia/).fill("Centro");
 	await form.getByLabel(/^Ciudad/).fill("Guadalajara");
 	await form.getByLabel(/^Código postal/).fill("44100");
-	await form.locator('select[name="state"]').selectOption("MX_JAL");
+	await pickSearchOption(page, "state", "Jalisco", /Jalisco/);
 	await form.getByRole("button", { name: "Guardar" }).click();
 	// The API's message, in Spanish, under the RFC.
 	await expect(form.getByText("El RFC no es válido", { exact: false })).toBeVisible();
