@@ -148,7 +148,29 @@ Every screen is built from `@axzydev/axzy_ui_system`. Its look, and the look of 
 
 ### Breadcrumbs
 
-Every page passes `breadcrumbs` to `ITPage`: Home › section › detail. The `useBreadcrumbs` hook from `@shared/lib` builds them, and section labels come from `common:nav.*`.
+Every page that hangs from another one passes `breadcrumbs` to `ITPage` (or `ITPageHeader`): section › detail, with the last
+item as plain text and the ones before it linking to their list. Section labels come from `common:nav.*`. A screen that is
+reached from a list does not carry a "back" button of its own: the breadcrumbs are the way back.
+
+### Only the kit builds a screen
+
+A screen, a feature or a widget is written **only** with the components of `@axzydev/axzy_ui_system`. Raw HTML elements are
+a defect: `div`, `span`, `p`, `dl`, `dt`, `dd`, `table`, `thead`, `tbody`, `tr`, `th`, `td`, `ul`, `ol`, `li`, `h1`-`h6`,
+`section`, `article`, `header`, `footer`, `nav`, `aside` and `main` are all forbidden in `src/pages`, `src/features`,
+`src/entities` and `src/widgets`, and the lint fails on them. Only `<form>` is allowed outside the kit, because it carries
+the `onSubmit` of `FormDialog`.
+
+| Instead of | Use |
+|---|---|
+| `div`, `span`, `section`, `article` | `ITStack`, `ITFlex`, `ITGrid`, `ITCard`, `ITDivider` |
+| `p`, `h1`-`h6` | `ITText` (with `as`) |
+| `ul`, `ol`, `li` | `ITStack` with the items, or `ITTable` when they are rows |
+| `table`, `thead`, `tbody`, `tr`, `th`, `td` | `ITTable` (client-side data) or `ITDataTable` (server-side `fetchData`) |
+| `dl`, `dt`, `dd` | `ITGrid` with `ITStatCard`, or `ITTable` |
+| a label and its control | `ITField` |
+
+`src/shared/ui` is where the app keeps the few primitives the kit does not have (`FormDialog`, `SecretValue`, `useSubmit`).
+Anything a screen needs beyond those comes from the kit, never from new raw markup.
 
 ## 9. Insecure context
 
