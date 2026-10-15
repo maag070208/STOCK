@@ -35,6 +35,12 @@ Phase: [F8-fast-invoice-capture.md](../F8-fast-invoice-capture.md).
 - E2E (red): an invoice created without a contact is read back without one, and the supplier's contact is not required.
 - Accept: what is already stored in `contact_id` is untouched.
 
+**Progress, 2026-10-15:** F8-01 to F8-04 are done in the API, test first: the future date is accepted
+(`InvoicesEndpointTest`), the search reads the number, the supplier's code and its name, the closure closes only what
+nothing has counted (`InvoiceRulesTest` for the rule, `INVOICE_WITHOUT_LINES` and `INVOICE_STATUS_INVALID` in the e2e,
+`AuditCoverageTest` for `INVOICE_CLOSED`), and the contact left the contract — sending it is `UNKNOWN_FIELD` — and the web
+form and detail with it.
+
 ## F8-05 · The list: one search box and status chips · Web
 - Unit (red): the search box and the chip become the filters of the request, combined.
 - E2E (red): Playwright types a supplier's name, gets its invoices, switches to `Cerradas`, and gets only the closed one.
