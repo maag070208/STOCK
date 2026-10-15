@@ -142,9 +142,24 @@ Every screen is built from `@axzydev/axzy_ui_system`. Its look, and the look of 
 
 ### Tables
 
-- Every column with data has a filter and a sort. Action columns have neither.
-- Tables are virtualized by default (`virtualized`, `virtualizedMaxHeight={400}`, `rowHeight={50}`).
+Every table — the `ITDataTable` of a server-side list, and the `PlainTable` a screen uses for the rows it already holds —
+carries the same configuration, so a list looks and behaves the same everywhere:
+
+```tsx
+defaultItemsPerPage={25}
+itemsPerPageOptions={[25, 50, 100]}
+layout="fixed"
+density="compact"
+virtualized
+virtualizedMaxHeight={400}
+rowHeight={50}
+showViewToggle={false}
+```
+
+- Every column with data has a filter and a sort. Action columns have neither, and their buttons are icons (rule 1).
 - `ITDataTable` has no built-in export. The export button goes in the page's `actions`, and it reuses the active filters.
+- The page size is 25 because a list is read in pages, not scrolled whole; a screen that needs a row further down has to
+  ask for it (a filter, or the next page) — a test included.
 
 ### Breadcrumbs
 
