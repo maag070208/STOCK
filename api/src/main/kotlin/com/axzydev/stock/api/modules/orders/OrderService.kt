@@ -544,6 +544,6 @@ class OrderService(
 		const val ACCEPT_DIFFERENCE = "orders.accept_difference"
 		const val STATUS_CATALOG = "ORDER_STATUS"
 		const val SOURCE = "order"
-		const val BUSINESS_ZONE = "America/Mexico_City"
+		const val BUSINESS_ZONE = com.axzydev.stock.api.core.time.BusinessTime.ZONE
 	}
 }

@@ -57,7 +57,9 @@ data class StockReportPage(
 data class MovementReportRow(
 	val seq: Long,
 	val occurredAt: Instant,
+	// The code of the movement type, and its label in the language of the request.
 	val type: String?,
+	val typeLabel: String?,
 	val warehouse: ReportRef,
 	val location: ReportRef,
 	val product: ReportRef,

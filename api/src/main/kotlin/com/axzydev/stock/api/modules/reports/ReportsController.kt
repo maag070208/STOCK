@@ -20,4 +20,10 @@ class ReportsController(private val reports: ReportsService) {
 	@RequiresPermission(ReportsService.VIEW)
 	fun stock(@RequestBody request: TableRequest, user: CurrentUser, locale: Locale): StockReportPage =
 		reports.stock(user, request, locale.language)
+
+	// The kardex of one material in one warehouse: its movements in order, with the running balance of each.
+	@PostMapping("/kardex")
+	@RequiresPermission(ReportsService.VIEW)
+	fun kardex(@RequestBody request: TableRequest, user: CurrentUser, locale: Locale): KardexPage =
+		reports.kardex(user, request, locale.language)
 }

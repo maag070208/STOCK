@@ -6,9 +6,11 @@ import com.axzydev.stock.api.core.errors.ApiException
 import com.axzydev.stock.api.core.errors.ErrorCode
 import com.axzydev.stock.api.core.security.CurrentUser
 import com.axzydev.stock.api.core.security.Scope
+import com.axzydev.stock.api.core.time.BusinessTime
 import com.axzydev.stock.api.core.validation.FieldError
 import com.axzydev.stock.api.core.validation.ValidationException
 import com.axzydev.stock.api.modules.catalogs.CatalogService
+import com.axzydev.stock.api.modules.identity.users.UserService
 import com.axzydev.stock.api.modules.products.ProductService
 import com.axzydev.stock.api.modules.warehouses.WarehouseService
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
@@ -16,6 +18,10 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
+import java.sql.Timestamp
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
 import java.util.UUID
 
 // The reports (docs/modules/reports.md). They read the views the modules publish for lists — the same rows the stock
@@ -26,6 +32,7 @@ class ReportsService(
 	private val products: ProductService,
 	private val catalogs: CatalogService,
 	private val warehouses: WarehouseService,
+	private val people: UserService,
 ) {
 	// The current stock (F6-01): one row per balance above zero, with the totals by warehouse, by aisle and rack, and
 	// the grand total. `belowMinimum` keeps only the materials whose total in the scoped warehouses is below their
@@ -78,6 +85,156 @@ class ReportsService(
 			groupTotals = totals.groups,
 		)
 	}
+
+
+	// The kardex of one material in one warehouse (F6-02): every movement in order, oldest first, with two running
+	// balances — the one of the location it touched, and the one of the material in the warehouse. A period starts from
+	// what the material already had, so a kardex over everything ends at the current balance.
+	@Transactional(readOnly = true)
+	fun kardex(user: CurrentUser, request: TableRequest, language: String): KardexPage {
+		val filters = kardexFilters(request)
+		val scoped = scope(user, filters.warehouseId)
+		if (scoped != null && filters.warehouseId !in scoped) throw ApiException(ErrorCode.NOT_FOUND)
+		val product = products.stockProducts(listOf(filters.productId))[filters.productId] ?: throw ApiException(ErrorCode.NOT_FOUND)
+		val warehouseCode = warehouses.codes(listOf(filters.warehouseId))[filters.warehouseId] ?: throw ApiException(ErrorCode.NOT_FOUND)
+		val found = movements(filters, language)
+		val (byLocation, warehouseOpening) = openings(filters)
+		val running = KardexRules.running(found, byLocation, warehouseOpening)
+		val limit = limit(request)
+		val page = page(request)
+		return KardexPage(
+			product = KardexProduct(
+				ReportRef(product.id, product.code, product.name),
+				ReportRef(filters.warehouseId, warehouseCode, null),
+				units(listOf(product.unitId), language)[product.unitId],
+				running.lastOrNull()?.runningWarehouse ?: warehouseOpening,
+			),
+			data = running.drop((page - 1) * limit).take(limit),
+			total = running.size.toLong(),
+			page = page,
+			pageIndex = page - 1,
+			totalPages = pages(running.size, limit),
+			totalCount = running.size.toLong(),
+			limit = limit,
+			hasPreviousPage = page > 1,
+			hasNextPage = page < pages(running.size, limit),
+		)
+	}
+
+	// The movements of the material in the warehouse, in the order they happened, with the names of what they touch.
+	private fun movements(filters: KardexFilters, language: String): List<MovementReportRow> {
+		val where = StringBuilder(" where m.product_id = :product and m.warehouse_id = :warehouse")
+		val params = MapSqlParameterSource().addValue("product", filters.productId).addValue("warehouse", filters.warehouseId)
+		filters.from?.let { where.append(" and m.occurred_at >= :from"); params.addValue("from", Timestamp.from(it)) }
+		filters.to?.let { where.append(" and m.occurred_at < :to"); params.addValue("to", Timestamp.from(it)) }
+		val raw = jdbc.query("select m.* from stock_movement_rows m$where order by m.seq", params) { rs, _ ->
+			RawMovement(
+				seq = rs.getLong("seq"),
+				occurredAt = rs.getTimestamp("occurred_at").toInstant(),
+				typeId = rs.getObject("type_id", UUID::class.java),
+				warehouseId = rs.getObject("warehouse_id", UUID::class.java),
+				warehouseCode = rs.getString("warehouse_code"),
+				warehouseName = rs.getString("warehouse_name"),
+				locationId = rs.getObject("location_id", UUID::class.java),
+				locationCode = rs.getString("location_code"),
+				productId = rs.getObject("product_id", UUID::class.java),
+				productCode = rs.getString("product_code"),
+				productName = rs.getString("product_name"),
+				unitId = rs.getObject("unit_id", UUID::class.java),
+				quantity = rs.getBigDecimal("quantity"),
+				direction = rs.getString("direction"),
+				userId = rs.getObject("user_id", UUID::class.java),
+				reason = rs.getString("reason"),
+				sourceType = rs.getString("source_type"),
+				sourceId = rs.getString("source_id"),
+			)
+		}
+		val types = catalogs.itemViews(raw.map { it.typeId }.toSet(), language)
+		val unitsById = units(raw.map { it.unitId }, language)
+		val peopleById = people.people(raw.mapNotNull { it.userId })
+		return raw.map { row ->
+			MovementReportRow(
+				seq = row.seq,
+				occurredAt = row.occurredAt,
+				type = types[row.typeId]?.code,
+				typeLabel = types[row.typeId]?.label,
+				warehouse = ReportRef(row.warehouseId, row.warehouseCode, row.warehouseName),
+				location = ReportRef(row.locationId, row.locationCode, null),
+				product = ReportRef(row.productId, row.productCode, row.productName),
+				unit = unitsById[row.unitId],
+				quantity = row.quantity,
+				incoming = row.direction != "out",
+				user = row.userId?.let { person -> peopleById[person]?.let { ReportRef(it.id, it.username, it.name) } },
+				reason = row.reason,
+				sourceType = row.sourceType,
+				sourceId = row.sourceId,
+			)
+		}
+	}
+
+	// What the material had before the first listed movement: per location, and in the warehouse.
+	private fun openings(filters: KardexFilters): Pair<Map<UUID, BigDecimal>, BigDecimal> {
+		val where = StringBuilder(" where m.product_id = :product and m.warehouse_id = :warehouse")
+		val params = MapSqlParameterSource().addValue("product", filters.productId).addValue("warehouse", filters.warehouseId)
+		// Only a kardex that starts later has an opening; without a start there is nothing before it.
+		if (filters.from == null) return emptyMap<UUID, BigDecimal>() to BigDecimal.ZERO
+		where.append(" and m.occurred_at < :from")
+		params.addValue("from", Timestamp.from(filters.from))
+		val byLocation = jdbc.query(
+			"""
+			select m.location_id, sum(case when m.direction = 'out' then -m.quantity else m.quantity end) as balance
+			from stock_movement_rows m$where
+			group by m.location_id
+			""".trimIndent(),
+			params,
+		) { rs, _ -> rs.getObject("location_id", UUID::class.java) to rs.getBigDecimal("balance") }.toMap()
+		return byLocation to byLocation.values.fold(BigDecimal.ZERO) { sum, value -> sum.add(value) }
+	}
+
+	private fun kardexFilters(request: TableRequest): KardexFilters {
+		val filters = request.filters.orEmpty()
+		val unknown = filters.keys - KARDEX_FILTERS
+		if (unknown.isNotEmpty()) throw ValidationException(unknown.map { FieldError("filters.$it", ErrorCode.UNKNOWN_FIELD) })
+		return KardexFilters(
+			productId = filters["productId"]?.toString()?.takeIf { it.isNotBlank() }?.let { uuid("productId", it) }
+				?: throw ValidationException(listOf(FieldError("filters.productId", ErrorCode.FIELD_REQUIRED))),
+			warehouseId = filters["warehouseId"]?.toString()?.takeIf { it.isNotBlank() }?.let { uuid("warehouseId", it) }
+				?: throw ValidationException(listOf(FieldError("filters.warehouseId", ErrorCode.FIELD_REQUIRED))),
+			from = filters["from"]?.toString()?.takeIf { it.isNotBlank() }?.let { date("from", it).atStartOfDay(zone()).toInstant() },
+			to = filters["to"]?.toString()?.takeIf { it.isNotBlank() }?.let { date("to", it).plusDays(1).atStartOfDay(zone()).toInstant() },
+		)
+	}
+
+	private fun uuid(field: String, value: String): UUID =
+		runCatching { UUID.fromString(value) }.getOrElse { throw ValidationException(listOf(FieldError("filters.$field", ErrorCode.FORMAT_INVALID))) }
+
+	private fun date(field: String, value: String): LocalDate =
+		runCatching { LocalDate.parse(value) }.getOrElse { throw ValidationException(listOf(FieldError("filters.$field", ErrorCode.FORMAT_INVALID))) }
+
+	private fun zone(): ZoneId = ZoneId.of(BusinessTime.ZONE)
+
+	private data class KardexFilters(val productId: UUID, val warehouseId: UUID, val from: Instant? = null, val to: Instant? = null)
+
+	private data class RawMovement(
+		val seq: Long,
+		val occurredAt: Instant,
+		val typeId: UUID,
+		val warehouseId: UUID,
+		val warehouseCode: String,
+		val warehouseName: String?,
+		val locationId: UUID,
+		val locationCode: String,
+		val productId: UUID,
+		val productCode: String,
+		val productName: String,
+		val unitId: UUID,
+		val quantity: BigDecimal,
+		val direction: String?,
+		val userId: UUID?,
+		val reason: String?,
+		val sourceType: String,
+		val sourceId: String,
+	)
 
 	private fun isBelow(totals: Map<UUID, BigDecimal>, minimums: Map<UUID, BigDecimal>, productId: UUID): Boolean =
 		(minimums[productId] ?: BigDecimal.ZERO).signum() > 0 && (totals[productId] ?: BigDecimal.ZERO) < minimums.getValue(productId)
@@ -216,5 +373,6 @@ class ReportsService(
 		const val DEFAULT_SORT = "warehouse"
 		val STOCK_FILTERS = setOf("warehouseId", "aisle", "rack", "location", "product", "belowMinimum")
 		val STOCK_SORTS = setOf("warehouse", "location", "product", "quantity")
+		val KARDEX_FILTERS = setOf("productId", "warehouseId", "from", "to")
 	}
 }
