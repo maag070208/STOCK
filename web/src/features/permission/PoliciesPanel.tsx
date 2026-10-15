@@ -215,7 +215,7 @@ export function PoliciesPanel(props: { policies: Policy[]; actions: PolicyAction
 										<ITGrid item xs={12} sm={6} md={3}>
 											<ITInput name={`value-${index}`} label={t("policies.value")} value={condition.value} onChange={(e) => set({ value: e.target.value })} error={submit.fieldErrors[`conditions[${index}].value`]} touched={!!submit.fieldErrors[`conditions[${index}].value`]} />
 										</ITGrid>
-										<ITGrid item xs={12} sm={6} md={3}>
+										<ITGrid item xs={12} sm={6} md={3} className="sf:self-end">
 											<ITButton variant="text" label={t("common:actions.remove")} onClick={() => update({ conditions: editing.draft.conditions.filter((_, i) => i !== index) })} />
 										</ITGrid>
 									</ITGrid>

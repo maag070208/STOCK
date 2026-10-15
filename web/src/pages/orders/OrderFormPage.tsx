@@ -206,7 +206,7 @@ export function OrderFormPage() {
 											required
 										/>
 									</ITGrid>
-									<ITGrid item xs={12} md={3}>
+									<ITGrid item xs={12} md={3} className="sf:self-end">
 										<ITButton variant="text" label={t("form.remove")} onClick={() => setLines((current) => current.filter((candidate) => candidate.key !== line.key))} />
 									</ITGrid>
 								</ITGrid>

@@ -39,7 +39,7 @@ export function SharesEditor(props: {
 						<ITGrid item xs={8} sm={3}>
 							<ITInput name={`share-${index}`} type="number" label={t("form.share")} value={share.quantity} onChange={(e) => set(index, { quantity: e.target.value })} />
 						</ITGrid>
-						<ITGrid item xs={4} sm={3}>
+						<ITGrid item xs={4} sm={3} className="sf:self-end">
 							<ITButton variant="text" label={t("form.remove")} onClick={() => props.onChange(props.shares.filter((_, i) => i !== index))} />
 						</ITGrid>
 					</ITGrid>

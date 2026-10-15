@@ -90,7 +90,7 @@ export function QuickCapture(props: {
 					<ITGrid item xs={12} md={3}>
 						<ITInput name="capture-quantity" type="number" label={t("form.quantity")} value={value} onChange={(event) => setValue(String(event.target.value))} />
 					</ITGrid>
-					<ITGrid item xs={12} md={2}>
+					<ITGrid item xs={12} md={2} className="sf:self-end">
 						<ITButton type="submit" label={t("capture.add")} disabled={busy} />
 					</ITGrid>
 				</ITGrid>
