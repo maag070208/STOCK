@@ -2,6 +2,8 @@ import { ITAccordion, ITAlert, ITBadget, ITButton, ITCard, ITCheckbox, ITChip, I
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
+import { LabelPreview } from "@features/label/ui/LabelPreview";
+import { sampleValues } from "@features/label/model/zpl";
 import { labelTemplateApi, problemLines, type LabelTemplate, type TemplateVersion, type ZplProblem } from "@entities/label";
 import { useCan } from "@entities/user";
 import { formatDateTime } from "@shared/lib/format";
@@ -180,6 +182,10 @@ export function LabelTemplatePage() {
 						</ITCard>
 					</ITGrid>
 				</ITGrid>
+				<ITCard title={t("editor.preview")}>
+					{/* The placeholders show what the label looks like with a value in them, not the empty braces. */}
+					<LabelPreview zpl={zpl} values={sampleValues(placeholders)} />
+				</ITCard>
 				{!creating && canManage && <ITCheckbox name="active" label={t("editor.active")} checked={active} onChange={setActive} />}
 				{submit.error && <ITAlert variant="error">{submit.error}</ITAlert>}
 				{canManage && <ITButton type="submit" label={t("editor.save")} disabled={submit.submitting} />}

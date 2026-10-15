@@ -31,7 +31,11 @@
     "versions": "Versiones",
     "version": "Versión {{version}}",
     "current": "Activa",
-    "createdAt": "Creada"
+    "createdAt": "Creada",
+    "preview": "Vista previa de la etiqueta",
+    "previewEmpty": "Escribe el ZPL y aquí aparecerá la etiqueta.",
+    "previewLabel": "Vista previa de la etiqueta",
+    "previewSize": "Lienzo de {{width}} × {{length}} puntos, {{copies}} copia(s). Los valores son de ejemplo."
   },
   "printers": {
     "title": "Impresoras",

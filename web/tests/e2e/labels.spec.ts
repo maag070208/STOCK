@@ -44,6 +44,14 @@ test("the editor reports a forbidden command as it is typed, and each saved chan
 	const report = page.getByTestId("zpl-report");
 	await expect(report.getByText("La plantilla cumple las reglas.")).toBeVisible();
 
+	// The label is drawn as it would come out of the printer: the sample values in their place and the bars of the
+	// barcode, which is the point of the preview.
+	const preview = page.getByTestId("zpl-preview");
+	await expect(preview).toBeVisible();
+	await expect(preview.getByText("Codo galvanizado 1/2\"")).toBeVisible();
+	await expect(preview.getByText("7501234567890")).toBeVisible();
+	expect(await preview.locator("rect").count()).toBeGreaterThan(40);
+
 	const editor = page.getByLabel("ZPL");
 	await editor.fill(zpl.replace("^PQ", "^HH\n^PQ"));
 	await expect(report.getByText("La plantilla usa un comando ZPL que no está permitido.")).toBeVisible();

@@ -82,10 +82,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 			sidebar={{
 				navigationItems,
 				brand: { text: t("app.name"), logo: <img src="/brand/stockflow-glyph-dark.svg" alt="" className="sf:size-10" /> },
-				// It starts open, collapses from the button of the top bar, and remembers how the person left it.
-				isCollapsed: collapsed,
-				onToggleCollapse: () => toggleSidebar(),
-				expandOnHover: false,
+				expandOnHover: true,
 			}}
 		>
 			{children}

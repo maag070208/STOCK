@@ -31,7 +31,11 @@
     "versions": "Versions",
     "version": "Version {{version}}",
     "current": "Active",
-    "createdAt": "Created"
+    "createdAt": "Created",
+    "preview": "Label preview",
+    "previewEmpty": "Write the ZPL and the label will appear here.",
+    "previewLabel": "Label preview",
+    "previewSize": "{{width}} × {{length}} dots, {{copies}} copy(ies). The values are samples."
   },
   "printers": {
     "title": "Printers",
