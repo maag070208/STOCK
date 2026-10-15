@@ -130,3 +130,26 @@ class OrderDocument(
 )
 
 interface OrderDocumentRepository : JpaRepository<OrderDocument, UUID>
+
+// A reassignment of picked material (order-fulfillment.md section 8): what left one order for another, or went back to a
+// location. The picks themselves change line, so this is what the reports count as moved.
+@Entity
+@Table(name = "order_reassignments")
+class OrderReassignment(
+	var orderId: UUID,
+	var lineId: UUID,
+	var targetOrderId: UUID?,
+	var targetLineId: UUID?,
+	var locationId: UUID?,
+	var kind: String,
+	var quantity: BigDecimal,
+	var note: String,
+	var userId: UUID?,
+	var createdAt: Instant,
+) {
+	@Id
+	@GeneratedValue(strategy = GenerationType.UUID)
+	var id: UUID? = null
+}
+
+interface OrderReassignmentRepository : JpaRepository<OrderReassignment, UUID>

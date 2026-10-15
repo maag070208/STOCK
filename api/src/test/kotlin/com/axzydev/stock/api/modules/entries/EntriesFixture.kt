@@ -2,10 +2,10 @@ package com.axzydev.stock.api.modules.entries
 
 import com.axzydev.stock.api.support.Api
 import com.axzydev.stock.api.support.Api.Companion.uniqueCode
+import com.axzydev.stock.api.support.BusinessDays
 import com.axzydev.stock.api.support.ApiResponse
 import com.axzydev.stock.api.support.TestUser
 import com.axzydev.stock.api.support.list
-import java.time.LocalDate
 import java.util.UUID
 
 // What a material entry needs, created through the API as a person would: a supplier, a warehouse with a rack,
@@ -38,7 +38,7 @@ class EntriesFixture(private val api: Api) {
 			(if (shares.isEmpty()) emptyMap() else mapOf("assignments" to shares.map { (operator, share) -> mapOf("operatorId" to operator.id, "quantity" to share) }))
 
 	fun body(vararg lines: Map<String, Any?>, number: String = number(), changes: Map<String, Any?> = emptyMap()): Map<String, Any?> =
-		mapOf("number" to number, "supplierId" to supplier, "invoiceDate" to LocalDate.now().toString(), "warehouseId" to warehouse, "lines" to lines.toList()) + changes
+		mapOf("number" to number, "supplierId" to supplier, "invoiceDate" to BusinessDays.today().toString(), "warehouseId" to warehouse, "lines" to lines.toList()) + changes
 
 	fun create(body: Map<String, Any?>, token: String = admin, key: String = UUID.randomUUID().toString()): ApiResponse =
 		api.call("POST", "/invoices", token, body, headers = mapOf("Idempotency-Key" to key))

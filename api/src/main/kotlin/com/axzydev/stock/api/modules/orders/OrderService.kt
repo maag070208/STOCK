@@ -79,6 +79,7 @@ class OrderService(
 	private val orders: OrderRepository,
 	private val lines: OrderLineRepository,
 	private val picks: OrderPickRepository,
+	private val reassignments: OrderReassignmentRepository,
 	private val customers: CustomerService,
 	private val warehouses: WarehouseService,
 	private val staff: StaffTemplateService,
@@ -350,6 +351,10 @@ class OrderService(
 		OrderRules.reassignableQuantity(from.pickedQuantity, targetLine.reserved, request.quantity!!)?.let { throw ApiException(it) }
 		val taken = takePicks(from, request.quantity)
 		taken.forEach { picks.save(OrderPick(targetLine.id!!, it.locationId, it.quantity, it.movementId, it.pickedBy, it.pickedAt)) }
+		// What moved is kept: the picks changed line, and the reports count this (order-fulfillment.md section 8).
+		reassignments.save(
+			OrderReassignment(source.id!!, from.id!!, target.id, targetLine.id, null, TRANSFER, request.quantity, note, user.id, clock.instant()),
+		)
 		from.pickedQuantity = from.pickedQuantity.subtract(request.quantity)
 		targetLine.pickedQuantity = targetLine.pickedQuantity.add(request.quantity)
 		touch(source)
@@ -389,6 +394,9 @@ class OrderService(
 			listOf(MovementCommand(StockService.IN_RETURN, target!!.id, from.productId, request.quantity, "Orden ${order.number}", SOURCE, order.id.toString())),
 		).single()
 		takePicks(from, request.quantity)
+		reassignments.save(
+			OrderReassignment(order.id!!, from.id!!, null, null, target.id, RETURN, request.quantity, note, user.id, clock.instant()),
+		)
 		from.pickedQuantity = from.pickedQuantity.subtract(request.quantity)
 		touch(order)
 		audit.record(
@@ -544,6 +552,8 @@ class OrderService(
 		const val ACCEPT_DIFFERENCE = "orders.accept_difference"
 		const val STATUS_CATALOG = "ORDER_STATUS"
 		const val SOURCE = "order"
+		const val TRANSFER = "TRANSFER"
+		const val RETURN = "RETURN"
 		const val BUSINESS_ZONE = com.axzydev.stock.api.core.time.BusinessTime.ZONE
 	}
 }

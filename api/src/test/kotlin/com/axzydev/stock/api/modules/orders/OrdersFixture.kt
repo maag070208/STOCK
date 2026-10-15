@@ -3,9 +3,9 @@ package com.axzydev.stock.api.modules.orders
 import com.axzydev.stock.api.support.Api
 import com.axzydev.stock.api.support.Api.Companion.uniqueCode
 import com.axzydev.stock.api.support.ApiResponse
+import com.axzydev.stock.api.support.BusinessDays
 import com.axzydev.stock.api.support.TestUser
 import com.axzydev.stock.api.support.list
-import java.time.LocalDate
 import java.util.UUID
 
 // What an order needs, created through the API as a person would: a customer, a warehouse with a rack, materials and
@@ -39,7 +39,7 @@ class OrdersFixture(private val api: Api) {
 			"number" to number,
 			"warehouseId" to warehouse,
 			"customerId" to customer,
-			"dueDate" to LocalDate.now().plusDays(3).toString(),
+			"dueDate" to BusinessDays.today(3).toString(),
 			"lines" to lines.toList(),
 		) + changes
 

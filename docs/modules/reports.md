@@ -27,8 +27,8 @@ All of them are `POST`, with filters, and answer the table contract (`data`, `to
 | Current stock | `/api/v1/reports/stock` | `warehouseId`, `aisle`, `rack`, `location`, `product` (code or name), `belowMinimum` | warehouse, aisle, rack, location, material code and name, unit, quantity |
 | Kardex | `/api/v1/reports/kardex` | `productId` (required), `warehouseId`, `from`, `to` | date and time, movement type, warehouse, location, quantity in and out, running balance of the location, running balance of the product in the warehouse, user, reason, source |
 | Movements | `/api/v1/reports/movements` | `warehouseId`, `productId`, `type`, `userId`, `from`, `to` | date and time, type, warehouse, location, material, quantity, direction (in or out), user, reason, source |
-| Orders | `/api/v1/reports/orders` | `warehouseId`, `customerId`, `status`, `from`, `to` | order number, warehouse, customer, status, due date, material, asked, picked, moved to another order, moved in, created on, validated on |
-| Invoices and entries | `/api/v1/reports/invoices` | `warehouseId`, `supplierId`, `status`, `from`, `to` | invoice number, supplier, warehouse, status, date, material, expected, counted, difference, placed |
+| Orders | `/api/v1/reports/orders` | `warehouseId`, `customerId`, `status`, `from`, `to` (the period is the creation date) | order number, warehouse, customer, status, due date, material, asked, picked, moved to another order, moved in, created on, validated on |
+| Invoices and entries | `/api/v1/reports/invoices` | `warehouseId`, `supplierId`, `status`, `from`, `to` (the period is the invoice's date) | invoice number, supplier, warehouse, status, date, material, expected, counted, difference, placed |
 
 **Current stock** also answers the totals the screen groups by: per warehouse, per aisle and rack, and the grand total.
 The grand total is always the sum of the rows it lists (acceptance criterion 1). With `belowMinimum` only the materials
@@ -42,7 +42,11 @@ Movements in the kardex and the movements report are read from `stock_movements`
 their movement type: an `OUT` subtracts, everything else adds.
 
 **Orders** sums, per order and material: what was asked, what was picked, what was moved to another order and what came
-in from another one (`order_reassignments`, written by the reassignment of F5-10 to F5-12), and the dates.
+in from another one (`order_reassignments`, written by the reassignment of F5-10 to F5-12), and the dates. Its status
+totals carry the picked quantity of each status, and the entries report carries the counted quantity of each of its own.
+
+**The period** is the creation date on the orders report and the invoice's date on the entries report, both in the
+business zone, and both ends are inclusive.
 
 ## 4. Exports
 

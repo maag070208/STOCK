@@ -21,6 +21,18 @@ class ReportsController(private val reports: ReportsService) {
 	fun stock(@RequestBody request: TableRequest, user: CurrentUser, locale: Locale): StockReportPage =
 		reports.stock(user, request, locale.language)
 
+	// The orders of the reader's warehouses, by period, customer and status, with what was picked and moved.
+	@PostMapping("/orders")
+	@RequiresPermission(ReportsService.VIEW)
+	fun orders(@RequestBody request: TableRequest, user: CurrentUser, locale: Locale): OrderReportPage =
+		reports.orders(user, request, locale.language)
+
+	// The invoices and entries of the reader's warehouses, by period, supplier and status.
+	@PostMapping("/invoices")
+	@RequiresPermission(ReportsService.VIEW)
+	fun invoices(@RequestBody request: TableRequest, user: CurrentUser, locale: Locale): InvoiceReportPage =
+		reports.invoices(user, request, locale.language)
+
 	// The movements of the reader's warehouses, by period, type, user and material.
 	@PostMapping("/movements")
 	@RequiresPermission(ReportsService.VIEW)

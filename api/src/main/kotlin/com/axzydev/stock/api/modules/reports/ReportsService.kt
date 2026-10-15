@@ -288,6 +288,286 @@ class ReportsService(
 		)
 	}
 
+
+	// The orders report (F6-04): every line of an order with what it asked, what was picked and what moved between
+	// orders, filtered by warehouse, customer, status and period, with the totals and the same by status.
+	@Transactional(readOnly = true)
+	fun orders(user: CurrentUser, request: TableRequest, language: String): OrderReportPage {
+		val filters = orderFilters(request)
+		val scoped = scope(user, filters.warehouseId)
+		if (scoped != null && filters.warehouseId != null && filters.warehouseId !in scoped) throw ApiException(ErrorCode.NOT_FOUND)
+		val rows = if (scoped != null && scoped.isEmpty()) emptyList() else orderRows(scoped, filters, language).sortedWith(orderReportOrder(request))
+		val totals = OrderReportRules.totals(rows)
+		val limit = limit(request)
+		val page = page(request)
+		return OrderReportPage(
+			data = rows.drop((page - 1) * limit).take(limit),
+			total = rows.size.toLong(),
+			page = page,
+			pageIndex = page - 1,
+			totalPages = pages(rows.size, limit),
+			totalCount = rows.size.toLong(),
+			limit = limit,
+			hasPreviousPage = page > 1,
+			hasNextPage = page < pages(rows.size, limit),
+			asked = totals.asked,
+			picked = totals.picked,
+			movedOut = totals.movedOut,
+			movedIn = totals.movedIn,
+			statusTotals = totals.byStatus,
+		)
+	}
+
+	// The entries report (F6-04): every line of an invoice with what was expected, counted, settled and placed.
+	@Transactional(readOnly = true)
+	fun invoices(user: CurrentUser, request: TableRequest, language: String): InvoiceReportPage {
+		val filters = invoiceFilters(request)
+		val scoped = scope(user, filters.warehouseId)
+		if (scoped != null && filters.warehouseId != null && filters.warehouseId !in scoped) throw ApiException(ErrorCode.NOT_FOUND)
+		val rows = if (scoped != null && scoped.isEmpty()) emptyList() else invoiceRows(scoped, filters, language).sortedWith(invoiceReportOrder(request))
+		val totals = InvoiceReportRules.totals(rows)
+		val limit = limit(request)
+		val page = page(request)
+		return InvoiceReportPage(
+			data = rows.drop((page - 1) * limit).take(limit),
+			total = rows.size.toLong(),
+			page = page,
+			pageIndex = page - 1,
+			totalPages = pages(rows.size, limit),
+			totalCount = rows.size.toLong(),
+			limit = limit,
+			hasPreviousPage = page > 1,
+			hasNextPage = page < pages(rows.size, limit),
+			expected = totals.expected,
+			counted = totals.counted,
+			difference = totals.difference,
+			placed = totals.placed,
+			statusTotals = totals.byStatus,
+		)
+	}
+
+	private fun orderRows(scoped: List<UUID>?, filters: OrderFilters, language: String): List<OrderReportRow> {
+		val where = StringBuilder(" where 1 = 1")
+		val params = MapSqlParameterSource()
+		scoped?.let { where.append(" and r.warehouse_id in (:warehouses)"); params.addValue("warehouses", it) }
+		filters.warehouseId?.let { where.append(" and r.warehouse_id = :warehouse"); params.addValue("warehouse", it) }
+		filters.customerId?.let { where.append(" and r.customer_id = :customer"); params.addValue("customer", it) }
+		filters.statuses?.let { where.append(" and r.status_code in (:statuses)"); params.addValue("statuses", it) }
+		filters.from?.let { where.append(" and r.created_at >= :from"); params.addValue("from", Timestamp.from(it)) }
+		filters.to?.let { where.append(" and r.created_at < :to"); params.addValue("to", Timestamp.from(it)) }
+		val raw = jdbc.query("select r.* from order_report_rows r$where", params) { rs, _ ->
+			RawOrderReportRow(
+				orderId = rs.getObject("order_id", UUID::class.java),
+				number = rs.getString("number"),
+				warehouseId = rs.getObject("warehouse_id", UUID::class.java),
+				warehouseCode = rs.getString("warehouse_code"),
+				warehouseName = rs.getString("warehouse_name"),
+				customerId = rs.getObject("customer_id", UUID::class.java),
+				customerCode = rs.getString("customer_code"),
+				customerName = rs.getString("customer_name"),
+				statusId = rs.getObject("status_id", UUID::class.java),
+				statusCode = rs.getString("status_code"),
+				dueDate = rs.getDate("due_date").toLocalDate(),
+				createdAt = rs.getTimestamp("created_at").toInstant(),
+				validatedAt = rs.getTimestamp("validated_at")?.toInstant(),
+				productId = rs.getObject("product_id", UUID::class.java),
+				productCode = rs.getString("product_code"),
+				productName = rs.getString("product_name"),
+				unitId = rs.getObject("unit_id", UUID::class.java),
+				asked = rs.getBigDecimal("asked"),
+				picked = rs.getBigDecimal("picked"),
+				movedOut = rs.getBigDecimal("moved_out"),
+				movedIn = rs.getBigDecimal("moved_in"),
+			)
+		}
+		return mapOrderRows(raw, language)
+	}
+
+	private fun mapOrderRows(raw: List<RawOrderReportRow>, language: String): List<OrderReportRow> {
+		val statuses = catalogs.itemViews(raw.map { it.statusId }.toSet(), language)
+		return raw.map { row ->
+			OrderReportRow(
+				order = ReportRef(row.orderId, row.number, null),
+				warehouse = ReportRef(row.warehouseId, row.warehouseCode, row.warehouseName),
+				customer = ReportRef(row.customerId, row.customerCode, row.customerName),
+				status = row.statusCode,
+				statusLabel = statuses[row.statusId]?.label,
+				dueDate = row.dueDate,
+				product = ReportRef(row.productId, row.productCode, row.productName),
+				asked = row.asked,
+				picked = row.picked,
+				movedOut = row.movedOut,
+				movedIn = row.movedIn,
+				createdAt = row.createdAt,
+				validatedAt = row.validatedAt,
+			)
+		}
+	}
+
+	private fun invoiceRows(scoped: List<UUID>?, filters: InvoiceFilters, language: String): List<InvoiceReportRow> {
+		val where = StringBuilder(" where 1 = 1")
+		val params = MapSqlParameterSource()
+		scoped?.let { where.append(" and r.warehouse_id in (:warehouses)"); params.addValue("warehouses", it) }
+		filters.warehouseId?.let { where.append(" and r.warehouse_id = :warehouse"); params.addValue("warehouse", it) }
+		filters.supplierId?.let { where.append(" and r.supplier_id = :supplier"); params.addValue("supplier", it) }
+		filters.statuses?.let { where.append(" and r.status_code in (:statuses)"); params.addValue("statuses", it) }
+		filters.from?.let { where.append(" and r.invoice_date >= :from"); params.addValue("from", filters.from) }
+		filters.to?.let { where.append(" and r.invoice_date <= :to"); params.addValue("to", filters.to) }
+		val raw = jdbc.query("select r.* from invoice_report_rows r$where", params) { rs, _ ->
+			RawInvoiceReportRow(
+				invoiceId = rs.getObject("invoice_id", UUID::class.java),
+				number = rs.getString("number"),
+				warehouseId = rs.getObject("warehouse_id", UUID::class.java),
+				warehouseCode = rs.getString("warehouse_code"),
+				warehouseName = rs.getString("warehouse_name"),
+				supplierId = rs.getObject("supplier_id", UUID::class.java),
+				supplierCode = rs.getString("supplier_code"),
+				supplierName = rs.getString("supplier_name"),
+				statusId = rs.getObject("status_id", UUID::class.java),
+				statusCode = rs.getString("status_code"),
+				invoiceDate = rs.getDate("invoice_date").toLocalDate(),
+				productId = rs.getObject("product_id", UUID::class.java),
+				productCode = rs.getString("product_code"),
+				productName = rs.getString("product_name"),
+				expected = rs.getBigDecimal("expected"),
+				counted = rs.getBigDecimal("counted"),
+				difference = rs.getBigDecimal("difference"),
+				placed = rs.getBigDecimal("placed"),
+			)
+		}
+		val statuses = catalogs.itemViews(raw.map { it.statusId }.toSet(), language)
+		return raw.map { row ->
+			InvoiceReportRow(
+				invoice = ReportRef(row.invoiceId, row.number, null),
+				supplier = ReportRef(row.supplierId, row.supplierCode, row.supplierName),
+				warehouse = ReportRef(row.warehouseId, row.warehouseCode, row.warehouseName),
+				status = row.statusCode,
+				statusLabel = statuses[row.statusId]?.label,
+				invoiceDate = row.invoiceDate,
+				product = ReportRef(row.productId, row.productCode, row.productName),
+				expected = row.expected,
+				counted = row.counted,
+				difference = row.difference,
+				placed = row.placed,
+			)
+		}
+	}
+
+	private fun orderReportOrder(request: TableRequest): Comparator<OrderReportRow> = reportOrder(
+		request = request,
+		sorts = ORDER_REPORT_SORTS,
+		default = "createdAt",
+		of = { key ->
+			when (key) {
+				"number" -> compareBy<OrderReportRow> { it.order.code }
+				"customer" -> compareBy { it.customer.name ?: it.customer.code }
+				"dueDate" -> compareBy { it.dueDate }
+				"status" -> compareBy { it.status }
+				else -> compareBy { it.createdAt }
+			}
+		},
+		tie = { it.order.code ?: "" },
+	) { it.product.code ?: "" }
+
+	private fun invoiceReportOrder(request: TableRequest): Comparator<InvoiceReportRow> = reportOrder(
+		request = request,
+		sorts = INVOICE_REPORT_SORTS,
+		default = "date",
+		of = { key ->
+			when (key) {
+				"number" -> compareBy<InvoiceReportRow> { it.invoice.code }
+				"supplier" -> compareBy { it.supplier.name ?: it.supplier.code }
+				"status" -> compareBy { it.status }
+				else -> compareBy { it.invoiceDate }
+			}
+		},
+		tie = { it.invoice.code ?: "" },
+	) { it.product.code ?: "" }
+
+	// The order of a report: the key that was asked for, and always the same ties, so a page and its export agree.
+	private fun <T> reportOrder(
+		request: TableRequest,
+		sorts: Set<String>,
+		default: String,
+		of: (String) -> Comparator<T>,
+		tie: (T) -> String,
+		product: (T) -> String,
+	): Comparator<T> {
+		val key = request.sort?.key ?: default
+		if (key !in sorts) throw ValidationException(listOf(FieldError("sort.key", ErrorCode.FORMAT_INVALID)))
+		val comparator = of(key).thenBy(tie).thenBy(product)
+		return if (request.sort?.direction.equals("desc", ignoreCase = true)) comparator.reversed() else comparator
+	}
+
+	private fun orderFilters(request: TableRequest): OrderFilters {
+		val filters = request.filters.orEmpty()
+		val unknown = filters.keys - ORDER_REPORT_FILTERS
+		if (unknown.isNotEmpty()) throw ValidationException(unknown.map { FieldError("filters.$it", ErrorCode.UNKNOWN_FIELD) })
+		return OrderFilters(
+			warehouseId = filters["warehouseId"]?.toString()?.takeIf { it.isNotBlank() }?.let { uuid("warehouseId", it) },
+			customerId = filters["customerId"]?.toString()?.takeIf { it.isNotBlank() }?.let { uuid("customerId", it) },
+			statuses = statuses(filters),
+			from = filters["from"]?.toString()?.takeIf { it.isNotBlank() }?.let { date("from", it).atStartOfDay(zone()).toInstant() },
+			to = filters["to"]?.toString()?.takeIf { it.isNotBlank() }?.let { date("to", it).plusDays(1).atStartOfDay(zone()).toInstant() },
+		)
+	}
+
+	private fun invoiceFilters(request: TableRequest): InvoiceFilters {
+		val filters = request.filters.orEmpty()
+		val unknown = filters.keys - INVOICE_REPORT_FILTERS
+		if (unknown.isNotEmpty()) throw ValidationException(unknown.map { FieldError("filters.$it", ErrorCode.UNKNOWN_FIELD) })
+		return InvoiceFilters(
+			warehouseId = filters["warehouseId"]?.toString()?.takeIf { it.isNotBlank() }?.let { uuid("warehouseId", it) },
+			supplierId = filters["supplierId"]?.toString()?.takeIf { it.isNotBlank() }?.let { uuid("supplierId", it) },
+			statuses = statuses(filters),
+			from = filters["from"]?.toString()?.takeIf { it.isNotBlank() }?.let { date("from", it) },
+			to = filters["to"]?.toString()?.takeIf { it.isNotBlank() }?.let { date("to", it) },
+		)
+	}
+
+	// One status code, or several: the reports read the codes of the catalog.
+	private fun statuses(filters: Map<String, Any?>): List<String>? =
+		when (val value = filters["status"]) {
+			null -> null
+			is List<*> -> value.mapNotNull { it?.toString()?.takeIf { code -> code.isNotBlank() } }.ifEmpty { null }
+			else -> value.toString().takeIf { it.isNotBlank() }?.let { listOf(it) }
+		}
+
+	private data class OrderFilters(
+		val warehouseId: UUID? = null,
+		val customerId: UUID? = null,
+		val statuses: List<String>? = null,
+		val from: Instant? = null,
+		val to: Instant? = null,
+	)
+
+	private data class InvoiceFilters(
+		val warehouseId: UUID? = null,
+		val supplierId: UUID? = null,
+		val statuses: List<String>? = null,
+		val from: LocalDate? = null,
+		val to: LocalDate? = null,
+	)
+
+	private data class RawOrderReportRow(
+		val orderId: UUID, val number: String,
+		val warehouseId: UUID, val warehouseCode: String, val warehouseName: String?,
+		val customerId: UUID, val customerCode: String, val customerName: String,
+		val statusId: UUID, val statusCode: String,
+		val dueDate: LocalDate, val createdAt: Instant, val validatedAt: Instant?,
+		val productId: UUID, val productCode: String, val productName: String, val unitId: UUID,
+		val asked: BigDecimal, val picked: BigDecimal, val movedOut: BigDecimal, val movedIn: BigDecimal,
+	)
+
+	private data class RawInvoiceReportRow(
+		val invoiceId: UUID, val number: String,
+		val warehouseId: UUID, val warehouseCode: String, val warehouseName: String?,
+		val supplierId: UUID, val supplierCode: String, val supplierName: String,
+		val statusId: UUID, val statusCode: String, val invoiceDate: LocalDate,
+		val productId: UUID, val productCode: String, val productName: String,
+		val expected: BigDecimal, val counted: BigDecimal, val difference: BigDecimal, val placed: BigDecimal,
+	)
+
 	private data class KardexFilters(val productId: UUID, val warehouseId: UUID, val from: Instant? = null, val to: Instant? = null)
 
 	private data class RawMovement(
@@ -452,5 +732,9 @@ class ReportsService(
 		val MOVEMENT_FILTERS = setOf("warehouseId", "productId", "type", "userId", "from", "to")
 		val MOVEMENT_SORTS = setOf("date", "type", "warehouse", "product", "quantity")
 		const val MOVEMENT_DEFAULT_SORT = "date"
+		val ORDER_REPORT_FILTERS = setOf("warehouseId", "customerId", "status", "from", "to")
+		val ORDER_REPORT_SORTS = setOf("number", "customer", "dueDate", "status", "createdAt")
+		val INVOICE_REPORT_FILTERS = setOf("warehouseId", "supplierId", "status", "from", "to")
+		val INVOICE_REPORT_SORTS = setOf("number", "supplier", "status", "date")
 	}
 }
