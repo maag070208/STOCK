@@ -7,6 +7,9 @@ import { adminToken, call, e2eAdmin, newUser, signInAs, uniqueName } from "../su
 import { pickRemoteOption, pickSearchOption } from "../support/forms";
 
 const PRINTING_PORT = 19100;
+
+// The fake printer listens on one port for the whole suite, and two tests printing at once would answer for each other.
+test.describe.configure({ mode: "serial" });
 const zpl = "^XA\n^FO30,30^FDEtiqueta^FS\n^PQ{{copies}}\n^XZ";
 
 // Listens once on the printing port, and gives what it received.

@@ -77,6 +77,9 @@ test("an administrator gives a person an exception with a reason, and changes th
 	await dialog.getByLabel("Motivo", { exact: true }).fill("Revisión mensual");
 	await dialog.getByRole("button", { name: "Agregar excepción" }).click();
 	await expect(dialog.getByRole("row").filter({ hasText: "Revisión mensual" })).toBeVisible();
-	const exceptions = await call("GET", `/users/${user.id}/permissions`, { token: await adminToken() });
-	expect(exceptions.json.map((e: { permission: string }) => e.permission)).toEqual(["audit.view"]);
+	// The row is on the screen and the exception is in the database: the read waits for it, it does not race the write.
+	const token = await adminToken();
+	await expect
+		.poll(async () => (await call("GET", `/users/${user.id}/permissions`, { token })).json.map((e: { permission: string }) => e.permission))
+		.toEqual(["audit.view"]);
 });

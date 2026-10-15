@@ -33,7 +33,13 @@ A bug found later starts the same way: a failing test that reproduces it, then t
 1. **Permissions are tested in both directions.** Every endpoint, screen and action has a test that is allowed, and a test that is denied without the permission, with the error code the spec names. Out-of-scope access is tested too: `404` on reads by id, `403` on writes.
 2. **Concurrency rules are tested with real PostgreSQL**, not mocks. Two transactions run in parallel, and the test asserts that exactly one succeeds when stock is short, and that no balance goes negative.
 3. **Time is fixed.** Anything that depends on the date (due dates, alerts, expiry) takes a clock that the test controls. No test reads the real clock.
-4. **Test data is created by the suite and removed by it.** E2E tests create their data through the API's test commands, as CYC does ([D-022](../../../CYC/DECISIONES.md)). Tests never write to the database directly.
+4. **Test data is created by the suite, and the machine is reset when it piles up.** E2E tests create their data through the API's test commands, as CYC does ([D-022](../../../CYC/DECISIONES.md)). Tests never write to the database directly.
+   The suite creates its data through the API and most of it stays: every run leaves people, materials, suppliers,
+   warehouses, invoices and audit rows behind, and after a few runs the lists are hundreds of rows long. `scripts/e2e-reset.sh`
+   puts the database back: it keeps what the API seeds (the catalogs, the permissions, the five seed roles, the label
+   templates) and the real accounts (`KEEP_USERS`), empties every other table, and backs the database up first. Run it when
+   a list feels long; a test that fails because a row fell off the first page is not a flaky test, it is a database that
+   grew (web.md section 10).
    The web and app suites sign in as `e2e-admin`, an administrator the API keeps only with the profile `e2e` and the password `E2E_ADMIN_PASSWORD` (`.env`). The profile is for developers' machines and CI, never for production. It also raises the rate limits of login and password reset, because the suites sign in many times from one address and fail on purpose; the limit itself is tested by the API's own suite. The API's own suite does not need it: it changes the password of the bootstrap administrator, as a person would.
 5. **Fixtures are small and anonymized.** The legacy file is never copied into the repository. Fixtures use a few rows with the same shape, plus the control total of the real file as a check value.
 6. **Tests are deterministic.** No test depends on another test, on order, or on a previous run.
