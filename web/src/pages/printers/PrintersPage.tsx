@@ -37,8 +37,8 @@ export function PrintersPage() {
 	}, [load, canManage]);
 
 	const columns: Column<Printer>[] = [
-		{ key: "name", label: t("printers.columns.name"), type: "string" },
-		{ key: "warehouseCode", label: t("printers.columns.warehouse"), type: "string", render: (printer) => printer.warehouseCode ?? "" },
+		{ key: "name", label: t("printers.columns.name"), type: "string", filter: "search" },
+		{ key: "warehouseCode", label: t("printers.columns.warehouse"), type: "string", filter: "search", render: (printer) => printer.warehouseCode ?? "" },
 		{ key: "ipAddress", label: t("printers.columns.ipAddress"), type: "string" },
 		{ key: "port", label: t("printers.columns.port"), type: "string" },
 		{

@@ -13,5 +13,5 @@ export {
 	type NewInvoiceValues,
 	type RememberedWorkspace,
 } from "./model/newInvoice";
-export { canAdjust, sharesError, sharesTotal, type ShareError, type ShareInput } from "./model/shares";
+export { canAdjust, sharesError, sharesLeft, sharesTotal, type ShareError, type ShareInput } from "./model/shares";
 export type { Assignment, Discrepancy, Invoice, InvoiceInput, InvoiceLine, InvoiceStatus, LineInput, Placement, Ref, StaffMember } from "./model/types";

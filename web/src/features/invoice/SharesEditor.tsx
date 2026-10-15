@@ -1,6 +1,6 @@
 import { ITAlert, ITButton, ITFlex, ITGrid, ITInput, ITSearchSelect, ITStack, ITText } from "@axzydev/axzy_ui_system";
 import { useTranslation } from "react-i18next";
-import { sharesError, sharesTotal, type ShareInput, type StaffMember } from "@entities/invoice";
+import { sharesError, sharesLeft, sharesTotal, type ShareInput, type StaffMember } from "@entities/invoice";
 import { formatQuantity } from "@shared/lib/format";
 
 // The shares of one line: which operators of the warehouse's template receive it, and how much each one. It shows the
@@ -19,6 +19,8 @@ export function SharesEditor(props: {
 }) {
 	const { t, i18n } = useTranslation(["invoices", "common"]);
 	const error = sharesError(props.line, props.shares);
+	// What is missing (or over) is said while the person types, not only when the form is sent.
+	const left = sharesLeft(props.line, props.shares);
 	const set = (index: number, change: Partial<ShareInput>) => props.onChange(props.shares.map((share, i) => (i === index ? { ...share, ...change } : share)));
 
 	return (
@@ -45,10 +47,26 @@ export function SharesEditor(props: {
 					</ITGrid>
 				))}
 				<ITFlex justify="between" align="center" wrap="wrap" gap={2}>
-					<ITButton size="sm" variant="outlined" label={t("form.addShare")} onClick={() => props.onChange([...props.shares, { operatorId: "", quantity: "" }])} disabled={props.staff.length === 0} />
-					<ITText className="sf:tabular-nums">
-						{t("form.total", { assigned: formatQuantity(sharesTotal(props.shares), props.decimals, i18n.language), line: formatQuantity(props.line || 0, props.decimals, i18n.language) })}
-					</ITText>
+					<ITButton
+						size="sm"
+						variant="outlined"
+						label={t("form.addShare")}
+						// The new share starts with what is still missing, which is what the person is about to give away.
+						onClick={() => props.onChange([...props.shares, { operatorId: "", quantity: left > 0 ? String(left) : "" }])}
+						disabled={props.staff.length === 0}
+					/>
+					<ITStack spacing={1} className="sf:items-end">
+						<ITText className="sf:tabular-nums">
+							{t("form.total", { assigned: formatQuantity(sharesTotal(props.shares), props.decimals, i18n.language), line: formatQuantity(props.line || 0, props.decimals, i18n.language) })}
+						</ITText>
+						{left !== 0 && (
+							<ITText className={`sf:tabular-nums sf:text-body-sm ${left > 0 ? "sf:text-warning" : "sf:text-danger"}`}>
+								{left > 0
+									? t("form.missing", { quantity: formatQuantity(left, props.decimals, i18n.language) })
+									: t("form.over", { quantity: formatQuantity(Math.abs(left), props.decimals, i18n.language) })}
+							</ITText>
+						)}
+					</ITStack>
 				</ITFlex>
 				{props.staff.length === 0 && <ITText muted>{props.emptyMessage ?? t("form.noStaff")}</ITText>}
 			{props.showErrors && error && <ITAlert variant="error">{t(`shareErrors.${error}`)}</ITAlert>}

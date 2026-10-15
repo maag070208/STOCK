@@ -19,5 +19,11 @@ export function sharesError(line: string, shares: ShareInput[]): ShareError | nu
 	return Math.round(sharesTotal(shares) * 1000) === Math.round(amount(line) * 1000) ? null : "ASSIGNMENT_TOTAL_MISMATCH";
 }
 
+// What is still missing to cover the line, or what is over it: the number the person needs while splitting. It is
+// compared in thousandths, the finest decimals a unit allows here, so 0.1 + 0.2 does not leave a hundredth behind.
+export function sharesLeft(line: string, shares: ShareInput[]): number {
+	return Math.round((amount(line) - sharesTotal(shares)) * 1000) / 1000;
+}
+
 // An adjustment is sent with a note that explains it (material-receiving.md section 5).
 export const canAdjust = (note: string): boolean => note.trim().length > 0 && note.trim().length <= 500;

@@ -6,7 +6,13 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
+  // A test that fails on the first run is not retried locally (the suite is fast enough to run again).
   reporter: "list",
+  // Three at a time, not more: the tests share one database that grows as they run, and past three they slow each other
+  // into timeouts that have nothing to do with the app.
+  workers: process.env.CI ? 1 : 3,
+  // What a person waits for an element the app is fetching from that database.
+  expect: { timeout: 10_000 },
   use: { baseURL: "http://localhost:5173", trace: "retain-on-failure" },
   webServer: {
     command: "pnpm dev --port 5173 --strictPort",

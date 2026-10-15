@@ -63,7 +63,9 @@
     "saving": "Guardando…",
     "noLines": "Puedes guardar sin materiales y agregarlos en el detalle.",
     "noStaff": "El almacén no tiene operadores en su plantilla.",
-    "chooseWarehouse": "Elige primero el almacén que recibe: sus operadores aparecerán aquí."
+    "chooseWarehouse": "Elige primero el almacén que recibe: sus operadores aparecerán aquí.",
+    "missing": "Faltan {{quantity}} por asignar",
+    "over": "Sobra {{quantity}}"
   },
   "shareErrors": {
     "FIELD_REQUIRED": "Elige un operador y su cantidad.",

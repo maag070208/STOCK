@@ -75,6 +75,7 @@ export function QuickCapture(props: {
 		<form
 			ref={bar}
 			data-testid="quick-capture"
+			autoComplete="off"
 			noValidate
 			onKeyDown={onKeyDown}
 			onSubmit={(event: FormEvent) => {
@@ -85,7 +86,8 @@ export function QuickCapture(props: {
 			<ITStack spacing={2}>
 				<ITGrid container spacing={3}>
 					<ITGrid item xs={12} md={7}>
-						<ProductPicker name="capture-product" label={t("form.product")} value={product?.id ?? ""} onChange={setProduct} />
+						{/* The picker keeps its own text: when the material goes back to nothing, it is mounted again, empty. */}
+						<ProductPicker key={product?.id ?? "empty"} name="capture-product" label={t("form.product")} value={product?.id ?? ""} onChange={setProduct} />
 					</ITGrid>
 					<ITGrid item xs={12} md={3}>
 						<ITInput name="capture-quantity" type="number" label={t("form.quantity")} value={value} onChange={(event) => setValue(String(event.target.value))} />

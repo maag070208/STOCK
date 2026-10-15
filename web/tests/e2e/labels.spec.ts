@@ -70,8 +70,8 @@ test("for a person who reads English, the report is in English", async ({ page }
 });
 
 test("a printer needs a valid address, and its port is 9100", async ({ page }) => {
-	// The list is paginated and sorted by name: a name that sorts first is on the page the test reads.
-	const name = `A-Zebra ${uniqueName("").slice(0, 6)}`;
+	// The list is paginated and sorted by name: "A Zebra" sorts before every printer the other tests have left behind.
+	const name = `A Zebra ${uniqueName("").slice(0, 6)}`;
 	const token = await adminToken();
 	const warehouse = (await call("POST", "/warehouses", { token, body: { code: uniqueName("W-").toUpperCase(), name: "Almacén de la impresora" } })).json as { id: string; code: string };
 	await signInAs(page, e2eAdmin());
@@ -95,7 +95,7 @@ test("a manager prints three copies of a product label, on the printers of their
 	const token = await adminToken();
 	const warehouse = (await call("POST", "/warehouses", { token, body: { code: uniqueName("W-").toUpperCase(), name: "Almacén de etiquetas" } })).json as { id: string; code: string };
 	const other = (await call("POST", "/warehouses", { token, body: { code: uniqueName("W-").toUpperCase(), name: "Otro almacén" } })).json as { id: string };
-	const mine = `A-Zebra ${uniqueName("").slice(0, 6)}`;
+	const mine = `A Zebra ${uniqueName("").slice(0, 6)}`;
 	await call("POST", "/printers", { token, body: { name: mine, warehouseId: warehouse.id, ipAddress: "127.0.0.1" } });
 	await call("POST", "/printers", { token, body: { name: `Ajena ${uniqueName("").slice(0, 6)}`, warehouseId: other.id, ipAddress: "127.0.0.1" } });
 	const product = (await call("POST", "/products", { token, body: { code: uniqueName("M").toUpperCase(), name: "Codo galvanizado 1/2\"", unit: "PIECE" } })).json as { id: string };

@@ -63,7 +63,9 @@
     "saving": "Saving…",
     "noLines": "You can save without materials and add them on the detail.",
     "noStaff": "The warehouse has no operators in its template.",
-    "chooseWarehouse": "Choose the receiving warehouse first: its operators show here."
+    "chooseWarehouse": "Choose the receiving warehouse first: its operators show here.",
+    "missing": "{{quantity}} left to assign",
+    "over": "{{quantity}} too many"
   },
   "shareErrors": {
     "FIELD_REQUIRED": "Choose an operator and their quantity.",

@@ -63,9 +63,10 @@ test("an administrator creates a material, and its code is its barcode", async (
 	const row = page.getByRole("row").filter({ hasText: code });
 	await expect(row).toContainText("Codo 90° galvanizado");
 	await row.getByText("Codo 90° galvanizado").click();
-	await expect(page.getByText("Código de barras", { exact: false }).first()).toBeVisible();
-	// The code is the value of its card, and the barcode is the same code: two exact values on the screen.
-	await expect(page.getByText(code, { exact: true })).toHaveCount(2);
+	// The record is titled by its code, the strip says it is its own barcode, and the barcode draws it.
+	await expect(page.getByRole("heading", { name: code })).toBeVisible();
+	await expect(page.getByText("Código de barras", { exact: true })).toBeVisible();
+	await expect(page.getByText(code, { exact: true })).toHaveCount(3);
 });
 
 test("an office user sees the materials, and cannot create them or open the import", async ({ page }) => {
