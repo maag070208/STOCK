@@ -13,6 +13,9 @@ object ZplRules {
 
 	const val COPIES = "copies"
 
+	// The fields a key may print: what the screen offers when a label is designed or written (labels.md section 4).
+	fun placeholders(key: String): List<String> = (PLACEHOLDERS[key.trim().uppercase()].orEmpty() + COPIES).sorted()
+
 	// The placeholders of each key, besides {{copies}}. A new key has only {{copies}} until its data is defined.
 	val PLACEHOLDERS: Map<String, Set<String>> = mapOf(
 		"PRODUCT" to setOf("code", "name", "barcode", "unit"),

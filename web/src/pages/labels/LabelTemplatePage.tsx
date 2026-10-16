@@ -2,6 +2,8 @@ import { ITAccordion, ITAlert, ITBadget, ITButton, ITCard, ITCheckbox, ITChip, I
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
+import { LabelDesigner } from "@features/label/ui/LabelDesigner";
+import { blocksFromZpl, blocksToZpl, starterBlocks, type Block } from "@features/label/model/blocks";
 import { LabelPreview } from "@features/label/ui/LabelPreview";
 import { sampleValues } from "@features/label/model/zpl";
 import { labelTemplateApi, problemLines, type LabelTemplate, type TemplateVersion, type ZplProblem } from "@entities/label";
@@ -31,11 +33,28 @@ export function LabelTemplatePage() {
 	const [nameEn, setNameEn] = useState("");
 	const [zpl, setZpl] = useState("");
 	const [active, setActive] = useState(true);
+	// The design: the blocks the label is built with, and the size of the label. `designing` says whether the screen is
+	// editing blocks or the ZPL itself (labels.md section 4).
+	const [blocks, setBlocks] = useState<Block[]>([]);
+	const [designing, setDesigning] = useState(true);
+	const [labelWidth, setLabelWidth] = useState(812);
+	const [labelLength, setLabelLength] = useState(406);
 	const [problems, setProblems] = useState<ZplProblem[] | null>(null);
+	// The fields the key accepts, as the API answers them: for a template that does not exist yet, this is what the
+	// designer can offer while the person types the key.
+	const [liveFields, setLiveFields] = useState<string[]>([]);
 	const [checking, setChecking] = useState(false);
 	const [tried, setTried] = useState(false);
 	const submit = useSubmit();
 	const form = useRef<HTMLFormElement>(null);
+
+	// What the designer writes is what the template stores: both modes end in the same text.
+	const designed = blocksToZpl(blocks, labelWidth, labelLength);
+	const shownZpl = designing ? designed : zpl;
+	const setBlocksAndZpl = (next: Block[]) => {
+		setBlocks(next);
+		setZpl(blocksToZpl(next, labelWidth, labelLength));
+	};
 
 	const load = useCallback(async () => {
 		if (!id) return;
@@ -47,6 +66,10 @@ export function LabelTemplatePage() {
 			setNameEs(found.nameEs);
 			setNameEn(found.nameEn);
 			setZpl(found.zpl);
+			// An existing template opens on its ZPL, which is what it prints; building blocks start with a new one.
+			const read = blocksFromZpl(found.zpl);
+			setBlocks(read?.blocks ?? starterBlocks(found.placeholders ?? []));
+			setDesigning(false);
 			setActive(found.active);
 		} catch {
 			setMissing(true);
@@ -59,7 +82,7 @@ export function LabelTemplatePage() {
 
 	// The report follows the text: a pause in the typing asks the API, and only the answer for the latest text is shown.
 	useEffect(() => {
-		if (!canManage || !zpl.trim()) {
+		if (!canManage || !shownZpl.trim()) {
 			setProblems(null);
 			return;
 		}
@@ -67,8 +90,12 @@ export function LabelTemplatePage() {
 		setChecking(true);
 		const timer = setTimeout(() => {
 			labelTemplateApi
-				.validate(key, zpl)
-				.then((report) => current && setProblems(report.problems))
+				.validate(key, shownZpl)
+				.then((report) => {
+					if (!current) return;
+					setProblems(report.problems);
+					setLiveFields(report.placeholders ?? []);
+				})
 				.catch(() => current && setProblems(null))
 				.finally(() => current && setChecking(false));
 		}, CHECK_DELAY_MS);
@@ -76,7 +103,7 @@ export function LabelTemplatePage() {
 			current = false;
 			clearTimeout(timer);
 		};
-	}, [canManage, key, zpl, i18n.language]);
+	}, [canManage, key, shownZpl, i18n.language]);
 
 	const required = t("common:validation.required");
 	const local = {
@@ -97,14 +124,14 @@ export function LabelTemplatePage() {
 		setTried(true);
 		if (Object.values(local).some(Boolean)) return;
 		if (creating) {
-			const created = await submit.run(() => labelTemplateApi.create({ key: key.trim(), nameEs: nameEs.trim(), nameEn: nameEn.trim(), zpl }));
+			const created = await submit.run(() => labelTemplateApi.create({ key: key.trim(), nameEs: nameEs.trim(), nameEn: nameEn.trim(), zpl: shownZpl }));
 			if (created) {
 				toast(t("editor.saved", { version: created.version }));
 				navigate(`/labels/${created.id}`, { replace: true });
 			}
 			return;
 		}
-		const saved = await submit.run(() => labelTemplateApi.update(template!.id, { nameEs: nameEs.trim(), nameEn: nameEn.trim(), zpl, active }));
+		const saved = await submit.run(() => labelTemplateApi.update(template!.id, { nameEs: nameEs.trim(), nameEn: nameEn.trim(), zpl: shownZpl, active }));
 		if (saved) {
 			toast(saved.version === template!.version ? t("editor.unchanged", { version: saved.version }) : t("editor.saved", { version: saved.version }));
 			await load();
@@ -122,7 +149,7 @@ export function LabelTemplatePage() {
 		);
 	}
 
-	const placeholders = template?.placeholders ?? ["copies"];
+	const placeholders = template?.placeholders?.length ? template.placeholders : liveFields.length ? liveFields : ["copies"];
 	const lineLabel = (lines: number[]) => (lines.length === 1 ? t("editor.line", { line: lines[0] }) : t("editor.lines", { line: lines.join(", ") }));
 
 	return (
@@ -144,7 +171,7 @@ export function LabelTemplatePage() {
 				{submit.error && <ITAlert variant="error">{submit.error}</ITAlert>}
 				<ITGrid container spacing={4}>
 					{/* What the template is: three fields, and whether it is the one printing. */}
-					<ITGrid item xs={12} lg={7}>
+					<ITGrid item xs={12} lg={designing ? 12 : 7}>
 						<ITStack spacing={4}>
 							<ITCard title={t("editor.data")}>
 								<ITGrid container spacing={4}>
@@ -174,7 +201,54 @@ export function LabelTemplatePage() {
 
 							{/* The template itself, which is the biggest thing on the page. */}
 							<ITCard title={t("editor.template")}>
-								<ITTextarea name="zpl" label={t("editor.zpl")} value={zpl} rows={20} disabled={!canManage} onChange={setZpl} error={errors.zpl} resize="vertical" className="sf:[&_textarea]:font-mono sf:[&_textarea]:text-code-sm" />
+								<ITStack spacing={4}>
+									{/* Two ways to write the same template: with pieces that work, or by hand. */}
+									<ITFlex gap={2}>
+										<ITButton
+											size="sm"
+											variant={designing ? "solid" : "outlined"}
+											label={t("designer.mode")}
+											onClick={() => {
+												if (!designing) setBlocks(starterBlocks(placeholders));
+												setDesigning(true);
+											}}
+										/>
+										<ITButton
+											size="sm"
+											variant={designing ? "outlined" : "solid"}
+											label={t("designer.rawMode")}
+											disabled={!canManage}
+											onClick={() => {
+												if (designing) setZpl(designed);
+												setDesigning(false);
+											}}
+										/>
+									</ITFlex>
+
+									{designing ? (
+										<>
+											<ITGrid container spacing={4}>
+												<ITGrid item xs={6} sm={3}>
+													<ITInput name="labelWidth" type="number" label={t("designer.width")} value={String(labelWidth)} disabled={!canManage} onChange={(event) => setLabelWidth(Number(event.target.value))} />
+												</ITGrid>
+												<ITGrid item xs={6} sm={3}>
+													<ITInput name="labelLength" type="number" label={t("designer.height")} value={String(labelLength)} disabled={!canManage} onChange={(event) => setLabelLength(Number(event.target.value))} />
+												</ITGrid>
+											</ITGrid>
+											<LabelDesigner
+												blocks={blocks}
+												fields={placeholders}
+												width={labelWidth}
+												length={labelLength}
+												values={sampleValues(placeholders)}
+												zpl={shownZpl}
+												onChange={setBlocksAndZpl}
+											/>
+										</>
+									) : (
+										<ITTextarea name="zpl" label={t("editor.zpl")} value={zpl} rows={20} disabled={!canManage} onChange={setZpl} error={errors.zpl} resize="vertical" className="sf:[&_textarea]:font-mono sf:[&_textarea]:text-code-sm" />
+									)}
+								</ITStack>
 							</ITCard>
 
 							{/* The report of the rules, under what it judges, and as wide as it. */}
@@ -183,7 +257,7 @@ export function LabelTemplatePage() {
 									{checking && <ITText muted>{t("editor.checking")}</ITText>}
 									{!checking && problems?.length === 0 && <ITAlert variant="success">{t("editor.valid")}</ITAlert>}
 									{problems?.map((problem, index) => {
-										const lines = problemLines(zpl, problem.token);
+										const lines = problemLines(shownZpl, problem.token);
 										return (
 											<ITAlert key={`${problem.code}-${problem.token ?? index}`} variant="error">
 												<ITText as="span" className="sf:block">
@@ -210,12 +284,15 @@ export function LabelTemplatePage() {
 						</ITStack>
 					</ITGrid>
 
-					{/* The label as it will come out, next to what writes it: it stays in view while the ZPL is edited. */}
-					<ITGrid item xs={12} lg={5}>
-						<ITCard title={t("editor.preview")} className="sf:lg:sticky sf:lg:top-6">
-							<LabelPreview zpl={zpl} values={sampleValues(placeholders)} />
-						</ITCard>
-					</ITGrid>
+					{/* The label as it will come out, next to what writes it. In the designer the canvas already is the
+					    preview, and it is where the blocks are dragged. */}
+					{!designing && (
+						<ITGrid item xs={12} lg={5}>
+							<ITCard title={t("editor.preview")} className="sf:lg:sticky sf:lg:top-6">
+								<LabelPreview zpl={shownZpl} values={sampleValues(placeholders)} />
+							</ITCard>
+						</ITGrid>
+					)}
 				</ITGrid>
 			</form>
 			{versions.length > 0 && (

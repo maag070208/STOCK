@@ -40,7 +40,7 @@ data class VersionView(val version: Int, val zpl: String, val createdAt: Instant
 
 data class ProblemView(val code: String, val token: String?, val message: String)
 
-data class ValidationReport(val problems: List<ProblemView>)
+data class ValidationReport(val problems: List<ProblemView>, val placeholders: List<String>)
 
 // The label templates (labels.md sections 2 to 4): read with labels.view, changed with labels.manage. A change of the
 // ZPL is a new version; every version stays readable; the active one is printed.
@@ -63,7 +63,10 @@ class LabelTemplateService(
 
 	// The report the editor shows as the person types: each problem with the command or placeholder that causes it.
 	fun validate(request: ValidateRequest, locale: Locale): ValidationReport =
-		ValidationReport(ZplRules.check(request.key?.trim().orEmpty(), request.zpl.orEmpty()).map { ProblemView(it.code.name, it.token, messages.getMessage(it.code.messageKey, null, locale)) })
+		ValidationReport(
+			ZplRules.check(request.key?.trim().orEmpty(), request.zpl.orEmpty()).map { ProblemView(it.code.name, it.token, messages.getMessage(it.code.messageKey, null, locale)) },
+			ZplRules.placeholders(request.key?.trim().orEmpty()),
+		)
 
 	@Transactional
 	fun create(actor: CurrentUser, request: CreateTemplateRequest, language: String): TemplateView {

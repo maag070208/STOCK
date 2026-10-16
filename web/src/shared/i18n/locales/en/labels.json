@@ -75,5 +75,32 @@
     "copiesRange": "Enter a whole number from 1 to 100.",
     "submit": "Print",
     "sent": "Label sent to {{printer}}: {{count}} copies."
+  },
+  "designer": {
+    "mode": "Blocks",
+    "rawMode": "Raw ZPL",
+    "empty": "Add an element to start: the title, the code, the barcode…",
+    "up": "Move up",
+    "down": "Move down",
+    "x": "X position",
+    "y": "Y position",
+    "field": "What it prints",
+    "prefix": "Text before the value",
+    "size": "Height (dots)",
+    "module": "Module width",
+    "barHeight": "Bar height",
+    "width": "Width",
+    "height": "Height",
+    "thickness": "Thickness",
+    "noField": "No field: it prints a fixed text",
+    "size_of_label": "Label size",
+    "canvas": "The label (drag the elements)"
+  },
+  "blocks": {
+    "title": "Title",
+    "text": "Text",
+    "code": "Code",
+    "barcode": "Barcode",
+    "box": "Box or line"
   }
 }

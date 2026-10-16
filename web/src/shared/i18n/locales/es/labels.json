@@ -75,5 +75,32 @@
     "copiesRange": "Escribe un número entero de 1 a 100.",
     "submit": "Imprimir",
     "sent": "Etiqueta enviada a {{printer}}: {{count}} copias."
+  },
+  "designer": {
+    "mode": "Por bloques",
+    "rawMode": "ZPL a mano",
+    "empty": "Agrega un elemento para empezar: el título, el código, el código de barras…",
+    "up": "Subir",
+    "down": "Bajar",
+    "x": "Posición X",
+    "y": "Posición Y",
+    "field": "Qué imprime",
+    "prefix": "Texto antes del valor",
+    "size": "Altura (puntos)",
+    "module": "Ancho del módulo",
+    "barHeight": "Alto de las barras",
+    "width": "Ancho",
+    "height": "Alto",
+    "thickness": "Grosor",
+    "noField": "Sin campo: escribe un texto fijo",
+    "size_of_label": "Medidas de la etiqueta",
+    "canvas": "La etiqueta (arrastra los elementos)"
+  },
+  "blocks": {
+    "title": "Título",
+    "text": "Texto",
+    "code": "Código",
+    "barcode": "Código de barras",
+    "box": "Cuadro o línea"
   }
 }

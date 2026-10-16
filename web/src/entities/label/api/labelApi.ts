@@ -6,7 +6,7 @@ export const labelTemplateApi = {
 	get: (id: string) => get<LabelTemplate>(`/label-templates/${id}`),
 	versions: (id: string) => get<TemplateVersion[]>(`/label-templates/${id}/versions`),
 	// The editor's report as the person types: writes nothing.
-	validate: (key: string, zpl: string) => post<{ problems: ZplProblem[] }>("/label-templates/validate", { key, zpl }),
+	validate: (key: string, zpl: string) => post<{ problems: ZplProblem[]; placeholders: string[] }>("/label-templates/validate", { key, zpl }),
 	create: (input: TemplateInput & { key: string }) => post<LabelTemplate>("/label-templates", input),
 	update: (id: string, changes: Partial<TemplateInput> & { active?: boolean }) => patch<LabelTemplate>(`/label-templates/${id}`, changes),
 };
