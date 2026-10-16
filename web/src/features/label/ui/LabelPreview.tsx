@@ -192,18 +192,19 @@ export function LabelPreview(props: {
 									{props.selected === block.id && (
 										// What is selected says so, with the box it occupies and the corner that sizes it.
 										<>
-											<rect {...selectionBox(block, props.values)} fill="none" stroke="var(--sf-c-primary)" strokeWidth={2} strokeDasharray="10 6" />
+											<rect {...selectionBox(block, props.values)} rx={6} fill="none" stroke="var(--sf-c-primary)" strokeWidth={2} strokeDasharray="12 8" opacity={0.85} />
 											{props.onResizeBlock && (
-												<rect
+												// A round grip with a white ring: what makes a thing bigger reads as a handle, not as another
+												// dashed box on the label.
+												<circle
 													data-resize={block.id}
-													x={selectionBox(block, props.values).x + selectionBox(block, props.values).width - 9}
-													y={selectionBox(block, props.values).y + selectionBox(block, props.values).height - 9}
-													width={18}
-													height={18}
-													fill="white"
-													stroke="var(--sf-c-primary)"
-													strokeWidth={2}
-													style={{ cursor: "nwse-resize", touchAction: "none" }}
+													cx={selectionBox(block, props.values).x + selectionBox(block, props.values).width - 4}
+													cy={selectionBox(block, props.values).y + selectionBox(block, props.values).height - 4}
+													r={13}
+													fill="var(--sf-c-primary)"
+													stroke="white"
+													strokeWidth={4}
+													style={{ cursor: "nwse-resize", touchAction: "none", filter: "drop-shadow(0 1px 2px rgb(0 0 0 / 0.35))" }}
 													onPointerDown={(event) => startResize(event, block)}
 												/>
 											)}

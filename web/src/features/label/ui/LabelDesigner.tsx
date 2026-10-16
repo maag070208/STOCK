@@ -1,9 +1,10 @@
-import { ITAccordion, ITButton, ITCard, ITFlex, ITGrid, ITInput, ITSelect, ITStack, ITText } from "@axzydev/axzy_ui_system";
+import { ITButton, ITCard, ITFlex, ITGrid, ITInput, ITSelect, ITStack, ITText } from "@axzydev/axzy_ui_system";
 import { useEffect, useRef, useState, type DragEvent, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { FaArrowDown, FaArrowUp, FaBarcode, FaFont, FaHeading, FaRedo, FaSquare, FaTag, FaTrash, FaUndo } from "react-icons/fa";
+import { FaArrowDown, FaArrowUp, FaBarcode, FaFont, FaHeading, FaPen, FaRedo, FaSquare, FaTag, FaTrash, FaUndo } from "react-icons/fa";
 import { BLOCKS, LABEL_SIZES, blockValue, newBlock, sameSize, sizeInDots, sizeOfDots, textToBlock, type Block, type BlockKind } from "../model/blocks";
 import { dyn } from "@shared/i18n";
+import { FormDialog } from "@shared/ui/FormDialog";
 import { IconButton } from "@shared/ui/IconButton";
 import { LabelPreview } from "./LabelPreview";
 
@@ -38,6 +39,8 @@ export function LabelDesigner(props: {
 }) {
 	const { t } = useTranslation(["labels", "common"]);
 	const [selectedId, setSelectedId] = useState<string | null>(null);
+	// What is being edited, until it is kept: the dialog works on a copy so Cancelar leaves the label as it was.
+	const [draft, setDraft] = useState<Block | null>(null);
 	// Undo and redo (Ctrl+Z, Ctrl+Shift+Z): the label is written by hand, so it is easily unwritten. The history lives
 	// here because every change of the design goes through this component.
 	const past = useRef<Block[][]>([]);
@@ -80,10 +83,6 @@ export function LabelDesigner(props: {
 	// The size of the label, as one of the rolls a person knows. A size that is not there (an old template) shows empty.
 	const selectedSize = sizeOfDots({ width: props.width, length: props.length });
 	const nameOf = (kind: BlockKind) => t(dyn(BLOCKS.find((block) => block.kind === kind)!.label));
-	const change = (patch: Partial<Block>) => {
-		if (!selected) return;
-		commit(props.blocks.map((block) => (block.id === selected.id ? { ...block, ...patch } : block)));
-	};
 	const move = (index: number, step: -1 | 1) => {
 		const next = [...props.blocks];
 		const [block] = next.splice(index, 1);
@@ -162,135 +161,33 @@ export function LabelDesigner(props: {
 						</ITStack>
 					</ITCard>
 
-					{selected ? (
+					{selected && (
+						// What is chosen is described in one line, and edited in a dialog: the panel is for choosing, not for
+						// a form nobody reads while looking at the label.
 						<ITCard title={t("designer.selected", { name: nameOf(selected.kind) })}>
-							<ITStack spacing={4}>
-								{selected.kind !== "box" && (
-									<ITStack spacing={2}>
-										<ITInput
-											name={`field-${selected.id}`}
-											label={t("designer.field")}
-											placeholder={t("designer.fieldOpen")}
-											value={selected.field ?? ""}
-											onChange={(event) => change({ field: variableName(String(event.target.value)) })}
-										/>
-										<ITText muted className="sf:text-body-sm">
-											{t("designer.fieldHint")}
-										</ITText>
-										{props.fields.filter((field) => field !== "copies").length > 0 && (
-											<ITStack spacing={2}>
-												<ITText muted className="sf:text-body-sm">
-													{t("designer.suggestions")}
-												</ITText>
-												{/* What the label already prints: pressing one fills the name, and any other name can be written. */}
-												<ITFlex wrap="wrap" gap={2}>
-													{props.fields
-														.filter((field) => field !== "copies")
-														.map((field) => (
-															<ITButton key={field} size="sm" variant="outlined" label={`{{${field}}}`} onClick={() => change({ field })} />
-														))}
-												</ITFlex>
-											</ITStack>
-										)}
-									</ITStack>
-								)}
-								{selected.kind === "text" && (
-									<ITInput name={`prefix-${selected.id}`} label={t("designer.prefix")} value={selected.prefix} onChange={(event) => change({ prefix: String(event.target.value) })} />
-								)}
-								{selected.kind !== "box" && selected.kind !== "barcode" && (
-									<ITSelect
-										name={`size-${selected.id}`}
-										label={t("designer.textSize")}
-										value={String(selected.size)}
-										options={SIZES.map((size) => ({ value: String(size), label: t("designer.textSizeOption", asSize(size)) }))}
-										onChange={(event) => change({ size: Number(event.target.value) })}
-									/>
-								)}
-								{selected.kind === "barcode" && (
-									<ITStack spacing={4}>
-										<ITSelect
-											name={`barHeight-${selected.id}`}
-											label={t("designer.barHeight")}
-											value={String(selected.barHeight)}
-											options={SIZES.map((size) => ({ value: String(size), label: t("designer.textSizeOption", asSize(size)) }))}
-											onChange={(event) => change({ barHeight: Number(event.target.value) })}
-										/>
-										<ITSelect
-											name={`module-${selected.id}`}
-											label={t("designer.module")}
-											value={String(selected.module)}
-											options={[2, 3, 4, 5].map((module) => ({ value: String(module), label: t(dyn(`designer.moduleOption.${module}`)) }))}
-											onChange={(event) => change({ module: Number(event.target.value) })}
-										/>
-									</ITStack>
-								)}
-								{selected.kind === "box" && (
-									<ITGrid container spacing={3}>
-										<ITGrid item xs={6}>
-											<ITInput name={`width-${selected.id}`} type="number" label={t("designer.width")} value={String(selected.width)} onChange={(event) => change({ width: Number(event.target.value) })} />
-										</ITGrid>
-										<ITGrid item xs={6}>
-											<ITInput name={`boxHeight-${selected.id}`} type="number" label={t("designer.height")} value={String(selected.height)} onChange={(event) => change({ height: Number(event.target.value) })} />
-										</ITGrid>
-										<ITGrid item xs={6}>
-											<ITInput name={`thickness-${selected.id}`} type="number" label={t("designer.thickness")} value={String(selected.thickness)} onChange={(event) => change({ thickness: Number(event.target.value) })} />
-										</ITGrid>
-									</ITGrid>
-								)}
-
-								{selected.kind !== "box" && (
-									<ITSelect
-										name={`orientation-${selected.id}`}
-										label={t("designer.rotate")}
-										value={String(selected.orientation)}
-										options={[0, 90, 180, 270].map((turn) => ({ value: String(turn), label: t(dyn(`designer.turn.${turn}`)) }))}
-										onChange={(event) => change({ orientation: Number(event.target.value) as 0 | 90 | 180 | 270 })}
-									/>
-								)}
-
-								{/* Where it is: dragging is the easy way, so the exact numbers wait behind a click. */}
-								<ITAccordion
-									variant="bordered"
-									items={[
-										{
-											id: "more",
-											title: t("designer.more"),
-											content: (
-												<ITStack spacing={3}>
-													<ITGrid container spacing={3}>
-										<ITGrid item xs={6}>
-											<ITInput name={`x-${selected.id}`} type="number" label={t("designer.x")} value={String(selected.x)} onChange={(event) => change({ x: Number(event.target.value) })} />
-										</ITGrid>
-														<ITGrid item xs={6}>
-															<ITInput name={`y-${selected.id}`} type="number" label={t("designer.y")} value={String(selected.y)} onChange={(event) => change({ y: Number(event.target.value) })} />
-														</ITGrid>
-													</ITGrid>
-													<ITText muted className="sf:text-body-sm">
-														{t("designer.dragHint")}
-													</ITText>
-												</ITStack>
-											),
-										},
-									]}
-								/>
-
+							<ITStack spacing={3}>
 								<ITText muted className="sf:font-mono sf:text-code-sm">
 									{selected.kind === "box" ? t("designer.boxHint") : blockValue(selected) || t("designer.noField")}
 								</ITText>
-								<ITButton
-									variant="outlined"
-									size="sm"
-									color="danger"
-									icon={<FaTrash aria-hidden />}
-									label={t("common:actions.remove")}
-									onClick={() => {
-										commit(props.blocks.filter((block) => block.id !== selected.id));
-										setSelectedId(null);
-									}}
-								/>
+								<ITFlex gap={2} wrap="wrap">
+									<ITButton size="sm" icon={<FaPen aria-hidden />} label={t("designer.edit")} onClick={() => setDraft({ ...selected })} />
+									<ITButton
+										size="sm"
+										variant="outlined"
+										color="danger"
+										icon={<FaTrash aria-hidden />}
+										label={t("common:actions.remove")}
+										onClick={() => {
+											commit(props.blocks.filter((block) => block.id !== selected.id));
+											setSelectedId(null);
+										}}
+									/>
+								</ITFlex>
 							</ITStack>
 						</ITCard>
-					) : (
+					)}
+
+					{!selected && (
 						<ITCard title={t("designer.label")}>
 							<ITStack spacing={4}>
 								{/* The size is chosen, not typed: these are the rolls a person buys. */}
@@ -318,6 +215,7 @@ export function LabelDesigner(props: {
 							</ITStack>
 						</ITCard>
 					)}
+
 					{/* The elements, in the order they are printed: the list is also how one of them is chosen. */}
 					{props.blocks.length > 0 && (
 						<ITCard title={t("designer.elements")}>
@@ -339,6 +237,106 @@ export function LabelDesigner(props: {
 					)}
 				</ITStack>
 			</ITGrid>
+
+			{/* The dialog of the chosen element: everything it has, and nothing on the screen while it is closed. */}
+			<FormDialog
+				isOpen={!!draft}
+				title={draft ? t("designer.editTitle", { name: nameOf(draft.kind) }) : ""}
+				submitLabel={t("designer.done")}
+				onClose={() => setDraft(null)}
+				onSubmit={() => {
+					if (!draft) return;
+					commit(props.blocks.map((block) => (block.id === draft.id ? draft : block)));
+					setDraft(null);
+				}}
+			>
+				{draft && (
+					<ITStack spacing={4}>
+						{draft.kind !== "box" && (
+							<ITStack spacing={2}>
+								<ITInput name="field" label={t("designer.field")} placeholder={t("designer.fieldOpen")} value={draft.field ?? ""} onChange={(event) => setDraft({ ...draft, field: variableName(String(event.target.value)) })} />
+								<ITText muted className="sf:text-body-sm">
+									{t("designer.fieldHint")}
+								</ITText>
+								{props.fields.filter((field) => field !== "copies").length > 0 && (
+									<ITFlex wrap="wrap" gap={2}>
+										{props.fields
+											.filter((field) => field !== "copies")
+											.map((field) => (
+												<ITButton key={field} size="sm" variant="outlined" label={`{{${field}}}`} onClick={() => setDraft({ ...draft, field })} />
+											))}
+									</ITFlex>
+								)}
+							</ITStack>
+						)}
+						{draft.kind === "text" && <ITInput name="prefix" label={t("designer.prefix")} value={draft.prefix} onChange={(event) => setDraft({ ...draft, prefix: String(event.target.value) })} />}
+						{draft.kind !== "box" && draft.kind !== "barcode" && (
+							<ITSelect
+								name="size"
+								label={t("designer.textSize")}
+								value={String(draft.size)}
+								options={SIZES.map((size) => ({ value: String(size), label: t("designer.textSizeOption", asSize(size)) }))}
+								onChange={(event) => setDraft({ ...draft, size: Number(event.target.value) })}
+							/>
+						)}
+						{draft.kind === "barcode" && (
+							<ITGrid container spacing={3}>
+								<ITGrid item xs={12} sm={6}>
+									<ITSelect
+										name="barHeight"
+										label={t("designer.barHeight")}
+										value={String(draft.barHeight)}
+										options={SIZES.map((size) => ({ value: String(size), label: t("designer.textSizeOption", asSize(size)) }))}
+										onChange={(event) => setDraft({ ...draft, barHeight: Number(event.target.value) })}
+									/>
+								</ITGrid>
+								<ITGrid item xs={12} sm={6}>
+									<ITSelect
+										name="module"
+										label={t("designer.module")}
+										value={String(draft.module)}
+										options={[2, 3, 4, 5].map((module) => ({ value: String(module), label: t(dyn(`designer.moduleOption.${module}`)) }))}
+										onChange={(event) => setDraft({ ...draft, module: Number(event.target.value) })}
+									/>
+								</ITGrid>
+							</ITGrid>
+						)}
+						{draft.kind === "box" && (
+							<ITGrid container spacing={3}>
+								<ITGrid item xs={4}>
+									<ITInput name="width" type="number" label={t("designer.width")} value={String(draft.width)} onChange={(event) => setDraft({ ...draft, width: Number(event.target.value) })} />
+								</ITGrid>
+								<ITGrid item xs={4}>
+									<ITInput name="boxHeight" type="number" label={t("designer.height")} value={String(draft.height)} onChange={(event) => setDraft({ ...draft, height: Number(event.target.value) })} />
+								</ITGrid>
+								<ITGrid item xs={4}>
+									<ITInput name="thickness" type="number" label={t("designer.thickness")} value={String(draft.thickness)} onChange={(event) => setDraft({ ...draft, thickness: Number(event.target.value) })} />
+								</ITGrid>
+							</ITGrid>
+						)}
+						{draft.kind !== "box" && (
+							<ITSelect
+								name="orientation"
+								label={t("designer.rotate")}
+								value={String(draft.orientation)}
+								options={[0, 90, 180, 270].map((turn) => ({ value: String(turn), label: t(dyn(`designer.turn.${turn}`)) }))}
+								onChange={(event) => setDraft({ ...draft, orientation: Number(event.target.value) as 0 | 90 | 180 | 270 })}
+							/>
+						)}
+						<ITGrid container spacing={3}>
+							<ITGrid item xs={6}>
+								<ITInput name="x" type="number" label={t("designer.x")} value={String(draft.x)} onChange={(event) => setDraft({ ...draft, x: Number(event.target.value) })} />
+							</ITGrid>
+							<ITGrid item xs={6}>
+								<ITInput name="y" type="number" label={t("designer.y")} value={String(draft.y)} onChange={(event) => setDraft({ ...draft, y: Number(event.target.value) })} />
+							</ITGrid>
+						</ITGrid>
+						<ITText muted className="sf:text-body-sm">
+							{t("designer.dragHint")}
+						</ITText>
+					</ITStack>
+				)}
+			</FormDialog>
 		</ITGrid>
 	);
 }

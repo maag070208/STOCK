@@ -145,7 +145,10 @@
     "textSizeOption": "{{dots}} dots ({{millimeters}} mm)",
     "undo": "Undo",
     "redo": "Redo",
-    "resize": "Drag the corner to change the size"
+    "resize": "Drag the corner to change the size",
+    "edit": "Edit",
+    "editTitle": "Edit {{name}}",
+    "done": "Done"
   },
   "blocks": {
     "title": "Title",
