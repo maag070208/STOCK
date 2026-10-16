@@ -222,3 +222,26 @@ test("a block is sized by its corner, and Ctrl+Z puts it back", async ({ page })
 	expect(before.length).toBeGreaterThan(0);
 	expect(Number.parseFloat(font)).toBeGreaterThan(0);
 });
+
+test("a text is written where it is read, with a double click", async ({ page }) => {
+	const { id } = await template();
+	await signInAs(page, e2eAdmin());
+	await page.goto(`/#/labels/${id}`);
+	const canvas = page.getByTestId("zpl-preview");
+	await expect(canvas).toBeVisible();
+
+	// Double clicking the text on the label opens it there: what is written is what the label will print.
+	await page.locator("[data-block]").first().dblclick();
+	const field = page.locator("[data-edit]");
+	await expect(field).toBeVisible();
+	await field.fill("Tornillo 1/2 pulgada");
+	await field.press("Enter");
+	await expect(field).toHaveCount(0);
+	await expect(canvas.getByText("Tornillo 1/2 pulgada")).toBeVisible();
+
+	// Esc leaves what was there: the label does not change because a field was opened.
+	await page.locator("[data-block]").first().dblclick();
+	await page.locator("[data-edit]").fill("otra cosa");
+	await page.locator("[data-edit]").press("Escape");
+	await expect(canvas.getByText("Tornillo 1/2 pulgada")).toBeVisible();
+});

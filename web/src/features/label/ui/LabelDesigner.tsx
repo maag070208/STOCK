@@ -2,7 +2,7 @@ import { ITAccordion, ITButton, ITCard, ITFlex, ITGrid, ITInput, ITSelect, ITSta
 import { useEffect, useRef, useState, type DragEvent, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { FaArrowDown, FaArrowUp, FaBarcode, FaFont, FaHeading, FaRedo, FaSquare, FaTag, FaTrash, FaUndo } from "react-icons/fa";
-import { BLOCKS, LABEL_SIZES, blockValue, newBlock, sameSize, sizeInDots, sizeOfDots, type Block, type BlockKind } from "../model/blocks";
+import { BLOCKS, LABEL_SIZES, blockValue, newBlock, sameSize, sizeInDots, sizeOfDots, textToBlock, type Block, type BlockKind } from "../model/blocks";
 import { dyn } from "@shared/i18n";
 import { IconButton } from "@shared/ui/IconButton";
 import { LabelPreview } from "./LabelPreview";
@@ -121,6 +121,7 @@ export function LabelDesigner(props: {
 							guides
 							onMove={(id, position) => commit(props.blocks.map((block) => (block.id === id ? { ...block, ...position } : block)))}
 							onResizeBlock={(id, patch) => commit(props.blocks.map((block) => (block.id === id ? { ...block, ...patch } : block)))}
+							onEditText={(id, text) => commit(props.blocks.map((block) => (block.id === id ? { ...block, ...textToBlock(text) } : block)))}
 							onDropAt={(kind, position) => {
 								const block = { ...newBlock(kind as BlockKind, props.fields), ...position };
 								commit([...props.blocks, block]);

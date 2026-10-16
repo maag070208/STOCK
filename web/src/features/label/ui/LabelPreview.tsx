@@ -1,8 +1,8 @@
-import { ITFlex, ITStack, ITText } from "@axzydev/axzy_ui_system";
-import { useRef, type PointerEvent as ReactPointerEvent } from "react";
+import { ITStack, ITText } from "@axzydev/axzy_ui_system";
+import { useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { code128Bars, code128Width } from "../model/code128";
-import { blockValue, type Block } from "../model/blocks";
+import { blockText, blockValue, type Block } from "../model/blocks";
 import { fillPlaceholders, parseZpl, type ZplBarcode, type ZplLabel, type ZplText } from "../model/zpl";
 
 // The label as the printer would print it (labels.md section 4): the same dots the ZPL asks for, drawn on a white label
@@ -21,18 +21,42 @@ export function LabelPreview(props: {
 	onDropAt?: (kind: string, position: { x: number; y: number }) => void;
 	/** Dragging the corner of what is selected: how big it is, which for a text means how tall its letters are. */
 	onResizeBlock?: (id: string, patch: Partial<Block>) => void;
+	/** Double clicking a text writes it where it is read. */
+	onEditText?: (id: string, text: string) => void;
 	// The label of a template is looked at, and a design is aligned: the guides are the middle and the margins.
 	guides?: boolean;
 }) {
 	const { t } = useTranslation(["labels"]);
 	const svg = useRef<SVGSVGElement>(null);
+	// What is being written on the label, where it goes (in per cent of the label, so any size works) and what it says.
+	const [editing, setEditing] = useState<{ id: string; text: string; value: string; left: number; top: number; width: number } | null>(null);
+	const confirmEdit = () => {
+		if (!editing) return;
+		// The blur that closing the field causes is not a second edit.
+		const { id, value, text } = editing;
+		setEditing(null);
+		if (value !== text) props.onEditText?.(id, value);
+	};
+	const openEdit = (block: Block) => {
+		if (!props.onEditText || block.kind === "barcode" || block.kind === "box") return;
+		const box = selectionBox(block, props.values);
+		const text = blockText(block);
+		setEditing({
+			id: block.id,
+			text,
+			value: text,
+			left: (box.x / label.width) * 100,
+			top: (box.y / label.length) * 100,
+			width: (box.width / label.width) * 100,
+		});
+	};
 	const label = props.blocks ? labelOf(props.blocks, props.values) : parseZpl(fillPlaceholders(props.zpl, props.values));
-	const editing = !!props.blocks && !!props.onMove;
+	const designing = !!props.blocks && !!props.onMove;
 
 	// What a person does with the label: press a block, move it, let it go. The distance travelled by the pointer is
 	// turned into dots of the printer, which is the unit the template speaks.
 	const startDrag = (event: ReactPointerEvent, block: Block) => {
-		if (!editing) return;
+		if (!designing) return;
 		event.preventDefault();
 		props.onSelect?.(block.id);
 		const box = svg.current?.getBoundingClientRect();
@@ -92,15 +116,37 @@ export function LabelPreview(props: {
 	return (
 		<ITStack spacing={3}>
 			{/* The label sits on a workbench, so its white edge is visible against the card. */}
-			<ITFlex justify="center" className="sf:rounded-xl sf:bg-secondary-100 sf:p-6">
+			<ITText as="div" className="sf:relative sf:flex sf:justify-center sf:rounded-xl sf:bg-secondary-100 sf:p-6">
+				{editing && (
+					<input
+						// The field takes the focus because it was just opened: writing is what the person came to do.
+						autoFocus
+						data-edit={editing.id}
+						value={editing.value}
+						onChange={(event) => setEditing({ ...editing, value: event.target.value })}
+						onKeyDown={(event) => {
+							if (event.key === "Enter") {
+								event.preventDefault();
+								confirmEdit();
+							}
+							if (event.key === "Escape") {
+								event.preventDefault();
+								setEditing(null);
+							}
+						}}
+						onBlur={confirmEdit}
+						className="sf:absolute sf:z-10 sf:h-8 sf:rounded-sm sf:border-2 sf:border-primary sf:bg-white sf:px-2 sf:text-body-sm sf:shadow-lg"
+						style={{ left: `${editing.left}%`, top: `${editing.top}%`, width: `${editing.width}%`, minWidth: "6rem" }}
+					/>
+				)}
 				<svg
 					ref={svg}
 					viewBox={`0 0 ${label.width} ${label.length}`}
 					// A drag is the label's, not the page's: without this the window scrolls while a block moves.
-					style={editing ? { touchAction: "none" } : undefined}
+					style={designing ? { touchAction: "none" } : undefined}
 					onPointerDown={(event) => {
 						// Pressing the label itself, and not a block, lets it go.
-						if (editing && event.target === svg.current) props.onSelect?.(null);
+						if (designing && event.target === svg.current) props.onSelect?.(null);
 					}}
 					onDragOver={(event) => {
 						if (props.onDropAt) event.preventDefault();
@@ -135,8 +181,9 @@ export function LabelPreview(props: {
 									key={block.id}
 									data-block={block.id}
 									data-kind={block.kind}
-									className={editing ? "sf:cursor-move" : undefined}
+									className={designing ? "sf:cursor-move" : undefined}
 									onPointerDown={(event) => startDrag(event, block)}
+									onDoubleClick={() => openEdit(block)}
 								>
 									{/* A turned block is drawn turned, around the corner it is placed at. */}
 									<g transform={block.orientation ? `rotate(${block.orientation} ${block.x} ${block.y})` : undefined}>
@@ -173,7 +220,7 @@ export function LabelPreview(props: {
 								return <rect key={index} x={element.x} y={element.y} width={side} height={side} fill="none" stroke="black" strokeWidth={2} strokeDasharray="8 6" />;
 							})}
 				</svg>
-			</ITFlex>
+			</ITText>
 			<ITText muted className="sf:text-body-sm">
 				{t("editor.previewSize", { width: label.width, length: label.length, copies: label.copies ?? 1 })}
 			</ITText>

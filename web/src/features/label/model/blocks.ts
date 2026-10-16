@@ -107,6 +107,19 @@ function fieldOrFirst(fields: string[]): string | null {
 	return fields.find((field) => field !== "copies") ?? null;
 }
 
+/** The text of a block as a person reads it: what is fixed, with its variable between double braces. */
+export const blockText = (block: Block) => `${block.prefix}${block.field ? `{{${block.field}}}` : ""}`;
+
+/** The other way: what was typed on the label becomes a fixed text and, at most, one variable. */
+export function textToBlock(text: string): { prefix: string; field: string | null } {
+	const found = /\{\{([^{}]*)\}\}/.exec(text);
+	if (!found) return { prefix: text, field: null };
+	// Anything after the first variable is literal text: the model holds one variable and a fixed text around it.
+	const prefix = text.slice(0, found.index) + text.slice(found.index + found[0].length);
+	const name = found[1].trim().toLowerCase().replace(/[^a-z0-9_]/g, "_").replace(/^([0-9])/, "_$1").slice(0, 40);
+	return { prefix, field: name || null };
+}
+
 /** The value a block prints: its fixed text and the placeholder the API fills at print time. */
 export function blockValue(block: Block): string {
 	const field = block.field ? `{{${block.field}}}` : "";
