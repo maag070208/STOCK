@@ -10,11 +10,16 @@ object ZplRules {
 
 	private val KEY = Regex("^[A-Z][A-Z0-9_]{1,59}$")
 	private val PLACEHOLDER = Regex("\\{\\{([^{}]*)\\}\\}")
+	// The name of a variable: what a printer's data can carry, so a typo is still caught.
+	private val VARIABLE = Regex("^[A-Za-z][A-Za-z0-9_]{0,39}$")
 
 	const val COPIES = "copies"
 
 	// The fields a key may print: what the screen offers when a label is designed or written (labels.md section 4).
 	fun placeholders(key: String): List<String> = (PLACEHOLDERS[key.trim().uppercase()].orEmpty() + COPIES).sorted()
+
+	/** The variables a ZPL uses: what the screen offers as suggestions. */
+	fun used(zpl: String): List<String> = PLACEHOLDER.findAll(zpl).map { it.groupValues[1].trim() }.distinct().sorted().toList()
 
 	// The placeholders of each key, besides {{copies}}. A new key has only {{copies}} until its data is defined.
 	val PLACEHOLDERS: Map<String, Set<String>> = mapOf(
@@ -30,7 +35,7 @@ object ZplRules {
 	fun key(value: String): ErrorCode? = if (KEY.matches(value)) null else ErrorCode.FORMAT_INVALID
 
 	// Every problem of a template: not one label from ^XA to ^XZ; a command outside the list (every ~ command is);
-	// a placeholder its key does not have.
+	// a placeholder that is not shaped like a name.
 	fun check(key: String, zpl: String): List<Problem> {
 		val problems = mutableListOf<Problem>()
 		val commands = commands(zpl)
@@ -38,8 +43,9 @@ object ZplRules {
 		val oneLabel = commands.count { it == "^XA" } == 1 && commands.count { it == "^XZ" } == 1 && text.startsWith("^XA") && text.endsWith("^XZ")
 		if (!oneLabel) problems += Problem(ErrorCode.ZPL_BLOCK_INVALID, null)
 		commands.filter { it.startsWith("~") || code(it) !in ALLOWED }.distinct().forEach { problems += Problem(ErrorCode.ZPL_COMMAND_NOT_ALLOWED, it) }
-		val allowed = PLACEHOLDERS[key].orEmpty() + COPIES
-		PLACEHOLDER.findAll(zpl).map { it.groupValues[1] }.filter { it !in allowed }.distinct().forEach { problems += Problem(ErrorCode.ZPL_PLACEHOLDER_UNKNOWN, it) }
+		// The template says what it prints: a name the API does not know is allowed, as long as it reads like one, and it
+		// prints empty until something fills it. The fields of the key are what the screen suggests (labels.md section 4).
+		PLACEHOLDER.findAll(zpl).map { it.groupValues[1].trim() }.filter { !VARIABLE.matches(it) }.distinct().forEach { problems += Problem(ErrorCode.ZPL_PLACEHOLDER_UNKNOWN, it) }
 		return problems
 	}
 

@@ -56,7 +56,8 @@ export function LabelPreview(props: {
 		window.addEventListener("pointerup", stop);
 	};
 
-	if (label.elements.length === 0) {
+	// The label is drawn empty when it has nothing on it: it is where an element is dropped, so it is always there.
+	if (label.elements.length === 0 && !props.blocks) {
 		return <ITText muted>{t("editor.previewEmpty")}</ITText>;
 	}
 	return (

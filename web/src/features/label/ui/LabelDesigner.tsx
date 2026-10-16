@@ -21,6 +21,9 @@ const ICONS: Record<BlockKind, ReactNode> = {
 
 // The sizes a person recognizes, in dots of the printer: the label is 203 dpi, so 36 dots are about 4.5 mm.
 const SIZES = [24, 36, 50, 70, 90, 110, 150, 200];
+
+// The name of a variable, as the printer's data can carry it: what a person types is not always a name.
+const variableName = (typed: string) => typed.toLowerCase().replace(/[^a-z0-9_]/g, "_").replace(/^([0-9])/, "_$1").slice(0, 40);
 const asSize = (dots: number) => ({ dots, millimeters: Math.round((dots / 203) * 25.4) });
 
 export function LabelDesigner(props: {
@@ -118,13 +121,33 @@ export function LabelDesigner(props: {
 						<ITCard title={t("designer.selected", { name: nameOf(selected.kind) })}>
 							<ITStack spacing={4}>
 								{selected.kind !== "box" && (
-									<ITSelect
-										name={`field-${selected.id}`}
-										label={t("designer.field")}
-										value={selected.field ?? ""}
-										options={props.fields.filter((field) => field !== "copies").map((field) => ({ value: field, label: t(dyn(`designer.fields.${field}`)) }))}
-										onChange={(event) => change({ field: String(event.target.value) })}
-									/>
+									<ITStack spacing={2}>
+										<ITInput
+											name={`field-${selected.id}`}
+											label={t("designer.field")}
+											placeholder={t("designer.fieldOpen")}
+											value={selected.field ?? ""}
+											onChange={(event) => change({ field: variableName(String(event.target.value)) })}
+										/>
+										<ITText muted className="sf:text-body-sm">
+											{t("designer.fieldHint")}
+										</ITText>
+										{props.fields.filter((field) => field !== "copies").length > 0 && (
+											<ITStack spacing={2}>
+												<ITText muted className="sf:text-body-sm">
+													{t("designer.suggestions")}
+												</ITText>
+												{/* What the label already prints: pressing one fills the name, and any other name can be written. */}
+												<ITFlex wrap="wrap" gap={2}>
+													{props.fields
+														.filter((field) => field !== "copies")
+														.map((field) => (
+															<ITButton key={field} size="sm" variant="outlined" label={`{{${field}}}`} onClick={() => change({ field })} />
+														))}
+												</ITFlex>
+											</ITStack>
+										)}
+									</ITStack>
 								)}
 								{selected.kind === "text" && (
 									<ITInput name={`prefix-${selected.id}`} label={t("designer.prefix")} value={selected.prefix} onChange={(event) => change({ prefix: String(event.target.value) })} />
@@ -132,9 +155,9 @@ export function LabelDesigner(props: {
 								{selected.kind !== "box" && selected.kind !== "barcode" && (
 									<ITSelect
 										name={`size-${selected.id}`}
-										label={t("designer.size")}
+										label={t("designer.textSize")}
 										value={String(selected.size)}
-										options={SIZES.map((size) => ({ value: String(size), label: t("designer.sizeOption", asSize(size)) }))}
+										options={SIZES.map((size) => ({ value: String(size), label: t("designer.textSizeOption", asSize(size)) }))}
 										onChange={(event) => change({ size: Number(event.target.value) })}
 									/>
 								)}
@@ -144,7 +167,7 @@ export function LabelDesigner(props: {
 											name={`barHeight-${selected.id}`}
 											label={t("designer.barHeight")}
 											value={String(selected.barHeight)}
-											options={SIZES.map((size) => ({ value: String(size), label: t("designer.sizeOption", asSize(size)) }))}
+											options={SIZES.map((size) => ({ value: String(size), label: t("designer.textSizeOption", asSize(size)) }))}
 											onChange={(event) => change({ barHeight: Number(event.target.value) })}
 										/>
 										<ITSelect
@@ -228,14 +251,14 @@ export function LabelDesigner(props: {
 								{/* The size is chosen, not typed: these are the rolls a person buys. */}
 								<ITSelect
 									name="labelSize"
-									label={t("designer.roll")}
+									label={t("designer.rollSize")}
 									value={(selectedSize && `${selectedSize.widthInches}x${selectedSize.lengthInches}`) || ""}
 									placeholder={t("designer.sizePick")}
 									options={LABEL_SIZES.map((size) => {
 										const dots = sizeInDots(size);
 										return {
 											value: `${size.widthInches}x${size.lengthInches}`,
-											label: t("designer.sizeOption", { width: size.widthInches, length: size.lengthInches, dots: `${dots.width} × ${dots.length}` }),
+											label: t("designer.rollOption", { width: size.widthInches, length: size.lengthInches, dots: `${dots.width} × ${dots.length}` }),
 										};
 									})}
 									onChange={(event) => {

@@ -67,7 +67,8 @@ class LabelTemplateService(
 	fun validate(request: ValidateRequest, locale: Locale): ValidationReport =
 		ValidationReport(
 			ZplRules.check(request.key?.trim().orEmpty(), request.zpl.orEmpty()).map { ProblemView(it.code.name, it.token, messages.getMessage(it.code.messageKey, null, locale)) },
-			ZplRules.placeholders(request.key?.trim().orEmpty()),
+			// What the key suggests and what the template already prints: the screen offers both.
+			(ZplRules.placeholders(request.key?.trim().orEmpty()) + ZplRules.used(request.zpl.orEmpty())).distinct().sorted(),
 		)
 
 	@Transactional
@@ -137,7 +138,7 @@ class LabelTemplateService(
 		nameEn = template.nameEn,
 		version = template.version,
 		zpl = activeZpl(template),
-		placeholders = (ZplRules.PLACEHOLDERS[template.key].orEmpty() + ZplRules.COPIES).toList(),
+		placeholders = (ZplRules.placeholders(template.key) + ZplRules.used(activeZpl(template))).distinct().sorted(),
 		active = template.active,
 		updatedAt = template.updatedAt,
 		design = template.design,

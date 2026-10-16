@@ -135,7 +135,14 @@
       "180": "Upside down",
       "270": "90° counter-clockwise"
     },
-    "roll": "Roll size"
+    "roll": "Roll size",
+    "textSize": "Text size",
+    "rollSize": "Roll size",
+    "rollOption": "{{width}} × {{length}} inches ({{dots}} dots)",
+    "fieldOpen": "Write the name of the variable",
+    "fieldHint": "The name goes between double braces on the label, for example: name. Use letters, numbers and underscore.",
+    "suggestions": "The ones this label already uses:",
+    "textSizeOption": "{{dots}} dots ({{millimeters}} mm)"
   },
   "blocks": {
     "title": "Title",

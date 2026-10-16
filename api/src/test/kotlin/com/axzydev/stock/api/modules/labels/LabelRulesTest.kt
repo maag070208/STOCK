@@ -57,12 +57,21 @@ class LabelRulesTest {
 	}
 
 	@Test
-	fun `each key takes its own placeholders, and every key takes copies`() {
-		assertEquals(listOf(ErrorCode.ZPL_PLACEHOLDER_UNKNOWN to "rack"), codes("PRODUCT", product.replace("{{unit}}", "{{rack}}")))
+	fun `a template prints the variables it names, and only a name that is not one is refused`() {
+		// The template decides what it prints: a name the API does not know is allowed (the screen offers the known ones
+		// as suggestions, and the value is empty until something fills it), and a name that is not a name is not.
+		assertEquals(emptyList<Any>(), codes("PRODUCT", product.replace("{{unit}}", "{{rack}}")))
+		assertEquals(emptyList<Any>(), codes("PRODUCT", product.replace("{{unit}}", "{{precio_oferta}}")))
+		assertEquals(listOf(ErrorCode.ZPL_PLACEHOLDER_UNKNOWN to "precio oferta"), codes("PRODUCT", product.replace("{{unit}}", "{{precio oferta}}")))
+		assertEquals(listOf(ErrorCode.ZPL_PLACEHOLDER_UNKNOWN to "9precio"), codes("PRODUCT", product.replace("{{unit}}", "{{9precio}}")))
 		val location = "^XA^FO30,20^A0N,200,180^FD{{code}}^FS^FO430,40^A0N,40,40^FD{{warehouse_code}} {{aisle}} {{rack}} {{level}}^FS^PQ{{copies}}^XZ"
 		assertEquals(emptyList<Any>(), codes("LOCATION", location))
-		assertEquals(listOf(ErrorCode.ZPL_PLACEHOLDER_UNKNOWN to "barcode"), codes("LOCATION", location.replace("{{level}}", "{{barcode}}")))
 		assertEquals(emptyList<Any>(), codes("NEW_LABEL", "^XA^FDfijo^FS^PQ{{copies}}^XZ"))
+	}
+
+	@Test
+	fun `the variables a template uses are the ones a screen offers`() {
+		assertEquals(listOf("aisle", "code", "copies", "level", "rack", "warehouse_code"), ZplRules.used("^XA^FD{{code}} {{copies}}^FS^FO30,30^FD{{aisle}}{{rack}}{{level}}{{warehouse_code}}^FS^XZ"))
 	}
 
 	@Test
