@@ -50,6 +50,10 @@ A template is ZPL, the printer's language. It is data that reaches a printer, so
 3. **Data is sanitized.** At print time, every placeholder value has the characters `^`, `~` and `\` removed, and is cut to 60 characters. Product names with inch marks and slashes are allowed.
 4. **Only admins edit.** `labels.manage` is `ADMIN`.
 5. **Versioned.** Every change creates a new version. The active version is used for printing.
+6. **The editor draws the label.** The screen of a template shows it as the printer would print it (the width and the
+   length of the template, the texts at their position and height, the bars of the Code 128 barcode, and the values with a
+   sample in place of each placeholder), so a change is checked before a roll of labels is spent. It is a drawing and not
+   an interpreter: it understands the commands of rule 2 and nothing else, and a `^BQ` is shown as the square it takes.
 
 ### Example: product label
 

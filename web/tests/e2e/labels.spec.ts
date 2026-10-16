@@ -44,13 +44,8 @@ test("the editor reports a forbidden command as it is typed, and each saved chan
 	const report = page.getByTestId("zpl-report");
 	await expect(report.getByText("La plantilla cumple las reglas.")).toBeVisible();
 
-	// The label is drawn as it would come out of the printer: the sample values in their place and the bars of the
-	// barcode, which is the point of the preview.
-	const preview = page.getByTestId("zpl-preview");
-	await expect(preview).toBeVisible();
-	await expect(preview.getByText("Codo galvanizado 1/2\"")).toBeVisible();
-	await expect(preview.getByText("7501234567890")).toBeVisible();
-	expect(await preview.locator("rect").count()).toBeGreaterThan(40);
+	// The label of the test's own template is drawn too, with the one placeholder its key allows.
+	await expect(page.getByTestId("zpl-preview").getByText("Etiqueta")).toBeVisible();
 
 	const editor = page.getByLabel("ZPL");
 	await editor.fill(zpl.replace("^PQ", "^HH\n^PQ"));
@@ -135,4 +130,33 @@ test("a manager prints three copies of a product label, on the printers of their
 	const sent = await received;
 	expect(sent).toContain("^PQ3");
 	expect(sent).toContain("Codo galvanizado 1/2\"");
+});
+
+test("the editor draws the label of a product template, with its values and its barcode", async ({ page }) => {
+	await signInAs(page, e2eAdmin());
+	await page.goto("/#/labels");
+	await page.getByRole("cell", { name: "Etiqueta de producto" }).click();
+
+	// The label is drawn where it will be printed: the {{name}} of a product, its barcode with real bars, and its size
+	// in dots, which is what the person checks before spending a roll.
+	const preview = page.getByTestId("zpl-preview");
+	await expect(preview).toBeVisible();
+	await expect(preview.getByText("Codo galvanizado 1/2\"")).toBeVisible();
+	await expect(preview.getByText("7501234567890")).toBeVisible();
+	await expect(preview.getByText("M-1024")).toBeVisible();
+	// The barcode is drawn bar by bar: a Code 128 of thirteen digits is more than forty bars.
+	expect(await preview.locator("rect").count()).toBeGreaterThan(40);
+	await expect(page.getByText("Lienzo de 812 × 406 puntos")).toBeVisible();
+
+	// What is typed is what is drawn: a shorter label moves the text and shrinks the canvas.
+	const editor = page.getByLabel("ZPL");
+	await editor.fill(`^XA
+^PW600
+^LL300
+^FO20,20^A0N,50,50^FD{{code}}^FS
+^PQ1
+^XZ`);
+	await expect(page.getByText("Lienzo de 600 × 300 puntos")).toBeVisible();
+	await expect(preview.getByText("M-1024")).toBeVisible();
+	await expect(preview.getByText("7501234567890")).toHaveCount(0);
 });

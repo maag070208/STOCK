@@ -82,7 +82,11 @@ export function AppShell({ children }: { children: ReactNode }) {
 			sidebar={{
 				navigationItems,
 				brand: { text: t("app.name"), logo: <img src="/brand/stockflow-glyph-dark.svg" alt="" className="sf:size-10" /> },
-				expandOnHover: true,
+				isCollapsed: collapsed,
+				onToggleCollapse: () => toggleSidebar(),
+				// Collapses from the button of the top bar, which is the design (web.md section 8.2); with `true` the
+				// rail unfolds on hover and there is no control left to collapse it.
+				expandOnHover: false,
 			}}
 		>
 			{children}
