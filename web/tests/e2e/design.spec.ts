@@ -62,12 +62,17 @@ test.describe("shell", () => {
     await expect(page.getByRole("navigation").first()).toBeVisible();
   });
 
-  test("the sidebar is black glass: 70% black, 12px blur, faint white border, 256px wide", async ({ page }) => {
+  test("the sidebar is black glass: 70% black, 12px blur and a faint white border", async ({ page }) => {
     expect(await style(page, "aside", "background-color")).toBe(browserColor(components["shell-sidebar"].backgroundColor));
     expect(await style(page, "aside", "backdrop-filter")).toBe(`blur(${designTokens.elevation["shell-blur"]})`);
     expect(await style(page, "aside", "border-right-color")).toBe("rgba(255, 255, 255, 0.1)");
-    const box = await page.locator("aside").first().boundingBox();
-    expect(box!.width).toBe(px(designTokens.layout["shell-sidebar-expanded"]));
+  });
+
+  test("the sidebar is a 64px rail that unfolds to 256px while the pointer is on it", async ({ page }) => {
+    const rail = page.locator("aside").first();
+    await expect.poll(async () => (await rail.boundingBox())!.width).toBe(px(designTokens.layout["shell-sidebar-collapsed"]));
+    await rail.hover();
+    await expect.poll(async () => (await rail.boundingBox())!.width).toBe(px(designTokens.layout["shell-sidebar-expanded"]));
   });
 
   test("the top bar is black glass and 64px tall", async ({ page }) => {
@@ -78,6 +83,8 @@ test.describe("shell", () => {
   });
 
   test("the active navigation item is solid orange with white text", async ({ page }) => {
+    // On the rail the label is hidden: the pointer unfolds it, which is how a person reads the name.
+    await page.locator("aside").first().hover();
     const item = page.getByRole("navigation").first().getByRole("button", { name: "Inicio" });
     expect(await item.evaluate((el) => getComputedStyle(el).backgroundColor)).toBe(rgb(colors.primary));
     const label = item.getByText("Inicio", { exact: true });
@@ -91,8 +98,7 @@ test.describe("shell", () => {
     expect(await item.evaluate((el) => getComputedStyle(el).paddingInline)).toBe("12px");
   });
 
-  test("collapsing the sidebar leaves it 64px wide, with the brand mark and the item's icon", async ({ page }) => {
-    await page.getByRole("banner").getByRole("button").first().click();
+  test("the rail shows the brand mark and the icon of each item", async ({ page }) => {
     await expect.poll(async () => (await page.locator("aside").first().boundingBox())!.width).toBe(
       px(designTokens.layout["shell-sidebar-collapsed"]),
     );

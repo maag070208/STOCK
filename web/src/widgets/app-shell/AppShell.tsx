@@ -7,7 +7,6 @@ import { FaBalanceScale, FaBoxes, FaClipboardList, FaCubes, FaFileInvoice, FaHan
 import { APP_SCREENS, isScreenVisible, type AppScreen } from "@entities/permission";
 import { authApi, signedOut, usePermissions, useSessionUser } from "@entities/user";
 import { LanguageSwitch } from "@widgets/language-switch/LanguageSwitch";
-import { useState } from "react";
 
 const ICONS: Record<string, ReactNode> = {
 	home: <FaHome />,
@@ -31,13 +30,6 @@ const ICONS: Record<string, ReactNode> = {
 // The menu is built from APP_SCREENS and the person's permissions; the API still checks every request.
 export function AppShell({ children }: { children: ReactNode }) {
 	const { t } = useTranslation();
-	// The sidebar of the layout is controlled by the kit: opening it and remembering it is this component's business.
-	const [collapsed, setCollapsed] = useState(() => typeof window !== "undefined" && window.localStorage.getItem("stockflow.sidebar") === "collapsed");
-	const toggleSidebar = () =>
-		setCollapsed((value: boolean) => {
-			window.localStorage.setItem("stockflow.sidebar", value ? "open" : "collapsed");
-			return !value;
-		});
 	const navigate = useNavigate();
 	const location = useLocation();
 	const dispatch = useDispatch();
@@ -82,11 +74,9 @@ export function AppShell({ children }: { children: ReactNode }) {
 			sidebar={{
 				navigationItems,
 				brand: { text: t("app.name"), logo: <img src="/brand/stockflow-glyph-dark.svg" alt="" className="sf:size-10" /> },
-				isCollapsed: collapsed,
-				onToggleCollapse: () => toggleSidebar(),
-				// Collapses from the button of the top bar, which is the design (web.md section 8.2); with `true` the
-				// rail unfolds on hover and there is no control left to collapse it.
-				expandOnHover: false,
+				// The rail stays collapsed and unfolds while the pointer is on it (web.md section 8.2): the kit's own
+				// layout keeps that state, so the shell does not control it.
+				expandOnHover: true,
 			}}
 		>
 			{children}

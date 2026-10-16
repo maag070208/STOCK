@@ -22,8 +22,10 @@ export function LabelPreview(props: { zpl: string; values: Record<string, string
 					role="img"
 					aria-label={t("editor.previewLabel")}
 					data-testid="zpl-preview"
-					className="sf:h-auto sf:w-full sf:max-w-[52rem] sf:rounded-md sf:bg-white sf:shadow-md"
+					className="sf:h-auto sf:w-full sf:max-w-[52rem] sf:rounded-sm sf:border sf:border-outline-strong sf:bg-white sf:shadow-md"
 				>
+					{/* The edge of the label: where the die cuts it, so it reads as a label and not as a page. */}
+					<rect x={1} y={1} width={label.width - 2} height={label.length - 2} fill="none" stroke="#c3c8cf" strokeWidth={2} strokeDasharray="12 10" />
 					{label.elements.map((element, index) => {
 						if (element.kind === "text") return <PreviewText key={index} element={element} />;
 						if (element.kind === "barcode") return <PreviewBarcode key={index} element={element} />;

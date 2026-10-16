@@ -125,10 +125,9 @@ Every screen is built from `@axzydev/axzy_ui_system`. Its look, and the look of 
 - `ITLayout` with `sidebarFullHeight` gives a full-height sidebar with the brand at the top. The sidebar starts open and collapses from the top bar's menu button.
 - Every page uses `ITPage` with `noPadding`. The layout owns the single content margin.
 - Dark mode uses the `.dark` class. The theme persists in `localStorage["it-theme-dark-mode"]`.
-- The sidebar of `ITLayout` is controlled by the app: the shell owns `isCollapsed` and `onToggleCollapse`, it starts
-  **open**, collapses from the button of the top bar (`expandOnHover: false`, so hovering does not unfold it) and
-  remembers the choice in `localStorage["stockflow.sidebar"]`. The kit's own default is collapsed, which is not this
-  design (section 8.2).
+- The sidebar of `ITLayout` is a **64px rail that unfolds to 256px while the pointer is on it** (`expandOnHover: true`,
+  which is the kit's own state: the shell does not control it). On a phone the button of the top bar opens the drawer.
+  A screen never draws its own navigation.
 
 ### 8.3 Components used
 
