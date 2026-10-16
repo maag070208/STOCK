@@ -42,6 +42,30 @@ test.describe("workspace", () => {
     expect(await style(page, "body", "color")).toBe(rgb(colors["dark-on-surface"]));
   });
 
+  test("a screen taller than the window ends with the layout's room", async ({ page }) => {
+    // The bottom margin belongs to the layout (web.md section 8.6 rule 4): a long screen used to overflow the
+    // container that carried the padding, so its last card ended against the edge of the window.
+    await page.setViewportSize({ width: 1024, height: 420 });
+    await signInAs(page, office);
+    await page.goto("/#/products");
+    await expect(page.getByRole("heading", { name: "Materiales" })).toBeVisible();
+    await page.mouse.move(500, 200);
+    for (let wheel = 0; wheel < 12; wheel++) await page.mouse.wheel(0, 400);
+    const room = await page.evaluate(() => {
+      const main = document.querySelector("main")!;
+      const padded = document.querySelector('[class*="pb-12"]')!;
+      const last = padded.lastElementChild!;
+      return {
+        bottom: Math.round(main.getBoundingClientRect().bottom - last.getBoundingClientRect().bottom),
+        padding: Math.round(Number.parseFloat(getComputedStyle(padded).paddingBottom)),
+        taller: main.scrollHeight > main.clientHeight,
+      };
+    });
+    // The screen really is taller than the window, and what is left below the content is the layout's padding.
+    expect(room.taller).toBe(true);
+    expect(room.bottom).toBe(room.padding);
+  });
+
   test("the content is capped at the container width and its title is the module headline", async ({ page }) => {
     await page.setViewportSize({ width: 1920, height: 900 });
     await signInAs(page, office);

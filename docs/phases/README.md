@@ -13,13 +13,15 @@ F0 Foundations
                 ├── F5 Orders (exit)
                 └── F6 Reports and kardex
                      ├── F7 Hardening and deployment
-                     └── F8 Fast invoice capture
+                     ├── F8 Fast invoice capture
+                     └── F9 Every screen, the same design
 ```
 
 - F3 and F4 can run in parallel once F2 is done.
 - F5 and F6 can run in parallel once F4 is done.
-- F7 starts only after F5 and F6 are done.
 - F8 redesigns the invoice screens of F4 and is done before F7, so the hardening covers the screens that ship.
+- F9 takes the design F8 settled ([screens.md](../architecture/screens.md)) to every other page, and runs before F7:
+  the hardening covers the screens that ship, not the ones that are about to change.
 
 ## Phases
 
@@ -34,6 +36,7 @@ F0 Foundations
 | [F6](F6-reports.md) | Reports and kardex | Stock reports, kardex, movement and order reports |
 | [F7](F7-hardening-and-deployment.md) | Hardening and deployment | Backups, restore drill, security review, production deployment |
 | [F8](F8-fast-invoice-capture.md) | Fast invoice capture | The invoice screens of F4 with a modal, a quick capture bar and one search box |
+| [F9](F9-screen-design.md) | Every screen, the same design | The anatomy of the invoice screens applied to every page |
 
 ## Tasks
 

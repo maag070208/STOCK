@@ -146,7 +146,9 @@ Every screen is built from `@axzydev/axzy_ui_system`. Its look, and the look of 
 | Charts | `ITLineBarChart` |
 
 **The rules of a screen, module by module.** They are the rules the invoice screens were built with, written down so the
-next module does not invent its own. They are not suggestions: the lint fails on the first one, the tests hold them, and a
+next module does not invent its own. [screens.md](screens.md) is the same thing as a recipe, shape by shape (a list, a
+record, a report, a console and a form enter through there), and [F9](../phases/F9-screen-design.md) is the plan that took
+it to every page. They are not suggestions: the lint fails on the first one, the tests hold them, and a
 screen that breaks them is a defect — the same as a screen that does not save.
 
 ### 8.4 Only the kit builds a screen
@@ -186,6 +188,7 @@ markup. If the kit lacks something, it is added to the kit (and its version here
 | Description | The name of the record (`Aceros cd4aed`). Never "code · name" in the title: it is what the breadcrumb already says, and it wraps on a narrow window. |
 | Facts | The facts of a record go in **one slim card** (`FactStrip`): a small uppercase label and its value, four to a row (two when one of them is long, such as an address). A row of tall `ITStatCard`s is a defect: a number ends up shouting louder than the title. |
 | Summary | What the page holds ("1 línea · 100 piezas") is a fact of the strip. It is not repeated above the table. |
+| Every screen | A list, a record, a report, a console and a form are the five shapes; each one has its order in [screens.md](screens.md). |
 | Actions | The page's actions, at the end of the header. The **badge of the state and the action that changes it** go together here (8.6). |
 
 ### 8.6 Buttons and icons

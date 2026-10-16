@@ -58,7 +58,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 	return (
 		<ITLayout
 			className="sf-shell"
-			contentClassName="sf:max-w-(--sf-layout-container-max) sf:pb-12"
+			contentClassName="sf:max-w-(--sf-layout-container-max) sf:h-auto sf:min-h-full sf:pb-12"
 			sidebarFullHeight
 			topBar={{
 				logoText: t("app.name"),
