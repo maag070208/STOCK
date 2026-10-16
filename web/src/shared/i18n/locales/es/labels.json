@@ -122,7 +122,9 @@
       "4": "Grueso",
       "5": "Muy grueso"
     },
-    "unreadable": "Este ZPL no se puede representar por bloques (tiene cosas que el diseñador no maneja). El diseño empieza vacío; tu ZPL sigue guardado hasta que guardes el diseño."
+    "unreadable": "Este ZPL no se puede representar por bloques (tiene cosas que el diseñador no maneja). El diseño empieza vacío; tu ZPL sigue guardado hasta que guardes el diseño.",
+    "more": "Más opciones (posición exacta)",
+    "status": "Reglas"
   },
   "blocks": {
     "title": "Título",

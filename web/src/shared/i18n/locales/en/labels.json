@@ -122,7 +122,9 @@
       "4": "Thick",
       "5": "Very thick"
     },
-    "unreadable": "This ZPL cannot be shown as blocks (it has things the designer does not handle). The design starts empty; your ZPL stays saved until you save the design."
+    "unreadable": "This ZPL cannot be shown as blocks (it has things the designer does not handle). The design starts empty; your ZPL stays saved until you save the design.",
+    "more": "More options (exact position)",
+    "status": "Rules"
   },
   "blocks": {
     "title": "Title",

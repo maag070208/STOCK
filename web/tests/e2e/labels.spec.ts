@@ -162,16 +162,18 @@ test("the editor draws the label of a product template, with its values and its 
 });
 
 test("a label is designed by dragging its blocks, and the API accepts what it writes", async ({ page }) => {
+	// A template of the test's own: the seeded ones are what the other tests read.
+	const { id } = await template();
 	await signInAs(page, e2eAdmin());
-	await page.goto("/#/labels");
-	await page.getByRole("cell", { name: "Etiqueta de producto" }).click();
+	await page.goto(`/#/labels/${id}`);
 
 	// A template with no saved design opens its ZPL; the designer reads it into blocks, which is what lets a person move
 	// them. What cannot be read is said, never guessed.
 	await page.getByRole("button", { name: "Diseño" }).click();
 	await expect(page.getByTestId("zpl-preview")).toBeVisible();
 	const first = page.locator("[data-block]").first();
-	await expect(first).toHaveAttribute("data-kind", "title");
+	// The template of the fixture prints a fixed text, which is the block the reader finds.
+	await expect(first).toHaveAttribute("data-kind", "text");
 	await page.getByRole("button", { name: "Ver el ZPL que se guardará" }).click();
 	const before = await page.getByTestId("designed-zpl").innerText();
 	const start = (await first.boundingBox())!;

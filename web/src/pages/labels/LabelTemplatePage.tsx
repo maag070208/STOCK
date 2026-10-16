@@ -1,4 +1,4 @@
-import { ITAccordion, ITAlert, ITBadget, ITButton, ITCard, ITCheckbox, ITChip, ITFlex, ITGrid, ITInput, ITPage, ITStack, ITText, ITTextarea } from "@axzydev/axzy_ui_system";
+import { ITAccordion, ITAlert, ITBadget, ITButton, ITCard, ITCheckbox, ITFlex, ITGrid, ITInput, ITPage, ITStack, ITText, ITTextarea } from "@axzydev/axzy_ui_system";
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
@@ -186,31 +186,41 @@ export function LabelTemplatePage() {
 					{/* What the template is: three fields, and whether it is the one printing. */}
 					<ITGrid item xs={12} lg={designing ? 12 : 7}>
 						<ITStack spacing={4}>
-							<ITCard title={t("editor.data")}>
-								<ITGrid container spacing={4}>
-									<ITGrid item xs={12} md={4}>
-										<ITInput
-											name="key"
-											label={t("editor.key")}
-											value={key}
-											disabled={!creating || !canManage}
-											onChange={(e) => setKey(e.target.value.toUpperCase())}
-											error={errors.key ?? (creating ? t("editor.keyHint") : undefined)}
-											touched={!!errors.key}
-											required
-										/>
-									</ITGrid>
-									<ITGrid item xs={12} md={4}>
-										<ITInput name="nameEs" label={t("editor.nameEs")} value={nameEs} disabled={!canManage} onChange={(e) => setNameEs(e.target.value)} error={errors.nameEs} touched={!!errors.nameEs} required />
-									</ITGrid>
-									<ITGrid item xs={12} md={4}>
-										<ITInput name="nameEn" label={t("editor.nameEn")} value={nameEn} disabled={!canManage} onChange={(e) => setNameEn(e.target.value)} error={errors.nameEn} touched={!!errors.nameEn} required />
-									</ITGrid>
-								</ITGrid>
-								{!creating && canManage && (
-									<ITCheckbox name="active" label={t("editor.active")} checked={active} onChange={setActive} />
-								)}
-							</ITCard>
+							{/* What the template is called and whether it prints: set once, so it waits behind a click. */}
+							<ITAccordion
+								variant="bordered"
+								items={[
+									{
+										id: "data",
+										title: t("editor.data"),
+										content: (
+											<ITStack spacing={4}>
+												<ITGrid container spacing={4}>
+													<ITGrid item xs={12} md={4}>
+														<ITInput
+															name="key"
+															label={t("editor.key")}
+															value={key}
+															disabled={!creating || !canManage}
+															onChange={(e) => setKey(e.target.value.toUpperCase())}
+															error={errors.key ?? (creating ? t("editor.keyHint") : undefined)}
+															touched={!!errors.key}
+															required
+														/>
+													</ITGrid>
+													<ITGrid item xs={12} md={4}>
+														<ITInput name="nameEs" label={t("editor.nameEs")} value={nameEs} disabled={!canManage} onChange={(e) => setNameEs(e.target.value)} error={errors.nameEs} touched={!!errors.nameEs} required />
+													</ITGrid>
+													<ITGrid item xs={12} md={4}>
+														<ITInput name="nameEn" label={t("editor.nameEn")} value={nameEn} disabled={!canManage} onChange={(e) => setNameEn(e.target.value)} error={errors.nameEn} touched={!!errors.nameEn} required />
+													</ITGrid>
+												</ITGrid>
+												{!creating && canManage && <ITCheckbox name="active" label={t("editor.active")} checked={active} onChange={setActive} />}
+											</ITStack>
+										),
+									},
+								]}
+							/>
 
 							{/* The template itself, which is the biggest thing on the page. */}
 							<ITCard title={t("editor.template")}>
@@ -266,36 +276,30 @@ export function LabelTemplatePage() {
 								</ITStack>
 							</ITCard>
 
-							{/* The report of the rules, under what it judges, and as wide as it. */}
-							<ITCard title={t("editor.report")}>
-								<ITText as="aside" aria-live="polite" data-testid="zpl-report" className="sf:flex sf:flex-col sf:gap-3">
-									{checking && <ITText muted>{t("editor.checking")}</ITText>}
-									{!checking && problems?.length === 0 && <ITAlert variant="success">{t("editor.valid")}</ITAlert>}
-									{problems?.map((problem, index) => {
-										const lines = problemLines(shownZpl, problem.token);
-										return (
-											<ITAlert key={`${problem.code}-${problem.token ?? index}`} variant="error">
-												<ITText as="span" className="sf:block">
-													{problem.message}
-												</ITText>
-												{(problem.token || lines.length > 0) && (
-													<ITText as="span" className="sf:block sf:text-code-sm">
-														{[problem.token, lines.length > 0 ? lineLabel(lines) : null].filter(Boolean).join(" · ")}
-													</ITText>
-												)}
-											</ITAlert>
-										);
-									})}
-									<ITText as="h2" className="sf:text-label-md">
-										{t("editor.placeholders")}
+							{/* The rules, in one line: green when there is nothing to fix, and the problems when there are. */}
+							<ITText as="aside" aria-live="polite" data-testid="zpl-report" className="sf:flex sf:flex-col sf:gap-2">
+								{checking && <ITText muted className="sf:text-body-sm">{t("editor.checking")}</ITText>}
+								{!checking && problems?.length === 0 && (
+									<ITText className="sf:text-body-sm sf:text-success">
+										{t("editor.valid")}
 									</ITText>
-									<ITFlex wrap="wrap" gap={2}>
-										{placeholders.map((name) => (
-											<ITChip key={name} label={`{{${name}}}`} variant="soft" />
-										))}
-									</ITFlex>
-								</ITText>
-							</ITCard>
+								)}
+								{problems?.map((problem, index) => {
+									const lines = problemLines(shownZpl, problem.token);
+									return (
+										<ITAlert key={`${problem.code}-${problem.token ?? index}`} variant="error">
+											<ITText as="span" className="sf:block">
+												{problem.message}
+											</ITText>
+											{(problem.token || lines.length > 0) && (
+												<ITText as="span" className="sf:block sf:text-code-sm">
+													{[problem.token, lines.length > 0 ? lineLabel(lines) : null].filter(Boolean).join(" · ")}
+												</ITText>
+											)}
+										</ITAlert>
+									);
+								})}
+							</ITText>
 						</ITStack>
 					</ITGrid>
 

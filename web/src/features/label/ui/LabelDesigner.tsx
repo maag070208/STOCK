@@ -1,4 +1,4 @@
-import { ITAccordion, ITButton, ITCard, ITFlex, ITGrid, ITInput, ITSelect, ITStack, ITText } from "@axzydev/axzy_ui_system";
+import { ITAccordion, ITButton, ITCard, ITDropdownMenu, ITFlex, ITGrid, ITInput, ITSelect, ITStack, ITText, type ITDropdownMenuItem } from "@axzydev/axzy_ui_system";
 import { useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { FaArrowDown, FaArrowUp, FaBarcode, FaFont, FaHeading, FaPlus, FaSquare, FaTag, FaTrash } from "react-icons/fa";
@@ -101,12 +101,15 @@ export function LabelDesigner(props: {
 			{/* What can be done: add an element, or describe the one that is chosen. */}
 			<ITGrid item xs={12} lg={4}>
 				<ITStack spacing={4} className="sf:lg:sticky sf:lg:top-6">
-					<ITCard title={t("designer.add")}>
-						<ITStack spacing={2}>
-							{BLOCKS.map((block) => (
-								<ITButton key={block.kind} variant="outlined" size="sm" icon={<FaPlus aria-hidden />} className="sf:w-full sf:justify-start" label={nameOf(block.kind)} onClick={() => add(block.kind)} />
-							))}
-						</ITStack>
+					<ITCard>
+						<ITDropdownMenu
+							items={BLOCKS.map((block): ITDropdownMenuItem => ({ id: block.kind, label: nameOf(block.kind), icon: ICONS[block.kind], onClick: () => add(block.kind) }))}
+							trigger={
+								<ITButton variant="outlined" size="sm" icon={<FaPlus aria-hidden />} className="sf:w-full" label={t("designer.add")} />
+							}
+							triggerLabel={t("designer.add")}
+							placement="bottom-start"
+						/>
 					</ITCard>
 
 					{selected ? (
@@ -165,20 +168,31 @@ export function LabelDesigner(props: {
 									</ITGrid>
 								)}
 
-								{/* Where it is. Dragging it on the label is the easy way; this is for putting it exactly. */}
-								<ITStack spacing={2}>
-									<ITGrid container spacing={3}>
+								{/* Where it is: dragging is the easy way, so the exact numbers wait behind a click. */}
+								<ITAccordion
+									variant="bordered"
+									items={[
+										{
+											id: "more",
+											title: t("designer.more"),
+											content: (
+												<ITStack spacing={3}>
+													<ITGrid container spacing={3}>
 										<ITGrid item xs={6}>
 											<ITInput name={`x-${selected.id}`} type="number" label={t("designer.x")} value={String(selected.x)} onChange={(event) => change({ x: Number(event.target.value) })} />
 										</ITGrid>
-										<ITGrid item xs={6}>
-											<ITInput name={`y-${selected.id}`} type="number" label={t("designer.y")} value={String(selected.y)} onChange={(event) => change({ y: Number(event.target.value) })} />
-										</ITGrid>
-									</ITGrid>
-									<ITText muted className="sf:text-body-sm">
-										{t("designer.dragHint")}
-									</ITText>
-								</ITStack>
+														<ITGrid item xs={6}>
+															<ITInput name={`y-${selected.id}`} type="number" label={t("designer.y")} value={String(selected.y)} onChange={(event) => change({ y: Number(event.target.value) })} />
+														</ITGrid>
+													</ITGrid>
+													<ITText muted className="sf:text-body-sm">
+														{t("designer.dragHint")}
+													</ITText>
+												</ITStack>
+											),
+										},
+									]}
+								/>
 
 								<ITText muted className="sf:font-mono sf:text-code-sm">
 									{selected.kind === "box" ? t("designer.boxHint") : blockValue(selected) || t("designer.noField")}
