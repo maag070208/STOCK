@@ -1,7 +1,7 @@
 import { ITAccordion, ITButton, ITCard, ITFlex, ITGrid, ITInput, ITSelect, ITStack, ITText } from "@axzydev/axzy_ui_system";
-import { useState, type DragEvent, type ReactNode } from "react";
+import { useEffect, useRef, useState, type DragEvent, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { FaArrowDown, FaArrowUp, FaBarcode, FaFont, FaHeading, FaSquare, FaTag, FaTrash } from "react-icons/fa";
+import { FaArrowDown, FaArrowUp, FaBarcode, FaFont, FaHeading, FaRedo, FaSquare, FaTag, FaTrash, FaUndo } from "react-icons/fa";
 import { BLOCKS, LABEL_SIZES, blockValue, newBlock, sameSize, sizeInDots, sizeOfDots, type Block, type BlockKind } from "../model/blocks";
 import { dyn } from "@shared/i18n";
 import { IconButton } from "@shared/ui/IconButton";
@@ -38,24 +38,62 @@ export function LabelDesigner(props: {
 }) {
 	const { t } = useTranslation(["labels", "common"]);
 	const [selectedId, setSelectedId] = useState<string | null>(null);
+	// Undo and redo (Ctrl+Z, Ctrl+Shift+Z): the label is written by hand, so it is easily unwritten. The history lives
+	// here because every change of the design goes through this component.
+	const past = useRef<Block[][]>([]);
+	const future = useRef<Block[][]>([]);
+	const [, setRevision] = useState(0);
+	const commit = (next: Block[]) => {
+		past.current.push(props.blocks);
+		future.current = [];
+		setRevision((revision) => revision + 1);
+		props.onChange(next);
+	};
+	const step = (direction: -1 | 1) => {
+		const from = direction === -1 ? past : future;
+		const to = direction === -1 ? future : past;
+		const previous = from.current.pop();
+		if (!previous) return;
+		to.current.push(props.blocks);
+		setRevision((revision) => revision + 1);
+		props.onChange(previous);
+	};
+	useEffect(() => {
+		const onKey = (event: KeyboardEvent) => {
+			const target = document.activeElement as HTMLElement | null;
+			// Inside a field, Ctrl+Z is the field's own text: it is left alone.
+			if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable)) return;
+			if (!event.ctrlKey && !event.metaKey) return;
+			const key = event.key.toLowerCase();
+			if (key === "z" && !event.shiftKey) {
+				event.preventDefault();
+				step(-1);
+			} else if ((key === "z" && event.shiftKey) || key === "y") {
+				event.preventDefault();
+				step(1);
+			}
+		};
+		window.addEventListener("keydown", onKey);
+		return () => window.removeEventListener("keydown", onKey);
+	});
 	const selected = props.blocks.find((block) => block.id === selectedId) ?? null;
 	// The size of the label, as one of the rolls a person knows. A size that is not there (an old template) shows empty.
 	const selectedSize = sizeOfDots({ width: props.width, length: props.length });
 	const nameOf = (kind: BlockKind) => t(dyn(BLOCKS.find((block) => block.kind === kind)!.label));
 	const change = (patch: Partial<Block>) => {
 		if (!selected) return;
-		props.onChange(props.blocks.map((block) => (block.id === selected.id ? { ...block, ...patch } : block)));
+		commit(props.blocks.map((block) => (block.id === selected.id ? { ...block, ...patch } : block)));
 	};
 	const move = (index: number, step: -1 | 1) => {
 		const next = [...props.blocks];
 		const [block] = next.splice(index, 1);
 		next.splice(index + step, 0, block);
-		props.onChange(next);
+		commit(next);
 	};
 	// Adding an element chooses it: what was just added is what the person wants to describe.
 	const add = (kind: BlockKind) => {
 		const block = newBlock(kind, props.fields);
-		props.onChange([...props.blocks, block]);
+		commit([...props.blocks, block]);
 		setSelectedId(block.id);
 	};
 
@@ -81,10 +119,11 @@ export function LabelDesigner(props: {
 							selected={selectedId}
 							onSelect={setSelectedId}
 							guides
-							onMove={(id, position) => props.onChange(props.blocks.map((block) => (block.id === id ? { ...block, ...position } : block)))}
+							onMove={(id, position) => commit(props.blocks.map((block) => (block.id === id ? { ...block, ...position } : block)))}
+							onResizeBlock={(id, patch) => commit(props.blocks.map((block) => (block.id === id ? { ...block, ...patch } : block)))}
 							onDropAt={(kind, position) => {
 								const block = { ...newBlock(kind as BlockKind, props.fields), ...position };
-								props.onChange([...props.blocks, block]);
+								commit([...props.blocks, block]);
 								setSelectedId(block.id);
 							}}
 						/>
@@ -97,6 +136,10 @@ export function LabelDesigner(props: {
 				<ITStack spacing={4} className="sf:lg:sticky sf:lg:top-6">
 					<ITCard title={t("designer.add")}>
 						<ITStack spacing={2}>
+							<ITFlex gap={2}>
+								<IconButton icon={<FaUndo aria-hidden />} label={t("designer.undo")} variant="outlined" onClick={() => step(-1)} disabled={past.current.length === 0} />
+								<IconButton icon={<FaRedo aria-hidden />} label={t("designer.redo")} variant="outlined" onClick={() => step(1)} disabled={future.current.length === 0} />
+							</ITFlex>
 							{BLOCKS.map((block) => (
 								// It is dragged onto the label, and it is also a button: dragging is not for everybody.
 								<ITText
@@ -240,7 +283,7 @@ export function LabelDesigner(props: {
 									icon={<FaTrash aria-hidden />}
 									label={t("common:actions.remove")}
 									onClick={() => {
-										props.onChange(props.blocks.filter((block) => block.id !== selected.id));
+										commit(props.blocks.filter((block) => block.id !== selected.id));
 										setSelectedId(null);
 									}}
 								/>

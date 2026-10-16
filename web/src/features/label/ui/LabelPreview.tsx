@@ -19,6 +19,8 @@ export function LabelPreview(props: {
 	onMove?: (id: string, position: { x: number; y: number }) => void;
 	/** What a person does with the label while designing: drop an element on it, where they let it go. */
 	onDropAt?: (kind: string, position: { x: number; y: number }) => void;
+	/** Dragging the corner of what is selected: how big it is, which for a text means how tall its letters are. */
+	onResizeBlock?: (id: string, patch: Partial<Block>) => void;
 	// The label of a template is looked at, and a design is aligned: the guides are the middle and the margins.
 	guides?: boolean;
 }) {
@@ -57,6 +59,33 @@ export function LabelPreview(props: {
 	};
 
 	// The label is drawn empty when it has nothing on it: it is where an element is dropped, so it is always there.
+	// The corner of what is selected: dragging it makes it bigger or smaller in the dots of the printer.
+	const startResize = (event: ReactPointerEvent, block: Block) => {
+		if (!props.onResizeBlock) return;
+		event.preventDefault();
+		event.stopPropagation();
+		const box = svg.current?.getBoundingClientRect();
+		if (!box) return;
+		const scale = label.width / box.width;
+		const startX = event.clientX;
+		const startY = event.clientY;
+		const start = { ...block };
+		const move = (moving: PointerEvent) => {
+			const dx = (moving.clientX - startX) * scale;
+			const dy = (moving.clientY - startY) * scale;
+			// A text grows with the height of its letters, a barcode with its bars, and a box with its sides.
+			if (start.kind === "box") props.onResizeBlock!(block.id, { width: Math.max(4, Math.round(start.width + dx)), height: Math.max(2, Math.round(start.height + dy)) });
+			else if (start.kind === "barcode") props.onResizeBlock!(block.id, { barHeight: Math.max(20, Math.round(start.barHeight + dy)) });
+			else props.onResizeBlock!(block.id, { size: Math.max(10, Math.round(start.size + (dx + dy) / 2)) });
+		};
+		const stop = () => {
+			window.removeEventListener("pointermove", move);
+			window.removeEventListener("pointerup", stop);
+		};
+		window.addEventListener("pointermove", move);
+		window.addEventListener("pointerup", stop);
+	};
+
 	if (label.elements.length === 0 && !props.blocks) {
 		return <ITText muted>{t("editor.previewEmpty")}</ITText>;
 	}
@@ -114,8 +143,24 @@ export function LabelPreview(props: {
 										<BlockShape block={block} values={props.values} />
 									</g>
 									{props.selected === block.id && (
-										// What is selected says so, with the box it occupies.
-										<rect {...selectionBox(block, props.values)} fill="none" stroke="var(--sf-c-primary)" strokeWidth={2} strokeDasharray="10 6" />
+										// What is selected says so, with the box it occupies and the corner that sizes it.
+										<>
+											<rect {...selectionBox(block, props.values)} fill="none" stroke="var(--sf-c-primary)" strokeWidth={2} strokeDasharray="10 6" />
+											{props.onResizeBlock && (
+												<rect
+													data-resize={block.id}
+													x={selectionBox(block, props.values).x + selectionBox(block, props.values).width - 9}
+													y={selectionBox(block, props.values).y + selectionBox(block, props.values).height - 9}
+													width={18}
+													height={18}
+													fill="white"
+													stroke="var(--sf-c-primary)"
+													strokeWidth={2}
+													style={{ cursor: "nwse-resize", touchAction: "none" }}
+													onPointerDown={(event) => startResize(event, block)}
+												/>
+											)}
+										</>
 									)}
 								</g>
 							))

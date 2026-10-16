@@ -142,7 +142,10 @@
     "fieldOpen": "Escribe el nombre de la variable",
     "fieldHint": "El nombre va entre llaves dobles en la etiqueta, por ejemplo: nombre. Usa letras, números y guion bajo.",
     "suggestions": "Las que ya usa esta etiqueta:",
-    "textSizeOption": "{{dots}} puntos ({{millimeters}} mm)"
+    "textSizeOption": "{{dots}} puntos ({{millimeters}} mm)",
+    "undo": "Deshacer",
+    "redo": "Rehacer",
+    "resize": "Arrastra la esquina para cambiar el tamaño"
   },
   "blocks": {
     "title": "Título",

@@ -142,7 +142,10 @@
     "fieldOpen": "Write the name of the variable",
     "fieldHint": "The name goes between double braces on the label, for example: name. Use letters, numbers and underscore.",
     "suggestions": "The ones this label already uses:",
-    "textSizeOption": "{{dots}} dots ({{millimeters}} mm)"
+    "textSizeOption": "{{dots}} dots ({{millimeters}} mm)",
+    "undo": "Undo",
+    "redo": "Redo",
+    "resize": "Drag the corner to change the size"
   },
   "blocks": {
     "title": "Title",

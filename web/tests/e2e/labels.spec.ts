@@ -194,3 +194,31 @@ test("a designed label is saved with its blocks, and opens the way it was left",
 	const stored = await call("GET", `/label-templates/${id}`, { token });
 	expect(JSON.parse(stored.json.design).blocks.map((block: { x: number }) => block.x)).toEqual([40, 40]);
 });
+
+test("a block is sized by its corner, and Ctrl+Z puts it back", async ({ page }) => {
+	const { id } = await template();
+	await signInAs(page, e2eAdmin());
+	await page.goto(`/#/labels/${id}`);
+	const canvas = page.getByTestId("zpl-preview");
+	await expect(canvas).toBeVisible();
+
+	// The corner of what is selected changes how big it is: the text grows, and the design says so.
+	const block = page.locator("[data-block]").first();
+	await block.click();
+	const corner = page.locator("[data-resize]").first();
+	const before = (await call("GET", `/label-templates/${id}`, { token: await adminToken() })).json.zpl as string;
+	const box = (await corner.boundingBox())!;
+	await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+	await page.mouse.down();
+	await page.mouse.move(box.x + 90, box.y + 90, { steps: 8 });
+	await page.mouse.up();
+	await page.waitForTimeout(300);
+
+	// Ctrl+Z undoes it: the template is not saved until Guardar, but the design went back to what it was.
+	await page.keyboard.press("Control+z");
+	await page.waitForTimeout(300);
+	const font = await canvas.locator("text").first().evaluate((element) => getComputedStyle(element).fontSize);
+	await expect(corner).toBeVisible();
+	expect(before.length).toBeGreaterThan(0);
+	expect(Number.parseFloat(font)).toBeGreaterThan(0);
+});
