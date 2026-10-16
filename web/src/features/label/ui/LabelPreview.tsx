@@ -17,6 +17,8 @@ export function LabelPreview(props: {
 	selected?: string | null;
 	onSelect?: (id: string | null) => void;
 	onMove?: (id: string, position: { x: number; y: number }) => void;
+	/** What a person does with the label while designing: drop an element on it, where they let it go. */
+	onDropAt?: (kind: string, position: { x: number; y: number }) => void;
 	// The label of a template is looked at, and a design is aligned: the guides are the middle and the margins.
 	guides?: boolean;
 }) {
@@ -70,6 +72,18 @@ export function LabelPreview(props: {
 						// Pressing the label itself, and not a block, lets it go.
 						if (editing && event.target === svg.current) props.onSelect?.(null);
 					}}
+					onDragOver={(event) => {
+						if (props.onDropAt) event.preventDefault();
+					}}
+					onDrop={(event) => {
+						const kind = event.dataTransfer.getData("application/x-stockflow-block");
+						if (!kind || !props.onDropAt) return;
+						event.preventDefault();
+						// Where it was let go, in the dots of the printer.
+						const box = svg.current!.getBoundingClientRect();
+						const scale = label.width / box.width;
+						props.onDropAt(kind, { x: Math.max(0, Math.round((event.clientX - box.left) * scale)), y: Math.max(0, Math.round((event.clientY - box.top) * scale)) });
+					}}
 					role="img"
 					aria-label={t("editor.previewLabel")}
 					data-testid="zpl-preview"
@@ -94,7 +108,10 @@ export function LabelPreview(props: {
 									className={editing ? "sf:cursor-move" : undefined}
 									onPointerDown={(event) => startDrag(event, block)}
 								>
-									<BlockShape block={block} values={props.values} />
+									{/* A turned block is drawn turned, around the corner it is placed at. */}
+									<g transform={block.orientation ? `rotate(${block.orientation} ${block.x} ${block.y})` : undefined}>
+										<BlockShape block={block} values={props.values} />
+									</g>
 									{props.selected === block.id && (
 										// What is selected says so, with the box it occupies.
 										<rect {...selectionBox(block, props.values)} fill="none" stroke="var(--sf-c-primary)" strokeWidth={2} strokeDasharray="10 6" />

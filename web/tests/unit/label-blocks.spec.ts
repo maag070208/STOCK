@@ -62,3 +62,16 @@ test("the sizes a person chooses are the rolls, in inches and in dots", () => {
 	// A label of a size nobody chose (an old template) is not forced into one of them.
 	expect(sizeOfDots({ width: 700, length: 300 })).toBeNull();
 });
+
+test("a block can be turned, and the turn survives the round trip", () => {
+	// ZPL turns a field with the letter of its orientation: N as written, R a quarter, I half, B three quarters.
+	const turned = { ...newBlock("code", PRODUCT), x: 40, y: 40, orientation: 90 as const };
+	expect(blocksToZpl([turned])).toContain("^A0R,");
+	expect(blocksFromZpl(blocksToZpl([turned]))!.blocks[0]).toMatchObject({ orientation: 90 });
+	// A barcode turns with its own command.
+	const barcode = { ...newBlock("barcode", PRODUCT), orientation: 270 as const };
+	expect(blocksToZpl([barcode])).toContain("^BCB,");
+	expect(blocksFromZpl(blocksToZpl([barcode]))!.blocks[0]).toMatchObject({ orientation: 270 });
+	// A block nobody turned comes back as written.
+	expect(blocksToZpl([newBlock("code", PRODUCT)])).toContain("^A0N,");
+});

@@ -126,7 +126,16 @@
     "more": "Más opciones (posición exacta)",
     "status": "Reglas",
     "handWritten": "Esta etiqueta se escribió a mano y el diseñador no puede representarla por bloques, así que se muestra tal como se imprime y no se toca. Duplícala como plantilla nueva si quieres rehacerla por bloques.",
-    "sizePick": "Elige la medida del rollo"
+    "sizePick": "Elige la medida del rollo",
+    "dragFromPalette": "Arrástralo a la etiqueta, o púlsalo para agregarlo.",
+    "rotate": "Giro",
+    "turn": {
+      "0": "Normal",
+      "90": "90° a la derecha",
+      "180": "De cabeza",
+      "270": "90° a la izquierda"
+    },
+    "roll": "Medida del rollo"
   },
   "blocks": {
     "title": "Título",

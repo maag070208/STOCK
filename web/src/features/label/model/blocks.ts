@@ -6,6 +6,11 @@
 
 export type BlockKind = "title" | "text" | "code" | "barcode" | "box";
 
+/** The ZPL orientation of a field: N is as written, R a quarter turn, I half, B three quarters. */
+const ZPL_TURN: Record<number, string> = { 0: "N", 90: "R", 180: "I", 270: "B" };
+export const turnLetter = (orientation: number) => ZPL_TURN[orientation] ?? "N";
+export const turnOfLetter = (letter: string | undefined) => Number(Object.entries(ZPL_TURN).find(([, value]) => value === (letter ?? "N").toUpperCase())?.[0] ?? 0) as 0 | 90 | 180 | 270;
+
 export interface Block {
 	/** What tells one block from another while it is edited. */
 	id: string;
@@ -18,6 +23,8 @@ export interface Block {
 	field: string | null;
 	/** What goes before the value ("Pasillo ", "Rack "), which is how the seeded labels write their rows. */
 	prefix: string;
+	/** Which way it is drawn: 0 is as written, and the printer turns the rest (labels.md section 4). */
+	orientation: 0 | 90 | 180 | 270;
 	/** Barcode only: width of one module and height of the bars. */
 	module: number;
 	barHeight: number;
@@ -43,25 +50,25 @@ export const BLOCKS: BlockSpec[] = [
 		label: "blocks.title",
 		defaults: { y: 30, size: 80, field: "name", prefix: "" },
 		// The name wraps in two lines inside the width of the label, as the seeded product label does.
-		zpl: (block, value) => `^FO${block.x},${block.y}^FB752,2,0,L,0^A0N,${block.size},${block.size}^FD${value(block)}^FS`,
+		zpl: (block, value) => `^FO${block.x},${block.y}^FB752,2,0,L,0^A0${turnLetter(block.orientation)},${block.size},${block.size}^FD${value(block)}^FS`,
 	},
 	{
 		kind: "code",
 		label: "blocks.code",
 		defaults: { y: 30, size: 110, field: "code", prefix: "" },
-		zpl: (block, value) => `^FO${block.x},${block.y}^A0N,${block.size},${block.size}^FD${value(block)}^FS`,
+		zpl: (block, value) => `^FO${block.x},${block.y}^A0${turnLetter(block.orientation)},${block.size},${block.size}^FD${value(block)}^FS`,
 	},
 	{
 		kind: "barcode",
 		label: "blocks.barcode",
 		defaults: { y: 170, size: 0, field: "barcode", module: 3, barHeight: 110 },
-		zpl: (block, value) => `^FO${block.x},${block.y}^BY${block.module},2,${block.barHeight}^BCN,${block.barHeight},Y,N,N^FD${value(block)}^FS`,
+		zpl: (block, value) => `^FO${block.x},${block.y}^BY${block.module},2,${block.barHeight}^BC${turnLetter(block.orientation)},${block.barHeight},Y,N,N^FD${value(block)}^FS`,
 	},
 	{
 		kind: "text",
 		label: "blocks.text",
 		defaults: { y: 300, size: 36, field: "unit", prefix: "" },
-		zpl: (block, value) => `^FO${block.x},${block.y}^A0N,${block.size},${block.size}^FD${value(block)}^FS`,
+		zpl: (block, value) => `^FO${block.x},${block.y}^A0${turnLetter(block.orientation)},${block.size},${block.size}^FD${value(block)}^FS`,
 	},
 	{
 		kind: "box",
@@ -85,6 +92,7 @@ export function newBlock(kind: BlockKind, fields: string[]): Block {
 		size: 40,
 		field: wanted && fields.includes(wanted) ? wanted : fieldOrFirst(fields),
 		prefix: "",
+		orientation: 0,
 		module: 3,
 		barHeight: 110,
 		width: 200,
@@ -160,6 +168,7 @@ export function blocksFromZpl(zpl: string): ReadLabel | null {
 	let module = 3;
 	let barHeight = 110;
 	let kind: "text" | "barcode" | "box" | null = null;
+	let orientation: 0 | 90 | 180 | 270 = 0;
 	let data = "";
 
 	for (const { code, argument } of tokens(zpl)) {
@@ -171,11 +180,15 @@ export function blocksFromZpl(zpl: string): ReadLabel | null {
 			x = num(parts[0], x);
 			y = num(parts[1], y);
 		} else if (code === "FB") blockWidth = num(parts[0], 0);
-		else if (code.startsWith("A")) size = num(argument.slice(2).split(",")[0], size);
+		else if (code.startsWith("A")) {
+			orientation = turnOfLetter(argument.slice(0, 1));
+			size = num(argument.slice(2).split(",")[0], size);
+		}
 		else if (code === "BY") {
 			module = num(parts[0], module);
 			barHeight = num(parts[2], barHeight);
 		} else if (code === "BC") {
+			orientation = turnOfLetter(argument.slice(0, 1));
 			barHeight = num(parts[1], barHeight);
 			kind = "barcode";
 		} else if (code === "BQ") return null;
@@ -188,13 +201,13 @@ export function blocksFromZpl(zpl: string): ReadLabel | null {
 			if (kind === "barcode") {
 				const printed = value(data);
 				if (!printed) return null;
-				read.blocks.push({ ...blank("barcode"), x, y, module, barHeight, field: printed.field, prefix: printed.prefix });
+				read.blocks.push({ ...blank("barcode"), x, y, module, barHeight, orientation, field: printed.field, prefix: printed.prefix });
 			} else {
 				const printed = value(data);
 				if (!printed) return null;
 				// A field as tall as a title, or one that wraps, is the title of the label; the rest is text or code.
 				const isTitle = blockWidth > 0 || size >= 70;
-				read.blocks.push({ ...blank(isTitle ? "title" : printed.field === "code" ? "code" : "text"), x, y, size, field: printed.field, prefix: printed.prefix });
+				read.blocks.push({ ...blank(isTitle ? "title" : printed.field === "code" ? "code" : "text"), x, y, size, orientation, field: printed.field, prefix: printed.prefix });
 			}
 			kind = null;
 			data = "";
@@ -206,7 +219,7 @@ export function blocksFromZpl(zpl: string): ReadLabel | null {
 }
 
 function blank(kind: BlockKind): Block {
-	return { id: `r${++counter}`, kind, x: 30, y: 0, size: 40, field: null, prefix: "", module: 3, barHeight: 110, width: 200, height: 4, thickness: 2 };
+	return { id: `r${++counter}`, kind, x: 30, y: 0, size: 40, field: null, prefix: "", orientation: 0, module: 3, barHeight: 110, width: 200, height: 4, thickness: 2 };
 }
 
 /** The design a template saved, as the designer holds it, or null when it has none or it cannot be read. */

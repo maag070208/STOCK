@@ -1,7 +1,7 @@
-import { ITAccordion, ITButton, ITCard, ITDropdownMenu, ITFlex, ITGrid, ITInput, ITSelect, ITStack, ITText, type ITDropdownMenuItem } from "@axzydev/axzy_ui_system";
-import { useState, type ReactNode } from "react";
+import { ITAccordion, ITButton, ITCard, ITFlex, ITGrid, ITInput, ITSelect, ITStack, ITText } from "@axzydev/axzy_ui_system";
+import { useState, type DragEvent, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { FaArrowDown, FaArrowUp, FaBarcode, FaFont, FaHeading, FaPlus, FaSquare, FaTag, FaTrash } from "react-icons/fa";
+import { FaArrowDown, FaArrowUp, FaBarcode, FaFont, FaHeading, FaSquare, FaTag, FaTrash } from "react-icons/fa";
 import { BLOCKS, LABEL_SIZES, blockValue, newBlock, sameSize, sizeInDots, sizeOfDots, type Block, type BlockKind } from "../model/blocks";
 import { dyn } from "@shared/i18n";
 import { IconButton } from "@shared/ui/IconButton";
@@ -79,6 +79,11 @@ export function LabelDesigner(props: {
 							onSelect={setSelectedId}
 							guides
 							onMove={(id, position) => props.onChange(props.blocks.map((block) => (block.id === id ? { ...block, ...position } : block)))}
+							onDropAt={(kind, position) => {
+								const block = { ...newBlock(kind as BlockKind, props.fields), ...position };
+								props.onChange([...props.blocks, block]);
+								setSelectedId(block.id);
+							}}
 						/>
 					)}
 				</ITCard>
@@ -87,15 +92,26 @@ export function LabelDesigner(props: {
 			{/* What can be done: add an element, or describe the one that is chosen. */}
 			<ITGrid item xs={12} lg={4}>
 				<ITStack spacing={4} className="sf:lg:sticky sf:lg:top-6">
-					<ITCard>
-						<ITDropdownMenu
-							items={BLOCKS.map((block): ITDropdownMenuItem => ({ id: block.kind, label: nameOf(block.kind), icon: ICONS[block.kind], onClick: () => add(block.kind) }))}
-							trigger={
-								<ITButton variant="outlined" size="sm" icon={<FaPlus aria-hidden />} className="sf:w-full" label={t("designer.add")} />
-							}
-							triggerLabel={t("designer.add")}
-							placement="bottom-start"
-						/>
+					<ITCard title={t("designer.add")}>
+						<ITStack spacing={2}>
+							{BLOCKS.map((block) => (
+								// It is dragged onto the label, and it is also a button: dragging is not for everybody.
+								<ITText
+									as="span"
+									key={block.kind}
+									draggable
+									onDragStart={(event: DragEvent) => event.dataTransfer.setData("application/x-stockflow-block", block.kind)}
+									onClick={() => add(block.kind)}
+									className="sf:flex sf:cursor-grab sf:items-center sf:gap-3 sf:rounded-sm sf:border sf:border-outline-strong sf:px-3 sf:py-2 sf:text-body-sm sf:hover:bg-secondary-50"
+								>
+									{ICONS[block.kind]}
+									{nameOf(block.kind)}
+								</ITText>
+							))}
+							<ITText muted className="sf:text-body-sm">
+								{t("designer.dragFromPalette")}
+							</ITText>
+						</ITStack>
 					</ITCard>
 
 					{selected ? (
@@ -154,6 +170,16 @@ export function LabelDesigner(props: {
 									</ITGrid>
 								)}
 
+								{selected.kind !== "box" && (
+									<ITSelect
+										name={`orientation-${selected.id}`}
+										label={t("designer.rotate")}
+										value={String(selected.orientation)}
+										options={[0, 90, 180, 270].map((turn) => ({ value: String(turn), label: t(dyn(`designer.turn.${turn}`)) }))}
+										onChange={(event) => change({ orientation: Number(event.target.value) as 0 | 90 | 180 | 270 })}
+									/>
+								)}
+
 								{/* Where it is: dragging is the easy way, so the exact numbers wait behind a click. */}
 								<ITAccordion
 									variant="bordered"
@@ -202,7 +228,7 @@ export function LabelDesigner(props: {
 								{/* The size is chosen, not typed: these are the rolls a person buys. */}
 								<ITSelect
 									name="labelSize"
-									label={t("designer.size")}
+									label={t("designer.roll")}
 									value={(selectedSize && `${selectedSize.widthInches}x${selectedSize.lengthInches}`) || ""}
 									placeholder={t("designer.sizePick")}
 									options={LABEL_SIZES.map((size) => {

@@ -185,41 +185,32 @@ export function LabelTemplatePage() {
 					{/* What the template is: three fields, and whether it is the one printing. */}
 					<ITGrid item xs={12}>
 						<ITStack spacing={4}>
-							{/* What the template is called and whether it prints: set once, so it waits behind a click. */}
-							<ITAccordion
-								variant="bordered"
-								items={[
-									{
-										id: "data",
-										title: t("editor.data"),
-										content: (
-											<ITStack spacing={4}>
-												<ITGrid container spacing={4}>
-													<ITGrid item xs={12} md={4}>
-														<ITInput
-															name="key"
-															label={t("editor.key")}
-															value={key}
-															disabled={!creating || !canManage}
-															onChange={(e) => setKey(e.target.value.toUpperCase())}
-															error={errors.key ?? (creating ? t("editor.keyHint") : undefined)}
-															touched={!!errors.key}
-															required
-														/>
-													</ITGrid>
-													<ITGrid item xs={12} md={4}>
-														<ITInput name="nameEs" label={t("editor.nameEs")} value={nameEs} disabled={!canManage} onChange={(e) => setNameEs(e.target.value)} error={errors.nameEs} touched={!!errors.nameEs} required />
-													</ITGrid>
-													<ITGrid item xs={12} md={4}>
-														<ITInput name="nameEn" label={t("editor.nameEn")} value={nameEn} disabled={!canManage} onChange={(e) => setNameEn(e.target.value)} error={errors.nameEn} touched={!!errors.nameEn} required />
-													</ITGrid>
-												</ITGrid>
-												{!creating && canManage && <ITCheckbox name="active" label={t("editor.active")} checked={active} onChange={setActive} />}
-											</ITStack>
-										),
-									},
-								]}
-							/>
+							{/* What the template is called and whether it prints. */}
+							<ITCard title={t("editor.data")}>
+								<ITStack spacing={4}>
+									<ITGrid container spacing={4}>
+										<ITGrid item xs={12} md={4}>
+											<ITInput
+												name="key"
+												label={t("editor.key")}
+												value={key}
+												disabled={!creating || !canManage}
+												onChange={(e) => setKey(e.target.value.toUpperCase())}
+												error={errors.key ?? (creating ? t("editor.keyHint") : undefined)}
+												touched={!!errors.key}
+												required
+											/>
+										</ITGrid>
+										<ITGrid item xs={12} md={4}>
+											<ITInput name="nameEs" label={t("editor.nameEs")} value={nameEs} disabled={!canManage} onChange={(e) => setNameEs(e.target.value)} error={errors.nameEs} touched={!!errors.nameEs} required />
+										</ITGrid>
+										<ITGrid item xs={12} md={4}>
+											<ITInput name="nameEn" label={t("editor.nameEn")} value={nameEn} disabled={!canManage} onChange={(e) => setNameEn(e.target.value)} error={errors.nameEn} touched={!!errors.nameEn} required />
+										</ITGrid>
+									</ITGrid>
+									{!creating && canManage && <ITCheckbox name="active" label={t("editor.active")} checked={active} onChange={setActive} />}
+								</ITStack>
+							</ITCard>
 
 							{/* The label itself. What it prints is decided here; the printer's language is not the person's business. */}
 							<ITCard title={t("editor.template")}>
