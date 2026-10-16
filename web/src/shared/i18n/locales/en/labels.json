@@ -35,7 +35,11 @@
     "preview": "Label preview",
     "previewEmpty": "Write the ZPL and the label will appear here.",
     "previewLabel": "Label preview",
-    "previewSize": "{{width}} × {{length}} dots, {{copies}} copy(ies). The values are samples."
+    "previewSize": "{{width}} × {{length}} dots, {{copies}} copy(ies). The values are samples.",
+    "data": "Details",
+    "dataHint": "The key cannot change after the template is created.",
+    "state": "State",
+    "template": "Template"
   },
   "printers": {
     "title": "Printers",

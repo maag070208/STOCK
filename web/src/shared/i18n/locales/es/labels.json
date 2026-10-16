@@ -35,7 +35,11 @@
     "preview": "Vista previa de la etiqueta",
     "previewEmpty": "Escribe el ZPL y aquí aparecerá la etiqueta.",
     "previewLabel": "Vista previa de la etiqueta",
-    "previewSize": "Lienzo de {{width}} × {{length}} puntos, {{copies}} copia(s). Los valores son de ejemplo."
+    "previewSize": "Lienzo de {{width}} × {{length}} puntos, {{copies}} copia(s). Los valores son de ejemplo.",
+    "data": "Datos",
+    "dataHint": "La clave no cambia después de crearla.",
+    "state": "Estado",
+    "template": "Plantilla"
   },
   "printers": {
     "title": "Impresoras",

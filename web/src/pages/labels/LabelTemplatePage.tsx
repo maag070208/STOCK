@@ -1,11 +1,12 @@
-import { ITAccordion, ITAlert, ITBadget, ITButton, ITCard, ITCheckbox, ITChip, ITFlex, ITGrid, ITInput, ITPage, ITText, ITTextarea } from "@axzydev/axzy_ui_system";
-import { useCallback, useEffect, useState, type FormEvent } from "react";
+import { ITAccordion, ITAlert, ITBadget, ITButton, ITCard, ITCheckbox, ITChip, ITFlex, ITGrid, ITInput, ITPage, ITStack, ITText, ITTextarea } from "@axzydev/axzy_ui_system";
+import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import { LabelPreview } from "@features/label/ui/LabelPreview";
 import { sampleValues } from "@features/label/model/zpl";
 import { labelTemplateApi, problemLines, type LabelTemplate, type TemplateVersion, type ZplProblem } from "@entities/label";
 import { useCan } from "@entities/user";
+import { trail } from "@shared/lib/breadcrumbs";
 import { formatDateTime } from "@shared/lib/format";
 import { useSubmit } from "@shared/ui/useSubmit";
 import { toast } from "@app/store";
@@ -34,6 +35,7 @@ export function LabelTemplatePage() {
 	const [checking, setChecking] = useState(false);
 	const [tried, setTried] = useState(false);
 	const submit = useSubmit();
+	const form = useRef<HTMLFormElement>(null);
 
 	const load = useCallback(async () => {
 		if (!id) return;
@@ -109,8 +111,8 @@ export function LabelTemplatePage() {
 		}
 	}
 
-	const title = creating ? t("editor.newTitle") : template ? `${template.key} · ${template.name}` : t("templates.title");
-	const crumbs = [{ label: t("common:nav.labels"), onClick: () => navigate("/labels") }, { label: title }];
+	const title = creating ? t("editor.newTitle") : template?.key ?? t("templates.title");
+	const crumbs = trail(t("common:nav.home"), navigate, { label: t("common:nav.labels"), onClick: () => navigate("/labels") }, { label: title });
 
 	if (missing) {
 		return (
@@ -124,71 +126,97 @@ export function LabelTemplatePage() {
 	const lineLabel = (lines: number[]) => (lines.length === 1 ? t("editor.line", { line: lines[0] }) : t("editor.lines", { line: lines.join(", ") }));
 
 	return (
-		<ITPage title={title} breadcrumbs={crumbs} noPadding loading={!creating && !template}>
-			<form onSubmit={(event) => void save(event)} noValidate className="sf:flex sf:flex-col sf:gap-6">
+		<ITPage
+			title={title}
+			description={creating ? undefined : template?.name}
+			breadcrumbs={crumbs}
+			noPadding
+			loading={!creating && !template}
+			// The state, and the one action that saves the template, live at the top of the page.
+			actions={
+				<ITFlex align="center" gap={3}>
+					{!creating && template && <ITBadget color={template.active ? "success" : "gray"} label={t(template.active ? "common:status.active" : "common:status.inactive")} />}
+					{canManage && <ITButton label={t("editor.save")} onClick={() => form.current?.requestSubmit()} disabled={submit.submitting} />}
+				</ITFlex>
+			}
+		>
+			<form ref={form} onSubmit={(event) => void save(event)} noValidate>
+				{submit.error && <ITAlert variant="error">{submit.error}</ITAlert>}
 				<ITGrid container spacing={4}>
-					<ITGrid item xs={12} md={4}>
-						<ITInput
-							name="key"
-							label={t("editor.key")}
-							value={key}
-							disabled={!creating || !canManage}
-							onChange={(e) => setKey(e.target.value.toUpperCase())}
-							error={errors.key ?? (creating ? t("editor.keyHint") : undefined)}
-							touched={!!errors.key}
-							required
-						/>
-					</ITGrid>
-					<ITGrid item xs={12} md={4}>
-						<ITInput name="nameEs" label={t("editor.nameEs")} value={nameEs} disabled={!canManage} onChange={(e) => setNameEs(e.target.value)} error={errors.nameEs} touched={!!errors.nameEs} required />
-					</ITGrid>
-					<ITGrid item xs={12} md={4}>
-						<ITInput name="nameEn" label={t("editor.nameEn")} value={nameEn} disabled={!canManage} onChange={(e) => setNameEn(e.target.value)} error={errors.nameEn} touched={!!errors.nameEn} required />
-					</ITGrid>
-				</ITGrid>
-				<ITGrid container spacing={4}>
-					<ITGrid item xs={12} lg={8}>
-						<ITTextarea name="zpl" label={t("editor.zpl")} value={zpl} rows={16} disabled={!canManage} onChange={setZpl} error={errors.zpl} resize="vertical" className="sf:[&_textarea]:font-mono sf:[&_textarea]:text-code-sm" />
-					</ITGrid>
-					<ITGrid item xs={12} lg={4}>
-						<ITCard title={t("editor.report")}>
-							<ITText as="aside" aria-live="polite" data-testid="zpl-report" className="sf:flex sf:flex-col sf:gap-3">
-								{checking && <ITText muted>{t("editor.checking")}</ITText>}
-								{!checking && problems?.length === 0 && <ITAlert variant="success">{t("editor.valid")}</ITAlert>}
-								{problems?.map((problem, index) => {
-									const lines = problemLines(zpl, problem.token);
-									return (
-										<ITAlert key={`${problem.code}-${problem.token ?? index}`} variant="error">
-											<ITText as="span" className="sf:block">
-												{problem.message}
-											</ITText>
-											{(problem.token || lines.length > 0) && (
-												<ITText as="span" className="sf:block sf:text-code-sm">
-													{[problem.token, lines.length > 0 ? lineLabel(lines) : null].filter(Boolean).join(" · ")}
+					{/* What the template is: three fields, and whether it is the one printing. */}
+					<ITGrid item xs={12} lg={7}>
+						<ITStack spacing={4}>
+							<ITCard title={t("editor.data")}>
+								<ITGrid container spacing={4}>
+									<ITGrid item xs={12} md={4}>
+										<ITInput
+											name="key"
+											label={t("editor.key")}
+											value={key}
+											disabled={!creating || !canManage}
+											onChange={(e) => setKey(e.target.value.toUpperCase())}
+											error={errors.key ?? (creating ? t("editor.keyHint") : undefined)}
+											touched={!!errors.key}
+											required
+										/>
+									</ITGrid>
+									<ITGrid item xs={12} md={4}>
+										<ITInput name="nameEs" label={t("editor.nameEs")} value={nameEs} disabled={!canManage} onChange={(e) => setNameEs(e.target.value)} error={errors.nameEs} touched={!!errors.nameEs} required />
+									</ITGrid>
+									<ITGrid item xs={12} md={4}>
+										<ITInput name="nameEn" label={t("editor.nameEn")} value={nameEn} disabled={!canManage} onChange={(e) => setNameEn(e.target.value)} error={errors.nameEn} touched={!!errors.nameEn} required />
+									</ITGrid>
+								</ITGrid>
+								{!creating && canManage && (
+									<ITCheckbox name="active" label={t("editor.active")} checked={active} onChange={setActive} />
+								)}
+							</ITCard>
+
+							{/* The template itself, which is the biggest thing on the page. */}
+							<ITCard title={t("editor.template")}>
+								<ITTextarea name="zpl" label={t("editor.zpl")} value={zpl} rows={20} disabled={!canManage} onChange={setZpl} error={errors.zpl} resize="vertical" className="sf:[&_textarea]:font-mono sf:[&_textarea]:text-code-sm" />
+							</ITCard>
+
+							{/* The report of the rules, under what it judges, and as wide as it. */}
+							<ITCard title={t("editor.report")}>
+								<ITText as="aside" aria-live="polite" data-testid="zpl-report" className="sf:flex sf:flex-col sf:gap-3">
+									{checking && <ITText muted>{t("editor.checking")}</ITText>}
+									{!checking && problems?.length === 0 && <ITAlert variant="success">{t("editor.valid")}</ITAlert>}
+									{problems?.map((problem, index) => {
+										const lines = problemLines(zpl, problem.token);
+										return (
+											<ITAlert key={`${problem.code}-${problem.token ?? index}`} variant="error">
+												<ITText as="span" className="sf:block">
+													{problem.message}
 												</ITText>
-											)}
-										</ITAlert>
-									);
-								})}
-								<ITText as="h2" className="sf:text-label-md">
-									{t("editor.placeholders")}
+												{(problem.token || lines.length > 0) && (
+													<ITText as="span" className="sf:block sf:text-code-sm">
+														{[problem.token, lines.length > 0 ? lineLabel(lines) : null].filter(Boolean).join(" · ")}
+													</ITText>
+												)}
+											</ITAlert>
+										);
+									})}
+									<ITText as="h2" className="sf:text-label-md">
+										{t("editor.placeholders")}
+									</ITText>
+									<ITFlex wrap="wrap" gap={2}>
+										{placeholders.map((name) => (
+											<ITChip key={name} label={`{{${name}}}`} variant="soft" />
+										))}
+									</ITFlex>
 								</ITText>
-								<ITFlex wrap="wrap" gap={2}>
-									{placeholders.map((name) => (
-										<ITChip key={name} label={`{{${name}}}`} variant="soft" />
-									))}
-								</ITFlex>
-							</ITText>
+							</ITCard>
+						</ITStack>
+					</ITGrid>
+
+					{/* The label as it will come out, next to what writes it: it stays in view while the ZPL is edited. */}
+					<ITGrid item xs={12} lg={5}>
+						<ITCard title={t("editor.preview")} className="sf:lg:sticky sf:lg:top-6">
+							<LabelPreview zpl={zpl} values={sampleValues(placeholders)} />
 						</ITCard>
 					</ITGrid>
 				</ITGrid>
-				<ITCard title={t("editor.preview")}>
-					{/* The placeholders show what the label looks like with a value in them, not the empty braces. */}
-					<LabelPreview zpl={zpl} values={sampleValues(placeholders)} />
-				</ITCard>
-				{!creating && canManage && <ITCheckbox name="active" label={t("editor.active")} checked={active} onChange={setActive} />}
-				{submit.error && <ITAlert variant="error">{submit.error}</ITAlert>}
-				{canManage && <ITButton type="submit" label={t("editor.save")} disabled={submit.submitting} />}
 			</form>
 			{versions.length > 0 && (
 				<ITText as="section" data-testid="template-versions" className="sf:mt-8 sf:flex sf:flex-col sf:gap-2">

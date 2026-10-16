@@ -31,12 +31,12 @@ object SeedLabels {
 			^PW812
 			^LL406
 			^LH0,0
-			^FO30,20^A0N,200,180^FD{{code}}^FS
-			^FO30,250^BY3,2,100^BCN,100,Y,N,N^FD{{code}}^FS
-			^FO430,40^A0N,40,40^FD{{warehouse_code}}^FS
-			^FO430,110^A0N,36,36^FDPasillo {{aisle}}^FS
-			^FO430,160^A0N,36,36^FDRack {{rack}}^FS
-			^FO430,210^A0N,36,36^FDNivel {{level}}^FS
+			^FO30,20^A0N,110,100^FD{{code}}^FS
+			^FO30,170^BY3,2,110^BCN,110,Y,N,N^FD{{code}}^FS
+			^FO470,40^A0N,40,40^FD{{warehouse_code}}^FS
+			^FO470,110^A0N,36,36^FDPasillo {{aisle}}^FS
+			^FO470,160^A0N,36,36^FDRack {{rack}}^FS
+			^FO470,210^A0N,36,36^FDNivel {{level}}^FS
 			^PQ{{copies}}
 			^XZ
 			""".trimIndent(),

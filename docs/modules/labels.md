@@ -57,7 +57,7 @@ A template is ZPL, the printer's language. It is data that reaches a printer, so
 
 ### Example: product label
 
-Size 4 × 2 inches at 203 dpi (812 × 406 dots). The name wraps to two lines, the barcode is printed with its text, and the code and unit are below it.
+Size 4 × 2 inches at 203 dpi (812 × 406 dots). The name wraps to two lines, the barcode is printed with its text, and the code and unit are below it. The location label uses the same roll: its code fits the width (a 110-dot font for a six-character code), the barcode goes under it, and the warehouse, the aisle, the rack and the level sit in the right column.
 
 ```
 ^XA
@@ -81,12 +81,12 @@ The location code is printed large, with its barcode below it, and the warehouse
 ^PW812
 ^LL406
 ^LH0,0
-^FO30,20^A0N,200,180^FD{{code}}^FS
-^FO30,250^BY3,2,100^BCN,100,Y,N,N^FD{{code}}^FS
-^FO430,40^A0N,40,40^FD{{warehouse_code}}^FS
-^FO430,110^A0N,36,36^FDPasillo {{aisle}}^FS
-^FO430,160^A0N,36,36^FDRack {{rack}}^FS
-^FO430,210^A0N,36,36^FDNivel {{level}}^FS
+^FO30,20^A0N,110,100^FD{{code}}^FS
+^FO30,170^BY3,2,110^BCN,110,Y,N,N^FD{{code}}^FS
+^FO470,40^A0N,40,40^FD{{warehouse_code}}^FS
+^FO470,110^A0N,36,36^FDPasillo {{aisle}}^FS
+^FO470,160^A0N,36,36^FDRack {{rack}}^FS
+^FO470,210^A0N,36,36^FDNivel {{level}}^FS
 ^PQ{{copies}}
 ^XZ
 ```
