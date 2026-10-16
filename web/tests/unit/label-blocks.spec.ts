@@ -1,6 +1,6 @@
 // The blocks a label is built with: what the designer writes, and what it can read back (labels.md section 4).
 import { expect, test } from "@playwright/test";
-import { BLOCKS, blocksFromZpl, blocksToZpl, blockValue, newBlock } from "../../src/features/label/model/blocks";
+import { BLOCKS, LABEL_SIZES, blocksFromZpl, blocksToZpl, blockValue, newBlock, sizeInDots, sizeOfDots } from "../../src/features/label/model/blocks";
 
 const PRODUCT = ["name", "code", "barcode", "unit", "copies"];
 
@@ -51,4 +51,14 @@ test("a template written by hand is not guessed at", () => {
 	expect(blocksFromZpl("^XA^FO30,30^BQN,2,5^FD{{code}}^FS^XZ")).toBeNull();
 	// A fixed text is a block with no placeholder.
 	expect(blocksFromZpl("^XA^FO30,30^A0N,40,40^FDEtiqueta^FS^XZ")!.blocks[0]).toMatchObject({ kind: "text", prefix: "Etiqueta", field: null });
+});
+
+test("the sizes a person chooses are the rolls, in inches and in dots", () => {
+	// 203 dpi: an inch is 203 dots, and 4 × 2 inches is the roll the seeded labels print on.
+	const dots = LABEL_SIZES.map(sizeInDots);
+	expect(dots).toContainEqual({ width: 812, length: 406 });
+	expect(sizeOfDots({ width: 812, length: 406 })).toEqual({ widthInches: 4, lengthInches: 2 });
+	expect(sizeOfDots({ width: 406, length: 406 })).toEqual({ widthInches: 2, lengthInches: 2 });
+	// A label of a size nobody chose (an old template) is not forced into one of them.
+	expect(sizeOfDots({ width: 700, length: 300 })).toBeNull();
 });

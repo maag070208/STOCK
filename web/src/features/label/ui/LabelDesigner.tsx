@@ -2,7 +2,7 @@ import { ITAccordion, ITButton, ITCard, ITDropdownMenu, ITFlex, ITGrid, ITInput,
 import { useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { FaArrowDown, FaArrowUp, FaBarcode, FaFont, FaHeading, FaPlus, FaSquare, FaTag, FaTrash } from "react-icons/fa";
-import { BLOCKS, blockValue, newBlock, type Block, type BlockKind } from "../model/blocks";
+import { BLOCKS, LABEL_SIZES, blockValue, newBlock, sameSize, sizeInDots, sizeOfDots, type Block, type BlockKind } from "../model/blocks";
 import { dyn } from "@shared/i18n";
 import { IconButton } from "@shared/ui/IconButton";
 import { LabelPreview } from "./LabelPreview";
@@ -36,6 +36,8 @@ export function LabelDesigner(props: {
 	const { t } = useTranslation(["labels", "common"]);
 	const [selectedId, setSelectedId] = useState<string | null>(null);
 	const selected = props.blocks.find((block) => block.id === selectedId) ?? null;
+	// The size of the label, as one of the rolls a person knows. A size that is not there (an old template) shows empty.
+	const selectedSize = sizeOfDots({ width: props.width, length: props.length });
 	const nameOf = (kind: BlockKind) => t(dyn(BLOCKS.find((block) => block.kind === kind)!.label));
 	const change = (patch: Partial<Block>) => {
 		if (!selected) return;
@@ -79,22 +81,6 @@ export function LabelDesigner(props: {
 							onMove={(id, position) => props.onChange(props.blocks.map((block) => (block.id === id ? { ...block, ...position } : block)))}
 						/>
 					)}
-					<ITStack spacing={2} className="sf:mt-4">
-						<ITAccordion
-							variant="bordered"
-							items={[
-								{
-									id: "zpl",
-									title: t("designer.seeZpl"),
-									content: (
-										<ITText as="pre" data-testid="designed-zpl" className="sf:overflow-x-auto sf:font-mono sf:text-code-sm">
-											{props.zpl}
-										</ITText>
-									),
-								},
-							]}
-						/>
-					</ITStack>
 				</ITCard>
 			</ITGrid>
 
@@ -213,21 +199,31 @@ export function LabelDesigner(props: {
 					) : (
 						<ITCard title={t("designer.label")}>
 							<ITStack spacing={4}>
-								<ITGrid container spacing={3}>
-									<ITGrid item xs={6}>
-										<ITInput name="labelWidth" type="number" label={t("designer.labelWidth")} value={String(props.width)} onChange={(event) => props.onResize({ width: Number(event.target.value), length: props.length })} />
-									</ITGrid>
-									<ITGrid item xs={6}>
-										<ITInput name="labelLength" type="number" label={t("designer.labelLength")} value={String(props.length)} onChange={(event) => props.onResize({ width: props.width, length: Number(event.target.value) })} />
-									</ITGrid>
-								</ITGrid>
+								{/* The size is chosen, not typed: these are the rolls a person buys. */}
+								<ITSelect
+									name="labelSize"
+									label={t("designer.size")}
+									value={(selectedSize && `${selectedSize.widthInches}x${selectedSize.lengthInches}`) || ""}
+									placeholder={t("designer.sizePick")}
+									options={LABEL_SIZES.map((size) => {
+										const dots = sizeInDots(size);
+										return {
+											value: `${size.widthInches}x${size.lengthInches}`,
+											label: t("designer.sizeOption", { width: size.widthInches, length: size.lengthInches, dots: `${dots.width} × ${dots.length}` }),
+										};
+									})}
+									onChange={(event) => {
+										const chosen = LABEL_SIZES.find((size) => `${size.widthInches}x${size.lengthInches}` === String(event.target.value));
+										if (chosen && !selectedSize) props.onResize(sizeInDots(chosen));
+										else if (chosen && selectedSize && !sameSize(chosen, selectedSize)) props.onResize(sizeInDots(chosen));
+									}}
+								/>
 								<ITText muted className="sf:text-body-sm">
 									{t("designer.sizeHint")}
 								</ITText>
 							</ITStack>
 						</ITCard>
 					)}
-
 					{/* The elements, in the order they are printed: the list is also how one of them is chosen. */}
 					{props.blocks.length > 0 && (
 						<ITCard title={t("designer.elements")}>

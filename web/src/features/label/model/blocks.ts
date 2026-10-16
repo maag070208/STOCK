@@ -221,3 +221,29 @@ export function reading(design: string | null | undefined): (ReadLabel & { block
 		return null;
 	}
 }
+
+/** A roll size a person knows, in inches: the label is 203 dpi, so an inch is 203 dots. */
+export interface LabelSize {
+	widthInches: number;
+	lengthInches: number;
+}
+
+// The common rolls of a Zebra. `4 × 2` is the one the system prints on (labels.md section 4).
+export const LABEL_SIZES: LabelSize[] = [
+	{ widthInches: 2, lengthInches: 1 },
+	{ widthInches: 2, lengthInches: 2 },
+	{ widthInches: 2, lengthInches: 3 },
+	{ widthInches: 2, lengthInches: 4 },
+	{ widthInches: 3, lengthInches: 1 },
+	{ widthInches: 3, lengthInches: 2 },
+	{ widthInches: 4, lengthInches: 1 },
+	{ widthInches: 4, lengthInches: 2 },
+	{ widthInches: 4, lengthInches: 3 },
+	{ widthInches: 4, lengthInches: 6 },
+];
+
+export const DOTS_PER_INCH = 203;
+export const sizeInDots = (size: LabelSize) => ({ width: size.widthInches * DOTS_PER_INCH, length: size.lengthInches * DOTS_PER_INCH });
+export const sameSize = (a: LabelSize, b: LabelSize) => a.widthInches === b.widthInches && a.lengthInches === b.lengthInches;
+export const sizeOfDots = (dots: { width: number; length: number }): LabelSize | null =>
+	LABEL_SIZES.find((size) => sizeInDots(size).width === dots.width && sizeInDots(size).length === dots.length) ?? null;

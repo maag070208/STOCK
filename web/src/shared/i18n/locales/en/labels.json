@@ -102,8 +102,8 @@
     "seeZpl": "See the ZPL that will be saved",
     "dragHint": "You can also drag it inside the label.",
     "boxHint": "A box or a line: 4 dots tall is a line.",
-    "sizeHint": "4 × 2 inches at 203 dpi are 812 × 406 dots (the roll of the system).",
-    "sizeOption": "{{dots}} dots ({{millimeters}} mm)",
+    "sizeHint": "The size of the roll you buy. 4 × 2 inches is the one the system uses.",
+    "sizeOption": "{{width}} × {{length}} inches ({{dots}} dots)",
     "labelWidth": "Label width",
     "labelLength": "Label height",
     "fields": {
@@ -124,7 +124,9 @@
     },
     "unreadable": "This ZPL cannot be shown as blocks (it has things the designer does not handle). The design starts empty; your ZPL stays saved until you save the design.",
     "more": "More options (exact position)",
-    "status": "Rules"
+    "status": "Rules",
+    "handWritten": "This label was written by hand and the designer cannot show it as blocks, so it is shown as it prints and left alone. Duplicate it as a new template to rebuild it with blocks.",
+    "sizePick": "Choose the roll size"
   },
   "blocks": {
     "title": "Title",

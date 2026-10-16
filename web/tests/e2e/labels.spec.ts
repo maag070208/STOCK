@@ -35,7 +35,10 @@ async function template() {
 	return created.json as { id: string; key: string };
 }
 
-test("the editor reports a forbidden command as it is typed, and each saved change is a new version", async ({ page }) => {
+// TODO(F9): the ZPL editor left the screen (the owner asked for it: the printer's language is not the person's business).
+// What these checked — the report while typing, its language and the field error — now belongs to the API's own suite;
+// what the screen owes is that saving a designed label makes a version. Rewrite them with the designer's flow.
+test.fixme("the editor reports a forbidden command as it is typed, and each saved change is a new version", async ({ page }) => {
 	const { id, key } = await template();
 	await signInAs(page, e2eAdmin());
 	await page.goto(`/#/labels/${id}`);
@@ -64,7 +67,7 @@ test("the editor reports a forbidden command as it is typed, and each saved chan
 	await expect(versions.locator('[data-version="2"]')).toContainText("Activa");
 });
 
-test("for a person who reads English, the report is in English", async ({ page }) => {
+test.fixme("for a person who reads English, the report is in English", async ({ page }) => {
 	const { id } = await template();
 	// The interface follows the language of the person's profile.
 	const admin = await newUser(["ADMIN"]);
@@ -132,7 +135,7 @@ test("a manager prints three copies of a product label, on the printers of their
 	expect(sent).toContain("Codo galvanizado 1/2\"");
 });
 
-test("the editor draws the label of a product template, with its values and its barcode", async ({ page }) => {
+test.fixme("the editor draws the label of a product template, with its values and its barcode", async ({ page }) => {
 	await signInAs(page, e2eAdmin());
 	await page.goto("/#/labels");
 	await page.getByRole("cell", { name: "Etiqueta de producto" }).click();
@@ -169,28 +172,23 @@ test("a label is designed by dragging its blocks, and the API accepts what it wr
 
 	// A template with no saved design opens its ZPL; the designer reads it into blocks, which is what lets a person move
 	// them. What cannot be read is said, never guessed.
-	await page.getByRole("button", { name: "Diseño" }).click();
 	await expect(page.getByTestId("zpl-preview")).toBeVisible();
 	const first = page.locator("[data-block]").first();
 	// The template of the fixture prints a fixed text, which is the block the reader finds.
 	await expect(first).toHaveAttribute("data-kind", "text");
-	await page.getByRole("button", { name: "Ver el ZPL que se guardará" }).click();
-	const before = await page.getByTestId("designed-zpl").innerText();
+	const before = (await call("GET", `/label-templates/${id}`, { token: await adminToken() })).json.zpl as string;
 	const start = (await first.boundingBox())!;
 	await page.mouse.move(start.x + 30, start.y + 20);
 	await page.mouse.down();
 	await page.mouse.move(start.x + 230, start.y + 120, { steps: 10 });
 	await page.mouse.up();
 
-	// What was dragged is where the template now says: the ZPL is written from the blocks.
-	const moved = await page.getByTestId("designed-zpl").innerText();
-	expect(moved).not.toBe(before);
-	const firstOrigin = moved.split("\n").find((line) => line.includes("^FO"))!;
-	expect(firstOrigin.startsWith("^FO30,30")).toBe(false);
-
-	// And the API takes it: the blocks write what the rules allow.
+	// And the API takes it: the blocks write what the rules allow, and where they were left is where they print.
 	await page.getByRole("button", { name: "Guardar", exact: true }).click();
 	await expect(page.getByText(/Plantilla guardada|Sin cambios en el ZPL/)).toBeVisible();
+	const after = (await call("GET", `/label-templates/${id}`, { token: await adminToken() })).json.zpl as string;
+	expect(after).not.toBe(before);
+	expect((after.split("\n").find((line: string) => line.includes("^FO")) ?? "").startsWith("^FO30,30")).toBe(false);
 });
 
 test("a designed label is saved with its blocks, and opens the way it was left", async ({ page }) => {

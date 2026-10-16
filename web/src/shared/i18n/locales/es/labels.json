@@ -102,8 +102,8 @@
     "seeZpl": "Ver el ZPL que se guardará",
     "dragHint": "También puedes arrastrarlo dentro de la etiqueta.",
     "boxHint": "Un cuadro o una línea: 4 puntos de alto son una línea.",
-    "sizeHint": "4 × 2 pulgadas a 203 dpi son 812 × 406 puntos (el rollo del sistema).",
-    "sizeOption": "{{dots}} puntos ({{millimeters}} mm)",
+    "sizeHint": "Las medidas del rollo que compras. 4 × 2 pulgadas es el que usa el sistema.",
+    "sizeOption": "{{width}} × {{length}} pulgadas ({{dots}} puntos)",
     "labelWidth": "Ancho de la etiqueta",
     "labelLength": "Alto de la etiqueta",
     "fields": {
@@ -124,7 +124,9 @@
     },
     "unreadable": "Este ZPL no se puede representar por bloques (tiene cosas que el diseñador no maneja). El diseño empieza vacío; tu ZPL sigue guardado hasta que guardes el diseño.",
     "more": "Más opciones (posición exacta)",
-    "status": "Reglas"
+    "status": "Reglas",
+    "handWritten": "Esta etiqueta se escribió a mano y el diseñador no puede representarla por bloques, así que se muestra tal como se imprime y no se toca. Duplícala como plantilla nueva si quieres rehacerla por bloques.",
+    "sizePick": "Elige la medida del rollo"
   },
   "blocks": {
     "title": "Título",

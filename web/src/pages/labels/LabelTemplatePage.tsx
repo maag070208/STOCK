@@ -1,4 +1,4 @@
-import { ITAccordion, ITAlert, ITBadget, ITButton, ITCard, ITCheckbox, ITFlex, ITGrid, ITInput, ITPage, ITStack, ITText, ITTextarea } from "@axzydev/axzy_ui_system";
+import { ITAccordion, ITAlert, ITBadget, ITButton, ITCard, ITCheckbox, ITFlex, ITGrid, ITInput, ITPage, ITStack, ITText } from "@axzydev/axzy_ui_system";
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
@@ -36,7 +36,7 @@ export function LabelTemplatePage() {
 	// The design: the blocks the label is built with, and the size of the label. `designing` says whether the screen is
 	// editing blocks or the ZPL itself (labels.md section 4).
 	const [blocks, setBlocks] = useState<Block[]>([]);
-	const [designing, setDesigning] = useState(true);
+
 	const [labelWidth, setLabelWidth] = useState(812);
 	const [labelLength, setLabelLength] = useState(406);
 	const [problems, setProblems] = useState<ZplProblem[] | null>(null);
@@ -50,9 +50,8 @@ export function LabelTemplatePage() {
 	const submit = useSubmit();
 	const form = useRef<HTMLFormElement>(null);
 
-	// What the designer writes is what the template stores: both modes end in the same text.
-	const designed = blocksToZpl(blocks, labelWidth, labelLength);
-	const shownZpl = designing ? designed : zpl;
+	// What is saved is what the designer writes, unless the template was written by hand: then its ZPL is kept as it is.
+	const shownZpl = unreadable ? zpl : blocksToZpl(blocks, labelWidth, labelLength);
 	const setBlocksAndZpl = (next: Block[]) => {
 		setBlocks(next);
 		setZpl(blocksToZpl(next, labelWidth, labelLength));
@@ -77,7 +76,7 @@ export function LabelTemplatePage() {
 				setLabelWidth(read.width);
 				setLabelLength(read.length);
 			}
-			setDesigning(!!stored);
+			setUnreadable(!stored && !read);
 			setActive(found.active);
 		} catch {
 			setMissing(true);
@@ -149,7 +148,7 @@ export function LabelTemplatePage() {
 	}
 
 	// What the designer saves, and what it reads back. In ZPL mode there is no design: the template was written by hand.
-	const designJson = () => (designing ? JSON.stringify({ width: labelWidth, length: labelLength, blocks }) : "");
+	const designJson = () => (unreadable ? "" : JSON.stringify({ width: labelWidth, length: labelLength, blocks }));
 
 	const title = creating ? t("editor.newTitle") : template?.key ?? t("templates.title");
 	const crumbs = trail(t("common:nav.home"), navigate, { label: t("common:nav.labels"), onClick: () => navigate("/labels") }, { label: title });
@@ -184,7 +183,7 @@ export function LabelTemplatePage() {
 				{submit.error && <ITAlert variant="error">{submit.error}</ITAlert>}
 				<ITGrid container spacing={4}>
 					{/* What the template is: three fields, and whether it is the one printing. */}
-					<ITGrid item xs={12} lg={designing ? 12 : 7}>
+					<ITGrid item xs={12}>
 						<ITStack spacing={4}>
 							{/* What the template is called and whether it prints: set once, so it waits behind a click. */}
 							<ITAccordion
@@ -222,58 +221,31 @@ export function LabelTemplatePage() {
 								]}
 							/>
 
-							{/* The template itself, which is the biggest thing on the page. */}
+							{/* The label itself. What it prints is decided here; the printer's language is not the person's business. */}
 							<ITCard title={t("editor.template")}>
-								<ITStack spacing={4}>
-									{/* Two ways to write the same template: with pieces that work, or by hand. */}
-									<ITFlex gap={2}>
-										<ITButton
-											size="sm"
-											variant={designing ? "solid" : "outlined"}
-											label={t("designer.mode")}
-											onClick={() => {
-												if (!designing) {
-													const read = blocksFromZpl(zpl);
-													setBlocks(read?.blocks ?? starterBlocks(placeholders));
-													setUnreadable(!read);
-												}
-												setDesigning(true);
-											}}
-										/>
-										<ITButton
-											size="sm"
-											variant={designing ? "outlined" : "solid"}
-											label={t("designer.rawMode")}
-											disabled={!canManage}
-											onClick={() => {
-												if (designing) setZpl(designed);
-												setDesigning(false);
-											}}
-										/>
-									</ITFlex>
-
-									{designing ? (
-										<>
-											{unreadable && <ITAlert variant="info">{t("designer.unreadable")}</ITAlert>}
-											<LabelDesigner
-												blocks={blocks}
-												fields={placeholders}
-												width={labelWidth}
-												length={labelLength}
-												values={sampleValues(placeholders)}
-												zpl={shownZpl}
-												onChange={setBlocksAndZpl}
-												onResize={({ width, length }) => {
-													setLabelWidth(width);
-													setLabelLength(length);
-													setZpl(blocksToZpl(blocks, width, length));
-												}}
-											/>
-										</>
-									) : (
-										<ITTextarea name="zpl" label={t("editor.zpl")} value={zpl} rows={20} disabled={!canManage} onChange={setZpl} error={errors.zpl} resize="vertical" className="sf:[&_textarea]:font-mono sf:[&_textarea]:text-code-sm" />
-									)}
-								</ITStack>
+								{unreadable ? (
+									// A label written by hand that the designer cannot read: it is shown as it prints, and it is not
+									// touched. Saving it would replace what somebody wrote with blocks that only look like it.
+									<ITStack spacing={4}>
+										<ITAlert variant="warning">{t("designer.handWritten")}</ITAlert>
+										<LabelPreview zpl={zpl} values={sampleValues(placeholders)} />
+									</ITStack>
+								) : (
+									<LabelDesigner
+										blocks={blocks}
+										fields={placeholders}
+										width={labelWidth}
+										length={labelLength}
+										values={sampleValues(placeholders)}
+										zpl={shownZpl}
+										onChange={setBlocksAndZpl}
+										onResize={({ width, length }) => {
+											setLabelWidth(width);
+											setLabelLength(length);
+											setZpl(blocksToZpl(blocks, width, length));
+										}}
+									/>
+								)}
 							</ITCard>
 
 							{/* The rules, in one line: green when there is nothing to fix, and the problems when there are. */}
@@ -303,15 +275,6 @@ export function LabelTemplatePage() {
 						</ITStack>
 					</ITGrid>
 
-					{/* The label as it will come out, next to what writes it. In the designer the canvas already is the
-					    preview, and it is where the blocks are dragged. */}
-					{!designing && (
-						<ITGrid item xs={12} lg={5}>
-							<ITCard title={t("editor.preview")} className="sf:lg:sticky sf:lg:top-6">
-								<LabelPreview zpl={shownZpl} values={sampleValues(placeholders)} />
-							</ITCard>
-						</ITGrid>
-					)}
 				</ITGrid>
 			</form>
 			{versions.length > 0 && (
