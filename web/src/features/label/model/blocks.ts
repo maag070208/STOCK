@@ -208,3 +208,16 @@ export function blocksFromZpl(zpl: string): ReadLabel | null {
 function blank(kind: BlockKind): Block {
 	return { id: `r${++counter}`, kind, x: 30, y: 0, size: 40, field: null, prefix: "", module: 3, barHeight: 110, width: 200, height: 4, thickness: 2 };
 }
+
+/** The design a template saved, as the designer holds it, or null when it has none or it cannot be read. */
+export function reading(design: string | null | undefined): (ReadLabel & { blocks: Block[] }) | null {
+	if (!design) return null;
+	try {
+		const stored = JSON.parse(design) as { width?: number; length?: number; blocks?: Block[] };
+		if (!Array.isArray(stored.blocks) || stored.blocks.length === 0) return null;
+		return { width: stored.width ?? 812, length: stored.length ?? 406, blocks: stored.blocks };
+	} catch {
+		// A design that cannot be read is not a reason to lose the template: its ZPL still prints.
+		return null;
+	}
+}

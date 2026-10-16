@@ -16,10 +16,10 @@ import java.time.Instant
 import java.util.Locale
 import java.util.UUID
 
-data class CreateTemplateRequest(val key: String? = null, val nameEs: String? = null, val nameEn: String? = null, val zpl: String? = null)
+data class CreateTemplateRequest(val key: String? = null, val nameEs: String? = null, val nameEn: String? = null, val zpl: String? = null, val design: String? = null)
 
 // The key is not here: it cannot change. A new ZPL is a new version.
-data class UpdateTemplateRequest(val nameEs: String? = null, val nameEn: String? = null, val zpl: String? = null, val active: Boolean? = null)
+data class UpdateTemplateRequest(val nameEs: String? = null, val nameEn: String? = null, val zpl: String? = null, val active: Boolean? = null, val design: String? = null)
 
 data class ValidateRequest(val key: String? = null, val zpl: String? = null)
 
@@ -34,6 +34,8 @@ data class TemplateView(
 	val placeholders: List<String>,
 	val active: Boolean,
 	val updatedAt: Instant,
+	/** The blocks of the editor, as the screen wrote them, or null when the template was written by hand. */
+	val design: String?,
 )
 
 data class VersionView(val version: Int, val zpl: String, val createdAt: Instant)
@@ -80,6 +82,7 @@ class LabelTemplateService(
 		if (templates.findByKey(key) != null) throw ValidationException(listOf(FieldError("key", ErrorCode.DUPLICATE_VALUE)))
 		val now = clock.instant()
 		val template = templates.save(LabelTemplate(key, nameEs, nameEn, 1, actor.id, now, now))
+		template.design = request.design?.takeIf { it.isNotBlank() }
 		versions.save(LabelTemplateVersion(template.id!!, 1, zpl, now, actor.id))
 		audit.record(actor.actor, "LABEL_TEMPLATE_CREATED", "label_template", template.id.toString(), after = mapOf("key" to key, "version" to 1))
 		return view(template, language)
@@ -103,6 +106,8 @@ class LabelTemplateService(
 		nameEs?.let { template.nameEs = it }
 		nameEn?.let { template.nameEn = it }
 		request.active?.let { template.active = it }
+		// The design is stored as it comes: the screen is the one that knows what a block is.
+		if (request.zpl != null) template.design = request.design?.takeIf { it.isNotBlank() }
 		template.updatedAt = now
 		audit.record(actor.actor, "LABEL_TEMPLATE_UPDATED", "label_template", id.toString(), before, mapOf("version" to template.version, "active" to template.active))
 		return view(template, language)
@@ -135,6 +140,7 @@ class LabelTemplateService(
 		placeholders = (ZplRules.PLACEHOLDERS[template.key].orEmpty() + ZplRules.COPIES).toList(),
 		active = template.active,
 		updatedAt = template.updatedAt,
+		design = template.design,
 	)
 
 	companion object {

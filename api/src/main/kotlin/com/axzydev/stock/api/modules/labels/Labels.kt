@@ -6,6 +6,8 @@ import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.IdClass
 import jakarta.persistence.Table
+import org.hibernate.annotations.JdbcTypeCode
+import org.hibernate.type.SqlTypes
 import org.springframework.data.jpa.repository.JpaRepository
 import java.io.Serializable
 import java.time.Instant
@@ -27,6 +29,11 @@ class LabelTemplate(
 	var id: UUID? = null
 
 	var active: Boolean = true
+
+	// The design of the editor: the blocks, as JSON. Nullable: a template written by hand has none (labels.md section 4).
+	// It is a `jsonb` column, so Hibernate has to be told the string is JSON and not a varchar.
+	@JdbcTypeCode(SqlTypes.JSON)
+	var design: String? = null
 }
 
 data class TemplateVersionKey(val templateId: UUID? = null, val version: Int? = null) : Serializable

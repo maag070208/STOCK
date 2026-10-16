@@ -52,12 +52,12 @@ test("the editor reports a forbidden command as it is typed, and each saved chan
 	await expect(report.getByText("La plantilla usa un comando ZPL que no está permitido.")).toBeVisible();
 	await expect(report.getByText("^HH · Línea 3")).toBeVisible();
 	// Saving it anyway: the API refuses it, with the same message on the field, and no version is created.
-	await page.getByRole("button", { name: "Guardar" }).click();
+	await page.getByRole("button", { name: "Guardar", exact: true }).click();
 	await expect(page.getByText("La plantilla usa un comando ZPL que no está permitido.").nth(1)).toBeVisible();
 
 	await editor.fill(zpl.replace("30,30", "40,40"));
 	await expect(report.getByText("La plantilla cumple las reglas.")).toBeVisible();
-	await page.getByRole("button", { name: "Guardar" }).click();
+	await page.getByRole("button", { name: "Guardar", exact: true }).click();
 	await expect(page.getByText("Plantilla guardada. Versión 2.")).toBeVisible();
 	const versions = page.getByTestId("template-versions");
 	await expect(versions.locator("[data-version]")).toHaveCount(2);
@@ -166,11 +166,13 @@ test("a label is designed by dragging its blocks, and the API accepts what it wr
 	await page.goto("/#/labels");
 	await page.getByRole("cell", { name: "Etiqueta de producto" }).click();
 
-	// An existing template opens on its ZPL; the designer reads it as blocks, which is what lets a person move them.
-	await page.getByRole("button", { name: "Por bloques" }).click();
+	// A template with no saved design opens its ZPL; the designer reads it into blocks, which is what lets a person move
+	// them. What cannot be read is said, never guessed.
+	await page.getByRole("button", { name: "Diseño" }).click();
 	await expect(page.getByTestId("zpl-preview")).toBeVisible();
 	const first = page.locator("[data-block]").first();
 	await expect(first).toHaveAttribute("data-kind", "title");
+	await page.getByRole("button", { name: "Ver el ZPL que se guardará" }).click();
 	const before = await page.getByTestId("designed-zpl").innerText();
 	const start = (await first.boundingBox())!;
 	await page.mouse.move(start.x + 30, start.y + 20);
@@ -185,6 +187,30 @@ test("a label is designed by dragging its blocks, and the API accepts what it wr
 	expect(firstOrigin.startsWith("^FO30,30")).toBe(false);
 
 	// And the API takes it: the blocks write what the rules allow.
-	await page.getByRole("button", { name: "Guardar" }).click();
+	await page.getByRole("button", { name: "Guardar", exact: true }).click();
 	await expect(page.getByText(/Plantilla guardada|Sin cambios en el ZPL/)).toBeVisible();
+});
+
+test("a designed label is saved with its blocks, and opens the way it was left", async ({ page }) => {
+	const { id, key } = await template();
+	const token = await adminToken();
+	const design = JSON.stringify({
+		width: 812,
+		length: 406,
+		blocks: [
+			{ id: "b1", kind: "code", x: 40, y: 60, size: 110, field: "code", prefix: "", module: 3, barHeight: 110, width: 200, height: 4, thickness: 2 },
+			{ id: "b2", kind: "barcode", x: 40, y: 220, size: 40, field: "copies", prefix: "", module: 3, barHeight: 90, width: 200, height: 4, thickness: 2 },
+		],
+	});
+	const saved = await call("PATCH", `/label-templates/${id}`, { token, body: { zpl: "^XA^PW812^LL406^FO40,60^A0N,110,110^FD{{copies}}^FS^PQ{{copies}}^XZ", design } });
+	expect(saved.status).toBe(200);
+
+	// The screen opens what was designed, with the blocks where they were left, and the ZPL is what it writes.
+	await signInAs(page, e2eAdmin());
+	await page.goto(`/#/labels/${id}`);
+	await expect(page.getByTestId("zpl-preview")).toBeVisible();
+	await expect(page.locator("[data-block]")).toHaveCount(2);
+	await expect(page.locator("[data-block]").first()).toHaveAttribute("data-kind", "code");
+	const stored = await call("GET", `/label-templates/${id}`, { token });
+	expect(JSON.parse(stored.json.design).blocks.map((block: { x: number }) => block.x)).toEqual([40, 40]);
 });

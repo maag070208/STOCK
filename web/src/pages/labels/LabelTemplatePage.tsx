@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState, type FormEvent } from "react"
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import { LabelDesigner } from "@features/label/ui/LabelDesigner";
-import { blocksFromZpl, blocksToZpl, starterBlocks, type Block } from "@features/label/model/blocks";
+import { blocksFromZpl, blocksToZpl, reading, starterBlocks, type Block } from "@features/label/model/blocks";
 import { LabelPreview } from "@features/label/ui/LabelPreview";
 import { sampleValues } from "@features/label/model/zpl";
 import { labelTemplateApi, problemLines, type LabelTemplate, type TemplateVersion, type ZplProblem } from "@entities/label";
@@ -43,6 +43,8 @@ export function LabelTemplatePage() {
 	// The fields the key accepts, as the API answers them: for a template that does not exist yet, this is what the
 	// designer can offer while the person types the key.
 	const [liveFields, setLiveFields] = useState<string[]>([]);
+	// A ZPL written by hand that the designer cannot read as blocks: the person is told, and the design starts empty.
+	const [unreadable, setUnreadable] = useState(false);
 	const [checking, setChecking] = useState(false);
 	const [tried, setTried] = useState(false);
 	const submit = useSubmit();
@@ -66,10 +68,16 @@ export function LabelTemplatePage() {
 			setNameEs(found.nameEs);
 			setNameEn(found.nameEn);
 			setZpl(found.zpl);
-			// An existing template opens on its ZPL, which is what it prints; building blocks start with a new one.
-			const read = blocksFromZpl(found.zpl);
+			// What the screen opens is what was designed and saved. A template written by hand — or one from before the
+			// designer existed — is read out of its ZPL when it can be, and otherwise stays as ZPL.
+			const stored = reading(found.design);
+			const read = stored ?? blocksFromZpl(found.zpl);
 			setBlocks(read?.blocks ?? starterBlocks(found.placeholders ?? []));
-			setDesigning(false);
+			if (read && "width" in read) {
+				setLabelWidth(read.width);
+				setLabelLength(read.length);
+			}
+			setDesigning(!!stored);
 			setActive(found.active);
 		} catch {
 			setMissing(true);
@@ -124,19 +132,24 @@ export function LabelTemplatePage() {
 		setTried(true);
 		if (Object.values(local).some(Boolean)) return;
 		if (creating) {
-			const created = await submit.run(() => labelTemplateApi.create({ key: key.trim(), nameEs: nameEs.trim(), nameEn: nameEn.trim(), zpl: shownZpl }));
+			const created = await submit.run(() =>
+				labelTemplateApi.create({ key: key.trim(), nameEs: nameEs.trim(), nameEn: nameEn.trim(), zpl: shownZpl, design: designJson() }),
+			);
 			if (created) {
 				toast(t("editor.saved", { version: created.version }));
 				navigate(`/labels/${created.id}`, { replace: true });
 			}
 			return;
 		}
-		const saved = await submit.run(() => labelTemplateApi.update(template!.id, { nameEs: nameEs.trim(), nameEn: nameEn.trim(), zpl: shownZpl, active }));
+		const saved = await submit.run(() => labelTemplateApi.update(template!.id, { nameEs: nameEs.trim(), nameEn: nameEn.trim(), zpl: shownZpl, active, design: designJson() }));
 		if (saved) {
 			toast(saved.version === template!.version ? t("editor.unchanged", { version: saved.version }) : t("editor.saved", { version: saved.version }));
 			await load();
 		}
 	}
+
+	// What the designer saves, and what it reads back. In ZPL mode there is no design: the template was written by hand.
+	const designJson = () => (designing ? JSON.stringify({ width: labelWidth, length: labelLength, blocks }) : "");
 
 	const title = creating ? t("editor.newTitle") : template?.key ?? t("templates.title");
 	const crumbs = trail(t("common:nav.home"), navigate, { label: t("common:nav.labels"), onClick: () => navigate("/labels") }, { label: title });
@@ -209,7 +222,11 @@ export function LabelTemplatePage() {
 											variant={designing ? "solid" : "outlined"}
 											label={t("designer.mode")}
 											onClick={() => {
-												if (!designing) setBlocks(starterBlocks(placeholders));
+												if (!designing) {
+													const read = blocksFromZpl(zpl);
+													setBlocks(read?.blocks ?? starterBlocks(placeholders));
+													setUnreadable(!read);
+												}
 												setDesigning(true);
 											}}
 										/>
@@ -227,6 +244,7 @@ export function LabelTemplatePage() {
 
 									{designing ? (
 										<>
+											{unreadable && <ITAlert variant="info">{t("designer.unreadable")}</ITAlert>}
 											<LabelDesigner
 												blocks={blocks}
 												fields={placeholders}

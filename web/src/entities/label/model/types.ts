@@ -8,6 +8,8 @@ export interface LabelTemplate {
 	version: number;
 	zpl: string;
 	placeholders: string[];
+	/** The blocks the editor made, as JSON, or null when the template was written by hand. */
+	design: string | null;
 	active: boolean;
 	updatedAt: string;
 	// The kit's table wants its rows to be records (web.md section 8).
@@ -28,6 +30,8 @@ export interface ZplProblem {
 }
 
 export interface TemplateInput {
+	/** The blocks of the editor, as JSON: what the screen opens next time. Empty when it was written by hand. */
+	design?: string | null;
 	nameEs: string;
 	nameEn: string;
 	zpl: string;
