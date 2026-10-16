@@ -35,47 +35,38 @@ async function template() {
 	return created.json as { id: string; key: string };
 }
 
-// TODO(F9): the ZPL editor left the screen (the owner asked for it: the printer's language is not the person's business).
-// What these checked — the report while typing, its language and the field error — now belongs to the API's own suite;
-// what the screen owes is that saving a designed label makes a version. Rewrite them with the designer's flow.
-test.fixme("the editor reports a forbidden command as it is typed, and each saved change is a new version", async ({ page }) => {
+test("a designed label saves as a new version, and the API still refuses a bad ZPL", async ({ page }) => {
 	const { id, key } = await template();
 	await signInAs(page, e2eAdmin());
 	await page.goto(`/#/labels/${id}`);
 	await expect(page.getByRole("heading", { name: key })).toBeVisible();
-	await expect(page.getByText("Etiqueta de prueba").first()).toBeVisible();
-	const report = page.getByTestId("zpl-report");
-	await expect(report.getByText("La plantilla cumple las reglas.")).toBeVisible();
 
-	// The label of the test's own template is drawn too, with the one placeholder its key allows.
-	await expect(page.getByTestId("zpl-preview").getByText("Etiqueta")).toBeVisible();
-
-	const editor = page.getByRole("textbox", { name: "ZPL" });
-	await editor.fill(zpl.replace("^PQ", "^HH\n^PQ"));
-	await expect(report.getByText("La plantilla usa un comando ZPL que no está permitido.")).toBeVisible();
-	await expect(report.getByText("^HH · Línea 3")).toBeVisible();
-	// Saving it anyway: the API refuses it, with the same message on the field, and no version is created.
+	// A block added from the palette is part of the design, and saving it is a new version.
+	await page.locator('[data-palette="code"]').click();
 	await page.getByRole("button", { name: "Guardar", exact: true }).click();
-	await expect(page.getByText("La plantilla usa un comando ZPL que no está permitido.").nth(1)).toBeVisible();
+	await expect(page.getByText(/Plantilla guardada/)).toBeVisible();
 
-	await editor.fill(zpl.replace("30,30", "40,40"));
-	await expect(report.getByText("La plantilla cumple las reglas.")).toBeVisible();
-	await page.getByRole("button", { name: "Guardar", exact: true }).click();
-	await expect(page.getByText("Plantilla guardada. Versión 2.")).toBeVisible();
-	const versions = page.getByTestId("template-versions");
-	await expect(versions.locator("[data-version]")).toHaveCount(2);
-	await expect(versions.locator('[data-version="2"]')).toContainText("Activa");
+	const stored = await call("GET", `/label-templates/${id}`, { token: await adminToken() });
+	expect(stored.json.version).toBeGreaterThan(1);
+	expect(stored.json.design).toContain("code");
+	// The screen writes what the rules allow; a template written by hand is still judged by the API.
+	const refused = await call("PATCH", `/label-templates/${id}`, { token: await adminToken(), body: { zpl: "^XA^HH^XZ" } });
+	expect(refused.status).toBe(400);
+	expect(refused.json.details[0].field).toBe("zpl");
 });
 
-test.fixme("for a person who reads English, the report is in English", async ({ page }) => {
-	const { id } = await template();
-	// The interface follows the language of the person's profile.
+test("the designer speaks the language of the person using it", async ({ page }) => {
 	const admin = await newUser(["ADMIN"]);
 	await call("PATCH", `/users/${admin.id}`, { token: await adminToken(), body: { language: "en" } });
 	await signInAs(page, admin);
-	await page.goto(`/#/labels/${id}`);
-	await page.getByRole("textbox", { name: "ZPL" }).fill(zpl.replace("{{copies}}", "{{rack}}"));
-	await expect(page.getByTestId("zpl-report").getByText("The template uses a field this label type does not have.")).toBeVisible();
+	await page.goto("/#/labels/new");
+
+	// The screen a person designs on is in their language: the words, not the printer's.
+	await expect(page.getByRole("heading", { name: "New template" })).toBeVisible();
+	// The screen a person designs on is in their language: the palette says Title, Code, Text.
+	await expect(page.locator('[data-palette="code"]')).toContainText("Code");
+	await expect(page.getByText("Your label is empty. Start by adding an element:")).toBeVisible();
+	await expect(page.getByText("Roll size", { exact: true })).toBeVisible();
 });
 
 test("a printer needs a valid address, and its port is 9100", async ({ page }) => {
@@ -135,7 +126,7 @@ test("a manager prints three copies of a product label, on the printers of their
 	expect(sent).toContain("Codo galvanizado 1/2\"");
 });
 
-test.fixme("the editor draws the label of a product template, with its values and its barcode", async ({ page }) => {
+test("the label of a seeded template is drawn with its values and its barcode", async ({ page }) => {
 	await signInAs(page, e2eAdmin());
 	await page.goto("/#/labels");
 	await page.getByRole("cell", { name: "Etiqueta de producto" }).click();
@@ -151,17 +142,6 @@ test.fixme("the editor draws the label of a product template, with its values an
 	expect(await preview.locator("rect").count()).toBeGreaterThan(40);
 	await expect(page.getByText("Lienzo de 812 × 406 puntos")).toBeVisible();
 
-	// What is typed is what is drawn: a shorter label moves the text and shrinks the canvas.
-	const editor = page.getByRole("textbox", { name: "ZPL" });
-	await editor.fill(`^XA
-^PW600
-^LL300
-^FO20,20^A0N,50,50^FD{{code}}^FS
-^PQ1
-^XZ`);
-	await expect(page.getByText("Lienzo de 600 × 300 puntos")).toBeVisible();
-	await expect(preview.getByText("M-1024")).toBeVisible();
-	await expect(preview.getByText("7501234567890")).toHaveCount(0);
 });
 
 test("a label is designed by dragging its blocks, and the API accepts what it writes", async ({ page }) => {

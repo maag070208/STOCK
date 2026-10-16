@@ -102,10 +102,11 @@ export function LabelDesigner(props: {
 								<ITText
 									as="span"
 									key={block.kind}
+									data-palette={block.kind}
 									draggable
 									onDragStart={(event: DragEvent) => event.dataTransfer.setData("application/x-stockflow-block", block.kind)}
 									onClick={() => add(block.kind)}
-									className="sf:flex sf:cursor-grab sf:items-center sf:gap-3 sf:rounded-sm sf:border sf:border-outline-strong sf:px-3 sf:py-2 sf:text-body-sm sf:hover:bg-secondary-50"
+									className="sf:flex sf:cursor-grab sf:items-center sf:gap-3 sf:rounded-sm sf:bg-secondary-50 sf:px-3 sf:py-2 sf:text-body-sm sf:transition-colors sf:hover:bg-secondary-100"
 								>
 									{ICONS[block.kind]}
 									{nameOf(block.kind)}
