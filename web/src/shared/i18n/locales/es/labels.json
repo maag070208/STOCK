@@ -77,9 +77,9 @@
     "sent": "Etiqueta enviada a {{printer}}: {{count}} copias."
   },
   "designer": {
-    "mode": "Por bloques",
-    "rawMode": "ZPL a mano",
-    "empty": "Agrega un elemento para empezar: el título, el código, el código de barras…",
+    "mode": "Diseño",
+    "rawMode": "ZPL",
+    "empty": "Tu etiqueta está vacía. Empieza agregando un elemento:",
     "up": "Subir",
     "down": "Bajar",
     "x": "Posición X",
@@ -94,7 +94,34 @@
     "thickness": "Grosor",
     "noField": "Sin campo: escribe un texto fijo",
     "size_of_label": "Medidas de la etiqueta",
-    "canvas": "La etiqueta (arrastra los elementos)"
+    "canvas": "Tu etiqueta",
+    "add": "Agregar un elemento",
+    "selected": "{{name}} seleccionado",
+    "label": "La etiqueta",
+    "elements": "Elementos",
+    "seeZpl": "Ver el ZPL que se guardará",
+    "dragHint": "También puedes arrastrarlo dentro de la etiqueta.",
+    "boxHint": "Un cuadro o una línea: 4 puntos de alto son una línea.",
+    "sizeHint": "4 × 2 pulgadas a 203 dpi son 812 × 406 puntos (el rollo del sistema).",
+    "sizeOption": "{{dots}} puntos ({{millimeters}} mm)",
+    "labelWidth": "Ancho de la etiqueta",
+    "labelLength": "Alto de la etiqueta",
+    "fields": {
+      "name": "Nombre del material",
+      "code": "Código del material",
+      "barcode": "Código de barras",
+      "unit": "Unidad",
+      "warehouse_code": "Código del almacén",
+      "aisle": "Pasillo",
+      "rack": "Rack",
+      "level": "Nivel"
+    },
+    "moduleOption": {
+      "2": "Delgado",
+      "3": "Normal",
+      "4": "Grueso",
+      "5": "Muy grueso"
+    }
   },
   "blocks": {
     "title": "Título",

@@ -227,14 +227,6 @@ export function LabelTemplatePage() {
 
 									{designing ? (
 										<>
-											<ITGrid container spacing={4}>
-												<ITGrid item xs={6} sm={3}>
-													<ITInput name="labelWidth" type="number" label={t("designer.width")} value={String(labelWidth)} disabled={!canManage} onChange={(event) => setLabelWidth(Number(event.target.value))} />
-												</ITGrid>
-												<ITGrid item xs={6} sm={3}>
-													<ITInput name="labelLength" type="number" label={t("designer.height")} value={String(labelLength)} disabled={!canManage} onChange={(event) => setLabelLength(Number(event.target.value))} />
-												</ITGrid>
-											</ITGrid>
 											<LabelDesigner
 												blocks={blocks}
 												fields={placeholders}
@@ -243,6 +235,11 @@ export function LabelTemplatePage() {
 												values={sampleValues(placeholders)}
 												zpl={shownZpl}
 												onChange={setBlocksAndZpl}
+												onResize={({ width, length }) => {
+													setLabelWidth(width);
+													setLabelLength(length);
+													setZpl(blocksToZpl(blocks, width, length));
+												}}
 											/>
 										</>
 									) : (

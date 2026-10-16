@@ -77,9 +77,9 @@
     "sent": "Label sent to {{printer}}: {{count}} copies."
   },
   "designer": {
-    "mode": "Blocks",
-    "rawMode": "Raw ZPL",
-    "empty": "Add an element to start: the title, the code, the barcode…",
+    "mode": "Design",
+    "rawMode": "ZPL",
+    "empty": "Your label is empty. Start by adding an element:",
     "up": "Move up",
     "down": "Move down",
     "x": "X position",
@@ -94,7 +94,34 @@
     "thickness": "Thickness",
     "noField": "No field: it prints a fixed text",
     "size_of_label": "Label size",
-    "canvas": "The label (drag the elements)"
+    "canvas": "Your label",
+    "add": "Add an element",
+    "selected": "{{name}} selected",
+    "label": "The label",
+    "elements": "Elements",
+    "seeZpl": "See the ZPL that will be saved",
+    "dragHint": "You can also drag it inside the label.",
+    "boxHint": "A box or a line: 4 dots tall is a line.",
+    "sizeHint": "4 × 2 inches at 203 dpi are 812 × 406 dots (the roll of the system).",
+    "sizeOption": "{{dots}} dots ({{millimeters}} mm)",
+    "labelWidth": "Label width",
+    "labelLength": "Label height",
+    "fields": {
+      "name": "Material name",
+      "code": "Material code",
+      "barcode": "Barcode",
+      "unit": "Unit",
+      "warehouse_code": "Warehouse code",
+      "aisle": "Aisle",
+      "rack": "Rack",
+      "level": "Level"
+    },
+    "moduleOption": {
+      "2": "Thin",
+      "3": "Normal",
+      "4": "Thick",
+      "5": "Very thick"
+    }
   },
   "blocks": {
     "title": "Title",

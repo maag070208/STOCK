@@ -17,6 +17,8 @@ export function LabelPreview(props: {
 	selected?: string | null;
 	onSelect?: (id: string | null) => void;
 	onMove?: (id: string, position: { x: number; y: number }) => void;
+	// The label of a template is looked at, and a design is aligned: the guides are the middle and the margins.
+	guides?: boolean;
 }) {
 	const { t } = useTranslation(["labels"]);
 	const svg = useRef<SVGSVGElement>(null);
@@ -35,9 +37,13 @@ export function LabelPreview(props: {
 		const startX = event.clientX;
 		const startY = event.clientY;
 		const move = (moving: PointerEvent) => {
+			const x = block.x + (moving.clientX - startX) * scale;
+			const y = block.y + (moving.clientY - startY) * scale;
+			// Close to a guide sticks to it: lining two things up by hand is what the guides are for.
+			const snap = (value: number, guide: number) => (Math.abs(value - guide) <= 8 ? guide : value);
 			props.onMove?.(block.id, {
-				x: Math.max(0, Math.round(block.x + (moving.clientX - startX) * scale)),
-				y: Math.max(0, Math.round(block.y + (moving.clientY - startY) * scale)),
+				x: Math.max(0, Math.round(snap(x, 30))),
+				y: Math.max(0, Math.round(snap(y, 30))),
 			});
 		};
 		const stop = () => {
@@ -71,6 +77,14 @@ export function LabelPreview(props: {
 				>
 					{/* The edge of the label: where the die cuts it, so it reads as a label and not as a page. */}
 					<rect x={1} y={1} width={label.width - 2} height={label.length - 2} fill="none" stroke="#c3c8cf" strokeWidth={2} strokeDasharray="12 10" />
+					{props.guides && (
+						// The middle and the margins of the label, which is where a label is usually aligned to.
+						<g stroke="#7aa7ff" strokeWidth={1} strokeDasharray="6 8" opacity={0.7}>
+							<line x1={label.width / 2} y1={0} x2={label.width / 2} y2={label.length} />
+							<line x1={0} y1={label.length / 2} x2={label.width} y2={label.length / 2} />
+							<rect x={30} y={30} width={label.width - 60} height={label.length - 60} fill="none" />
+						</g>
+					)}
 					{props.blocks
 						? props.blocks.map((block) => (
 								<g
