@@ -1,6 +1,6 @@
 # Design system
 
-**Status:** Adopted, 2026-10-13. **Web redesigned to bento, 2026-10-31.** The web runs the Axzy UI System's `appearance="bento"` over the tokens of `design/stockflow-DESIGN.md`; the app is still on the previous "Evreghen Command Center" look and moves in the second wave of the same redesign (see [plan-mejora-stockflow.md](../plan-mejora-stockflow.md)). The sections below about structure, tables, forms, states and accessibility still apply; the ones that describe the old surfaces, shell and colors are superseded by section 2.
+**Status:** Adopted, 2026-10-13. **Redesigned to bento, 2026-10-31.** The web runs the Axzy UI System's `appearance="bento"` over the tokens of `design/stockflow-DESIGN.md`, and the app draws the same language with its own Compose components (`ui/components/Bento.kt`, `BrandArt.kt`, `ui/theme/Bento.kt`). The sections below about structure, tables, forms, states and accessibility still apply; the ones that describe the old surfaces, shell and colors are superseded by section 2.
 
 ## 1. Source
 

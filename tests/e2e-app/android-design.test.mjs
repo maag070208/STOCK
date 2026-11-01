@@ -27,8 +27,9 @@ function closestInside(shot, box, expected) {
 }
 
 // The pastel tones of the bento tiles (app/shared/.../ui/theme/Bento.kt), which are the design's, not the palette's.
-const MINT = [0xdd, 0xf3, 0xe8];
-const SEA = [0xe0, 0xf0, 0xf7];
+// Dark mode has its own pair for each tone.
+const MINT = { light: [0xdd, 0xf3, 0xe8], dark: [0x14, 0x3a, 0x2a] };
+const SEA = { light: [0xe0, 0xf0, 0xf7], dark: [0x12, 0x30, 0x3d] };
 
 async function checkSignIn() {
   const xml = await waitForText("Iniciar sesión");
@@ -63,13 +64,14 @@ async function checkHome(mode) {
   assertColor(closestInside(shot, greeting, expected.title), expected.title, 6, "greeting");
 
   const count = bounds(xml, "Contar");
-  assertColor(shot.at(Math.max(4, count.left - 16), count.centerY), MINT, 2, "count tile");
+  assertColor(shot.at(Math.max(4, count.left - 16), count.centerY), MINT[mode], 2, "count tile");
   const place = bounds(xml, "Ubicar");
-  assertColor(shot.at(Math.max(4, place.left - 16), place.centerY), SEA, 2, "placement tile");
+  assertColor(shot.at(Math.max(4, place.left - 16), place.centerY), SEA[mode], 2, "placement tile");
 
-  // The module tiles are white cards on the canvas.
+  // The module tiles are white cards in light mode and the dark surface in dark mode.
   const materials = bounds(xml, "Materiales");
-  assertColor(shot.at(Math.max(4, materials.left - 16), materials.centerY), rgb(colors.surface), 1, "module card");
+  const card = mode === "dark" ? rgb(colors["dark-surface"]) : rgb(colors.surface);
+  assertColor(shot.at(Math.max(4, materials.left - 16), materials.centerY), card, 2, "module card");
 
   // The state of the API is the pale green of a healthy service, in both modes.
   const badge = bounds(xml, "Conectado a la API");

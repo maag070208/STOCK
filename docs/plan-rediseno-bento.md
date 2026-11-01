@@ -1,6 +1,6 @@
 # Bento redesign: web and app
 
-**Status:** in progress, 2026-10-31. **Web wave done** (tokens, shell, home, entry screen and every module screen restyled); the **app wave** is next. The design language is the Axzy UI System's `appearance="bento"`, the same one the reference projects use (`~/DEV/PTNV/RESPONSIVA/web` and `.../PuertoNuevoApp`).
+**Status:** in progress, 2026-10-31. **Web wave done** (tokens, shell, home, entry screen and every module screen restyled); the **app wave** is done for the shell, the home, the module menu and the entry screen, and every other screen inherits it through `PageScaffold` and the shared components. The design language is the Axzy UI System's `appearance="bento"`, the same one the reference projects use (`~/DEV/PTNV/RESPONSIVA/web` and `.../PuertoNuevoApp`).
 
 ## 1. Decisions
 
@@ -41,7 +41,11 @@ Known polish left for the end of the wave: the `Nuevo rol` action inside the acc
 1. Tokens (done): `node scripts/design-tokens.mjs` regenerated the app's `DesignTokens.kt` from the bento document; `ui/theme/Bento.kt` adds the tones, the ink, the field and the 24/20/16dp shapes, and the app compiles with its host tests green. The shell, the cards, the rows, the fields and the buttons were restyled, the bento components were added (`ui/components/Bento.kt`, `BrandArt.kt`), and the home and the entry screen were migrated; the other screens use the same `PageScaffold` and inherit the look.
 2. Components to port from the reference app (`~/DEV/PTNV/RESPONSIVA/PuertoNuevoApp/shared/src/commonMain/kotlin/.../core/`): `Bento.kt` (tile, pill button, chips), `BentoBottomBar`, `BentoTopBar`, `BentoDrawer`, `BentoTabs`, `BentoCharts` (gauge, waves, spark, donut), `BentoState`, and the bento `AppTextField`.
 3. Screens in waves: shell + home first (with the same tiles as the web home), then the receiving flow (count/placement), orders, materials, stock and labels.
-4. The design e2e on Android (`tests/e2e-app/android-design.test.mjs`) moves from the orange hero to the bento contract: canvas color, white bento cards, bottom bar, ink active destination.
+4. The design e2e on Android (`tests/e2e-app/android-design.test.mjs`) moved to the bento contract: canvas color, pastel task tiles, white cards and the entry illustration; `android-home` and `android-intro` pass on the emulator, and the light and dark design checks pass.
+
+### Wave 3 — done
+
+The app runs the bento look: tokens regenerated from the same document, `Bento.kt` and `BrandArt.kt` components, the shell (`BentoScreen`), white cards, filled pill fields, pastel status chips, the dashboard home and the animated entry illustration. The host tests are green and the device suites (`android-home`, `android-design` in light and dark, `android-intro`) pass on the emulator.
 
 ### Wave 4 — close
 
