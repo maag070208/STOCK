@@ -68,27 +68,30 @@ class ReceivingService(
 	private val audit: AuditService,
 	private val clock: Clock,
 ) {
-	// The operator's assignments that are still to count or to place, grouped by invoice.
+	// Only current work is read; a product scan narrows it further instead of replaying the operator's history.
 	@Transactional(readOnly = true)
-	fun mine(user: CurrentUser, language: String): List<MyReceiptView> {
-		val mine = assignments.findByOperatorId(user.id).groupBy { it.lineId }
+	fun mine(user: CurrentUser, language: String, productId: UUID? = null): List<MyReceiptView> {
+		val mine = assignments.findActiveWork(user.id, listOf(Status.PENDING.name, Status.IN_ASSIGNMENT.name), productId).groupBy { it.lineId }
 		val byInvoice = lines.findAllById(mine.keys).groupBy { it.invoiceId }
 		return invoices.findAllById(byInvoice.keys)
-			.filter { invoiceService.status(it) in setOf(Status.PENDING, Status.IN_ASSIGNMENT) }
 			.sortedBy { it.createdAt }
 			.map { invoice ->
 				val full = views.full(invoice, language)
-				val own = full.lines.orEmpty().map { line -> line.copy(assignments = line.assignments.filter { it.operator.id == user.id }) }.filter { it.assignments.isNotEmpty() }
+				val own = full.lines.orEmpty()
+					.filter { productId == null || it.product.id == productId }
+					.map { line -> line.copy(assignments = line.assignments.filter { it.operator.id == user.id }) }
+					.filter { it.assignments.isNotEmpty() }
 				MyReceiptView(full.copy(lines = null), own)
 			}
 	}
 
-	// A count, or its correction, until the invoice reaches IN_ASSIGNMENT (material-receiving.md, question 1).
+	// A count can be corrected until its assignment has a placement or the whole invoice is ready to place.
 	@Transactional
 	fun count(user: CurrentUser, assignmentId: UUID, request: CountRequest): AssignmentView {
 		val (assignment, line, invoice) = locate(assignmentId)
 		user.requireRead(RECEIVE, invoice.warehouseId, setOf(assignment.operatorId))
 		invoiceService.requireStatus(invoice, Status.PENDING)
+		if (assignment.placedQuantity.signum() > 0) throw ApiException(ErrorCode.ASSIGNMENT_LOCKED)
 		val check = Validator()
 		val decimals = products.stockProducts(listOf(line.productId))[line.productId]?.decimals ?: 0
 		when (val counted = request.countedQuantity) {
@@ -97,52 +100,51 @@ class ReceivingService(
 		}
 		val notes = check.optional("notes", request.notes, Rules.text(500))
 		check.check()
-		val before = assignment.countedQuantity
+		val before = mapOf("countedQuantity" to assignment.countedQuantity, "acceptedQuantity" to assignment.acceptedQuantity)
 		assignment.countedQuantity = request.countedQuantity
+		assignment.acceptedQuantity = request.countedQuantity?.takeIf { it.compareTo(assignment.expectedQuantity) == 0 }
 		assignment.countNotes = notes
 		assignment.countedAt = clock.instant()
 		assignment.updatedAt = clock.instant()
 		audit.record(
-			user.actor, "RECEIPT_COUNTED", "receipt_assignment", assignmentId.toString(),
-			mapOf("countedQuantity" to before), mapOf("countedQuantity" to assignment.countedQuantity, "expectedQuantity" to assignment.expectedQuantity, "notes" to notes),
+			user.actor, "RECEIPT_COUNTED", "receipt_assignment", assignmentId.toString(), before,
+			mapOf("countedQuantity" to assignment.countedQuantity, "acceptedQuantity" to assignment.acceptedQuantity, "expectedQuantity" to assignment.expectedQuantity, "notes" to notes),
 		)
 		advance(user.actor, invoice)
 		return views.assignment(assignment)
 	}
 
-	// The adjustment (material-receiving.md section 5): the expected quantity becomes the counted one, and the line
-	// moves by the same difference. A note is required, and the audit keeps both values.
+	// Resolving a difference accepts the physical count without rewriting the supplier invoice or the assignment.
 	@Transactional
 	fun adjust(user: CurrentUser, assignmentId: UUID, request: AdjustmentRequest): AssignmentView {
 		val (assignment, line, invoice) = locate(assignmentId)
 		user.requireWrite(RESOLVE, invoice.warehouseId)
 		invoiceService.requireStatus(invoice, Status.PENDING)
+		if (assignment.placedQuantity.signum() > 0) throw ApiException(ErrorCode.ASSIGNMENT_LOCKED)
 		val check = Validator()
 		val note = check.required("note", request.note, Rules.text(500))
 		check.check()
 		val counted = assignment.countedQuantity
 		if (counted == null || assignment.settled) throw ApiException(ErrorCode.INVOICE_STATUS_INVALID)
-		val before = mapOf("expectedQuantity" to assignment.expectedQuantity, "lineQuantity" to line.quantity)
+		val before = mapOf("expectedQuantity" to assignment.expectedQuantity, "acceptedQuantity" to assignment.acceptedQuantity, "lineQuantity" to line.quantity)
 		val difference = InvoiceRules.difference(assignment.expectedQuantity, counted)
-		val (expected, lineQuantity) = InvoiceRules.adjust(line.quantity, assignment.expectedQuantity, counted)
-		assignment.expectedQuantity = expected
+		assignment.acceptedQuantity = counted
 		assignment.updatedAt = clock.instant()
-		line.quantity = lineQuantity
 		audit.record(
 			user.actor, "DISCREPANCY_ADJUSTED", "receipt_assignment", assignmentId.toString(), before,
-			mapOf("expectedQuantity" to expected, "lineQuantity" to lineQuantity, "difference" to difference, "note" to note),
+			mapOf("expectedQuantity" to assignment.expectedQuantity, "acceptedQuantity" to counted, "lineQuantity" to line.quantity, "difference" to difference, "note" to note),
 		)
 		advance(user.actor, invoice)
 		return views.assignment(assignment)
 	}
 
-	// Placement (material-receiving.md section 7): counted material into locations of the invoice's warehouse, split as the
-	// operator wants, never more than was counted. Each placement is a RECEIPT movement.
+	// A settled assignment can be placed in parts while other lines are still being counted or resolved.
 	@Transactional
 	fun place(user: CurrentUser, assignmentId: UUID, request: PlacementsRequest): AssignmentView {
 		val (assignment, line, invoice) = locate(assignmentId)
 		user.requireRead(PLACE, invoice.warehouseId, setOf(assignment.operatorId))
-		invoiceService.requireStatus(invoice, Status.IN_ASSIGNMENT)
+		invoiceService.requireStatus(invoice, Status.PENDING, Status.IN_ASSIGNMENT)
+		if (!assignment.settled) throw ApiException(ErrorCode.ASSIGNMENT_NOT_SETTLED)
 		val check = Validator()
 		val bodies = request.placements.orEmpty()
 		if (bodies.isEmpty()) check.reject("placements", ErrorCode.FIELD_REQUIRED)
@@ -160,7 +162,7 @@ class ReceivingService(
 		}
 		check.check()
 		if (bodies.any { targets.getValue(it.locationId!!).warehouseId != invoice.warehouseId }) throw ApiException(ErrorCode.LOCATION_NOT_IN_WAREHOUSE)
-		if (!InvoiceRules.placementFits(assignment.countedQuantity!!, assignment.placedQuantity, bodies.map { it.quantity!! })) {
+		if (!InvoiceRules.placementFits(assignment.acceptedQuantity!!, assignment.placedQuantity, bodies.map { it.quantity!! })) {
 			throw ApiException(ErrorCode.PLACEMENT_EXCEEDS_COUNT)
 		}
 		val movements = stock.apply(

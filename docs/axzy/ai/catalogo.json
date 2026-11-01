@@ -1,6 +1,6 @@
 {
- "generatedAt": "2026-10-15T06:40:43.791Z",
- "libraryVersion": "1.5.0",
+ "generatedAt": "2026-10-29T19:34:11.830Z",
+ "libraryVersion": "1.7.2",
  "components": [
   {
    "name": "ITAvatar",
@@ -144,7 +144,7 @@
      "type": "React.ReactNode",
      "required": false,
      "default": "",
-     "description": "Icon element rendered before the label."
+     "description": "Icon element rendered before the label. With `variant=\"icon-only\"` and no `label`/`children` it becomes the only content and is centered in the square button."
     },
     {
      "name": "onClick",
@@ -165,14 +165,14 @@
      "type": "SizesTypes",
      "required": false,
      "default": "\"md\"",
-     "description": "Button size. Valid values: `\"sm\"`, `\"md\"`, `\"lg\"`."
+     "description": "Button size. Valid values: `\"sm\"`, `\"md\"`, `\"lg\"`. In `variant=\"icon-only\"` it also scales the square padding (`buttonIconPadding`: `sm` 0.5rem, `md` 0.625rem, `lg` 0.75rem)."
     },
     {
      "name": "variant",
      "type": "string",
      "required": false,
      "default": "\"filled\"",
-     "description": "Button visual style. Valid values: `\"filled\"`, `\"outlined\"`, `\"raised\"`, `\"rounded\"`, `\"text\"`, `\"raised-text\"`, `\"icon-only\"`, `\"link\"`."
+     "description": "Button visual style. Valid values: `\"filled\"`, `\"outlined\"`, `\"raised\"`, `\"rounded\"`, `\"text\"`, `\"raised-text\"`, `\"icon-only\"`, `\"link\"`. `\"icon-only\"` renders a centered square icon button; combine it with `icon` and `ariaLabel`."
     },
     {
      "name": "disabled",
@@ -496,6 +496,13 @@
      "required": false,
      "default": "",
      "description": "Click handler"
+    },
+    {
+     "name": "onScroll",
+     "type": "(e: React.UIEvent<HTMLElement>) => void",
+     "required": false,
+     "default": "",
+     "description": "Scroll handler (useful for scrollable chat/log panels)"
     }
    ]
   },
@@ -633,6 +640,13 @@
      "required": false,
      "default": "",
      "description": "Fallback image URL shown when the primary `src` fails to load"
+    },
+    {
+     "name": "fit",
+     "type": "\"contain\" | \"cover\"",
+     "required": false,
+     "default": "",
+     "description": "How the image fills its box: \"cover\" crops to fill (default), \"contain\" shows the whole image"
     },
     {
      "name": "onClick",
@@ -1723,6 +1737,20 @@
      "required": false,
      "default": "",
      "description": "Resize behavior of the textarea: \"none\" | \"vertical\" | \"horizontal\" | \"both\"."
+    },
+    {
+     "name": "onKeyDown",
+     "type": "(event: React.KeyboardEvent<HTMLTextAreaElement>) => void",
+     "required": false,
+     "default": "",
+     "description": "Keydown handler (e.g. Enter to send in a chat composer)."
+    },
+    {
+     "name": "autoFocus",
+     "type": "boolean",
+     "required": false,
+     "default": "",
+     "description": "Autofocus the textarea."
     }
    ]
   },
@@ -2003,10 +2031,17 @@
   {
    "name": "ITCard",
    "layer": "molecules",
-   "description": "Versatile card container with optional image, title, body content, and action footer. Supports interactive hover states.",
+   "description": "Versatile card container with optional image, title, body content, and action footer. Supports interactive hover states\nand pastel `tone` tiles. Follows the provider `appearance` (`soft`, `flat`, `bento`).",
    "example": "<ITCard title=\"Welcome\" image=\"/hero.jpg\" actions={<ITButton label=\"Learn more\" />}>\n  This is the card content.\n</ITCard>",
    "source": "src/components/molecules/card/card.tsx",
    "props": [
+    {
+     "name": "tone",
+     "type": "ITCardTone",
+     "required": false,
+     "default": "",
+     "description": "Pastel tile: tints the card background with the `--color-<tone>-soft` token of the palette, overriding the default white surface. In `soft`/`flat` appearances it also uses `--color-<tone>-soft-border` for the border; in `bento` the card stays borderless. Works in every appearance and in dark mode. Omit it for the regular surface."
+    },
     {
      "name": "onClick",
      "type": "() => void",
@@ -2020,6 +2055,13 @@
      "required": false,
      "default": "",
      "description": "Card title displayed in the header area."
+    },
+    {
+     "name": "headerActions",
+     "type": "React.ReactNode",
+     "required": false,
+     "default": "",
+     "description": "Optional actions rendered at the right of the title row (e.g. a play button)."
     },
     {
      "name": "image",
@@ -2561,6 +2603,234 @@
    ]
   },
   {
+   "name": "ITJSONEditor",
+   "layer": "molecules",
+   "description": "Editor de JSON con resaltado de sintaxis, gutter con números y plegado,\nerrores señalados por línea y columna, árbol navegable y acciones de formato.\n\nNo añade dependencias: el resaltado se pinta en una capa bajo el `<textarea>`\nnativo, así que se conservan el deshacer del navegador, el pegado, el dictado\ny el corrector. La validación la hace `JSON.parse`, de modo que el coloreado\nfunciona igual mientras el documento está a medio escribir.",
+   "example": "```tsx\n<ITJSONEditor value={json} onChange={setJson} onParse={handleParse} height={420} />\n```",
+   "source": "src/components/molecules/json-editor/json-editor.tsx",
+   "props": [
+    {
+     "name": "value",
+     "type": "string",
+     "required": false,
+     "default": "\"\"",
+     "description": "Documento JSON como cadena. Si es `undefined`, el editor arranca vacío."
+    },
+    {
+     "name": "onChange",
+     "type": "(value: string) => void",
+     "required": false,
+     "default": "",
+     "description": "Se dispara con el texto completo cada vez que cambia (teclado, pegado o barra de acciones)."
+    },
+    {
+     "name": "onParse",
+     "type": "(parsed: unknown, isValid: boolean, error?: string) => void",
+     "required": false,
+     "default": "",
+     "description": "Se dispara tras cada validación con el valor parseado y su estado."
+    },
+    {
+     "name": "placeholder",
+     "type": "string",
+     "required": false,
+     "default": "",
+     "description": "Texto de ayuda que se muestra cuando el documento está vacío."
+    },
+    {
+     "name": "readOnly",
+     "type": "boolean",
+     "required": false,
+     "default": "false",
+     "description": "Bloquea la edición: desaparecen las acciones que modifican el texto."
+    },
+    {
+     "name": "mode",
+     "type": "ITJSONEditorMode",
+     "required": false,
+     "default": "\"text\"",
+     "description": "Modo inicial: `\"text\"` (código) o `\"tree\"` (árbol navegable)."
+    },
+    {
+     "name": "showModeSwitch",
+     "type": "boolean",
+     "required": false,
+     "default": "true",
+     "description": "Permite alternar entre texto y árbol desde la barra."
+    },
+    {
+     "name": "showToolbar",
+     "type": "boolean",
+     "required": false,
+     "default": "true",
+     "description": "Muestra la barra superior de acciones."
+    },
+    {
+     "name": "showValidation",
+     "type": "boolean",
+     "required": false,
+     "default": "true",
+     "description": "Muestra el indicador de válido/ inválido con línea y columna del error."
+    },
+    {
+     "name": "showStatusBar",
+     "type": "boolean",
+     "required": false,
+     "default": "true",
+     "description": "Estadísticas del pie: líneas, nodos, profundidad y tamaño."
+    },
+    {
+     "name": "showLineNumbers",
+     "type": "boolean",
+     "required": false,
+     "default": "true",
+     "description": "Muestra los números de línea del gutter."
+    },
+    {
+     "name": "showFoldGutter",
+     "type": "boolean",
+     "required": false,
+     "default": "true",
+     "description": "Muestra el gutter de plegado de bloques `{…}` / `[…]`."
+    },
+    {
+     "name": "showTransformActions",
+     "type": "boolean",
+     "required": false,
+     "default": "true",
+     "description": "Habilita las acciones de la barra (formatear, minificar, ordenar, escapar)."
+    },
+    {
+     "name": "showCopyButton",
+     "type": "boolean",
+     "required": false,
+     "default": "true",
+     "description": "Habilita el botón de copiar el documento completo."
+    },
+    {
+     "name": "showImportButton",
+     "type": "boolean",
+     "required": false,
+     "default": "true",
+     "description": "Habilita la carga de un `.json` desde disco."
+    },
+    {
+     "name": "showDownloadButton",
+     "type": "boolean",
+     "required": false,
+     "default": "true",
+     "description": "Habilita la descarga del documento como `.json`."
+    },
+    {
+     "name": "showViewSettings",
+     "type": "boolean",
+     "required": false,
+     "default": "true",
+     "description": "Muestra la fila de ajustes de vista (ajuste de línea, números, plegado, indentación)."
+    },
+    {
+     "name": "indentSize",
+     "type": "number",
+     "required": false,
+     "default": "2",
+     "description": "Espacios por nivel de indentación, entre 0 y 8."
+    },
+    {
+     "name": "wrapLines",
+     "type": "boolean",
+     "required": false,
+     "default": "false",
+     "description": "Ajusta las líneas largas al ancho del editor. Desactivado mantiene el scroll horizontal y el gutter sincronizado."
+    },
+    {
+     "name": "treeShowLines",
+     "type": "boolean",
+     "required": false,
+     "default": "false",
+     "description": "Ofrece números de línea y plegado también en la vista de árbol."
+    },
+    {
+     "name": "canvasTheme",
+     "type": "ITJSONEditorTheme",
+     "required": false,
+     "default": "\"ink\"",
+     "description": "Paleta del lienzo: `\"ink\"` (tinta oscura, por defecto) o `\"light\"`."
+    },
+    {
+     "name": "height",
+     "type": "string | number",
+     "required": false,
+     "default": "340",
+     "description": "Altura del área de edición: número en píxeles o cualquier medida CSS."
+    },
+    {
+     "name": "minWidth",
+     "type": "string | number",
+     "required": false,
+     "default": "",
+     "description": "Ancho mínimo del editor. Útil dentro de layouts que comprimen."
+    },
+    {
+     "name": "actions",
+     "type": "React.ReactNode",
+     "required": false,
+     "default": "",
+     "description": "Acciones extra que se añaden al final de la barra, antes de copiar/descargar."
+    },
+    {
+     "name": "className",
+     "type": "string",
+     "required": false,
+     "default": "",
+     "description": "Clases para el contenedor raíz."
+    },
+    {
+     "name": "id",
+     "type": "string",
+     "required": false,
+     "default": "",
+     "description": "Identificador HTML del contenedor raíz, para anclarlo desde fuera o en pruebas."
+    },
+    {
+     "name": "textareaClassName",
+     "type": "string",
+     "required": false,
+     "default": "",
+     "description": "Clases para el `<textarea>`, por si hay que afinar la tipografía."
+    },
+    {
+     "name": "errorLine",
+     "type": "number",
+     "required": false,
+     "default": "",
+     "description": "Línea (1-based) que hay que marcar como errónea cuando el fallo lo detecta\nla aplicación y no el propio editor."
+    }
+   ]
+  },
+  {
+   "name": "ITJsonRenderer",
+   "layer": "molecules",
+   "description": "Render UI from JSON schema using AXZY UI System components.",
+   "example": "<ITJsonRenderer json={{ type: \"button\", props: { label: \"Click me\" } }} />",
+   "source": "src/components/molecules/json-renderer/json-renderer.tsx",
+   "props": [
+    {
+     "name": "json",
+     "type": "JsonComponentNode | JsonComponentNode[]",
+     "required": true,
+     "default": "",
+     "description": "JSON structure to render"
+    },
+    {
+     "name": "className",
+     "type": "string",
+     "required": false,
+     "default": "",
+     "description": "Additional CSS class names"
+    }
+   ]
+  },
+  {
    "name": "ITLineBarChart",
    "layer": "molecules",
    "description": "Barras + línea en SVG puro (sin librería de gráficas). Pensado para comparar\ndos series por periodo —ingresos contra gastos, cobrado contra proyectado—:\nlas barras van al fondo y la línea con su área encima, con tooltip al pasar\nel cursor. El SVG escala con `viewBox`, así que el trazo y el texto no se\ndeforman al cambiar el ancho del contenedor.",
@@ -2608,6 +2878,20 @@
      "required": false,
      "default": "",
      "description": "Color de las barras."
+    },
+    {
+     "name": "showLine",
+     "type": "boolean",
+     "required": false,
+     "default": "true",
+     "description": "Muestra la serie de línea."
+    },
+    {
+     "name": "showBars",
+     "type": "boolean",
+     "required": false,
+     "default": "true",
+     "description": "Muestra la serie de barras."
     },
     {
      "name": "height",
@@ -3364,6 +3648,27 @@
      "description": "Optional trend indicator text (e.g. \"+12%\", \"-3\")."
     },
     {
+     "name": "hint",
+     "type": "string",
+     "required": false,
+     "default": "",
+     "description": "Optional secondary line under the value (context, not a trend)."
+    },
+    {
+     "name": "progress",
+     "type": "number",
+     "required": false,
+     "default": "",
+     "description": "Optional progress 0–100 rendered under the hint."
+    },
+    {
+     "name": "progressColor",
+     "type": "\"gray\" | \"purple\" | \"info\" | \"success\" | \"warning\" | \"error\" | \"primary\" | \"secondary\" | \"danger\"",
+     "required": false,
+     "default": "\"primary\"",
+     "description": "Semantic color for the progress bar."
+    },
+    {
      "name": "trendDirection",
      "type": "\"up\" | \"down\" | \"neutral\"",
      "required": false,
@@ -3806,7 +4111,7 @@
   {
    "name": "ITTabs",
    "layer": "molecules",
-   "description": "Tabbed navigation component with \"line\" and \"pill\" visual variants.\nManages its own active state internally via a defaultActiveId.",
+   "description": "Tabbed navigation component with \"line\" and \"pill\" visual variants.\nManages its own active state internally via a defaultActiveId.\nWith `appearance=\"bento\"` the \"pill\" variant becomes a rounded track with an ink active pill.",
    "example": "<ITTabs\n  items={[\n    { id: \"tab1\", label: \"General\", content: <GeneralPanel /> },\n    { id: \"tab2\", label: \"Settings\", content: <SettingsPanel />, disabled: true },\n  ]}\n  defaultActiveId=\"tab1\"\n  onChange={(id) => console.log(\"Active tab:\", id)}\n/>",
    "source": "src/components/molecules/tabs/tabs.tsx",
    "props": [
@@ -4521,6 +4826,13 @@
      "description": "When true and `title` is provided, renders an ITFormHeader instead of the default title bar."
     },
     {
+     "name": "padded",
+     "type": "boolean",
+     "required": false,
+     "default": "true",
+     "description": "When false, the card has no padding: the title row and body are flush to the edges, so the content can draw its own sections."
+    },
+    {
      "name": "fullScreen",
      "type": "boolean",
      "required": false,
@@ -4617,10 +4929,17 @@
     },
     {
      "name": "onSubmit",
-     "type": "(file: File) => void",
+     "type": "(file: File) => void | Promise<void>",
      "required": false,
      "default": "",
-     "description": "Called when the user confirms and submits the file."
+     "description": "Called when the user confirms and submits the file. With `autoUpload`, it runs right after selection and may return a promise that drives the status."
+    },
+    {
+     "name": "autoUpload",
+     "type": "boolean",
+     "required": false,
+     "default": "false",
+     "description": "Sube en cuanto se elige el archivo, sin paso de confirmar. Usa `onSubmit` como la subida:\nel estado pasa a subiendo y luego a subido, o a error si la promesa falla."
     },
     {
      "name": "acceptedFileTypes",
@@ -5555,6 +5874,106 @@
    ]
   },
   {
+   "name": "ITSchemaRenderer",
+   "layer": "others",
+   "description": "Pinta una pantalla completa a partir de un esquema.\n\nNunca lanza por culpa del esquema: los problemas se convierten en avisos que\nse entregan por `onIssue` (y se acumulan en `issuesRef` si quieres leerlos).",
+   "example": "<ITSchemaRenderer schema={{ version: 1, id: \"demo\", content: { type: \"ITText\", text: \"Hola\" } }} />",
+   "source": "src/json-renderer/kernel/SchemaRenderer.tsx",
+   "props": [
+    {
+     "name": "schema",
+     "type": "ScreenSchema",
+     "required": true,
+     "default": "",
+     "description": "Esquema de pantalla a pintar. Admite un árbol parcial (streaming)."
+    },
+    {
+     "name": "catalog",
+     "type": "Catalog",
+     "required": false,
+     "default": "",
+     "description": "Catálogo de componentes permitidos. Por defecto, el de AXZY."
+    },
+    {
+     "name": "limits",
+     "type": "Partial<EngineLimits>",
+     "required": false,
+     "default": "",
+     "description": "Presupuesto de nodos, profundidad y tiempos."
+    },
+    {
+     "name": "params",
+     "type": "Record<string, SchemaValue>",
+     "required": false,
+     "default": "",
+     "description": "Valores de la ruta para `$param`. Los pone el host; el esquema no puede crearlos."
+    },
+    {
+     "name": "dataHandlers",
+     "type": "Record<string, DataHandler>",
+     "required": false,
+     "default": "",
+     "description": "Handlers de datos que registra el host, por nombre. Las fuentes de `data` los\nreferencian con `handler`. Conviene memoizarlo: cada fuente se resuelve contra él."
+    },
+    {
+     "name": "slots",
+     "type": "SlotRegistry",
+     "required": false,
+     "default": "",
+     "description": "Bloques JSX que registra el host, por nombre. Un nodo `{ \"type\": \"slot\", \"props\": { \"name\": \"…\" } }`\nmonta el componente con ese nombre; el esquema no puede elegir otro."
+    },
+    {
+     "name": "effects",
+     "type": "EffectRegistry",
+     "required": false,
+     "default": "",
+     "description": "Efectos que cumple el host. Una acción con `then`, `onError` o efectos sueltos\nlos ejecuta después de su handler; `toast` y `navigate` son los más comunes."
+    },
+    {
+     "name": "capabilities",
+     "type": "readonly string[]",
+     "required": false,
+     "default": "",
+     "description": "Capacidades que concede el host (`[\"usuarios.leer\", …]`). Un nodo o la pantalla que\ndeclara `requires` solo se pinta si todas están concedidas; si no, avisa con `JR060`.\nSin esta prop, cualquier `requires` se deniega."
+    },
+    {
+     "name": "resolveValue",
+     "type": "(value: unknown, path: SchemaPath) => unknown",
+     "required": false,
+     "default": "",
+     "description": "Resuelve los valores que no son referencias del motor (por ejemplo, textos\n`{ i18n }`). Las referencias `$source`, `$state` y `$param` las resuelve el motor."
+    },
+    {
+     "name": "resolveAction",
+     "type": "(node: NodeSchema, prop: string, action: unknown, path: SchemaPath) => ((...args: unknown[]) => void) | undefined",
+     "required": false,
+     "default": "",
+     "description": "Traduce una acción declarada a un handler ejecutable. Sin esta prop, las\nacciones se ignoran y se avisa una sola vez por nodo."
+    },
+    {
+     "name": "pendingFallback",
+     "type": "React.ReactNode",
+     "required": false,
+     "default": "",
+     "description": "Qué pintar mientras un nodo está pendiente (streaming)."
+    },
+    {
+     "name": "onIssue",
+     "type": "(issue: JsonEngineIssue) => void",
+     "required": false,
+     "default": "",
+     "description": "Se llama por cada aviso del motor, con código y ruta."
+    },
+    {
+     "name": "className",
+     "type": "string",
+     "required": false,
+     "default": "",
+     "description": "Clases del contenedor raíz."
+    }
+   ]
+  },
+  {
    "name": "ITThemeProvider",
    "layer": "others",
    "description": "Root theme context provider that injects CSS custom properties for all components,\nsupports custom color palettes, dark/light mode, and an optional in-app theme designer FAB.",
@@ -5655,6 +6074,14 @@
    "example": ""
   },
   {
+   "name": "useJsonRender",
+   "layer": "hooks",
+   "description": "",
+   "signature": "(json: JsonComponentNode | JsonComponentNode[]): import(\"/Users/axzy/DEV/AXZY/AXZY_UI_SYSTEM/node_modules/.pnpm/@types+react@19.0.8/node_modules/@types/react/jsx-runtime\").JSX.Element",
+   "source": "src/hooks/useJsonRender.tsx",
+   "example": ""
+  },
+  {
    "name": "useITTheme",
    "layer": "hooks",
    "description": "",
@@ -5679,22 +6106,57 @@
    "example": ""
   },
   {
+   "name": "useITAppearance",
+   "layer": "hooks",
+   "description": "Lenguaje visual activo (`\"soft\"` | `\"flat\"` | `\"bento\"`).\nFuera de un ITThemeProvider devuelve `\"soft\"` (aspecto por defecto).",
+   "signature": "(): ITThemeAppearance",
+   "source": "src/theme/theme-context.ts",
+   "example": ""
+  },
+  {
    "name": "useITTranslation",
    "layer": "hooks",
    "description": "Devuelve el traductor y los formateadores de la locale activa.\n\nFunciona aunque no exista `ITI18nProvider` (cae al catálogo base en español).",
    "signature": "(): ITI18nValue",
    "source": "src/i18n/useITTranslation.ts",
    "example": "```tsx\nconst { t, formatCurrency } = useITTranslation();\nreturn <ITButton label={t(\"common.cancel\")} onClick={onCancel} />;\n```"
+  },
+  {
+   "name": "useSchemaStream",
+   "layer": "hooks",
+   "description": "Devuelve el estado de un esquema que llega por trozos.",
+   "signature": "(source: StreamSource | null | undefined): StreamState",
+   "source": "src/json-renderer/stream/useSchemaStream.ts",
+   "example": "const estado = useSchemaStream(stream);\nestado.tree;      // árbol pintable, o null si aún no hay nada válido\nestado.streaming; // true mientras la fuente sigue emitiendo"
   }
  ],
  "otherExports": [
+  "AXZY_CATALOG_ENTRIES",
+  "AXZY_EXCLUDED_TYPES",
+  "ActionSchema",
+  "BindingResolver",
+  "BindingScope",
+  "CURRENT_SCHEMA_VERSION",
+  "Catalog",
+  "CatalogEntry",
   "Column",
   "ColumnFilterMode",
   "ColumnFilterValue",
   "ColumnFilters",
+  "ComponentContract",
+  "DEFAULT_LIMITS",
+  "DEFAULT_MIGRATIONS",
+  "DataHandler",
+  "DataLoader",
+  "DataSourceSchema",
+  "EffectRegistry",
+  "EffectSchema",
+  "EngineLimits",
   "FieldConfig",
   "FieldConfigV2",
   "FileTypeEnum",
+  "FlatRoute",
+  "GLOBALLY_FORBIDDEN_PROPS",
   "ITAccordionItem",
   "ITAccordionProps",
   "ITAlertProps",
@@ -5705,6 +6167,7 @@
   "ITButtonProps",
   "ITCalendarProps",
   "ITCardProps",
+  "ITCardTone",
   "ITCheckboxProps",
   "ITChipInputProps",
   "ITChipProps",
@@ -5729,6 +6192,9 @@
   "ITImageProps",
   "ITInputNumberProps",
   "ITInputProps",
+  "ITJSONEditorProps",
+  "ITJsonRenderEngineProps",
+  "ITJsonRendererProps",
   "ITLayoutProps",
   "ITLineBarChartProps",
   "ITLineBarDatum",
@@ -5778,19 +6244,91 @@
   "ITTripleFilterOption",
   "ITTripleFilterProps",
   "ITWysiwygProps",
+  "JsonComponentNode",
+  "JsonComponentType",
+  "JsonEngineCode",
+  "JsonEngineError",
+  "JsonEngineIssue",
+  "JsonEngineSeverity",
+  "LimitTracker",
+  "MigrationRegistry",
+  "MigrationResult",
+  "NavNode",
+  "NodeBoundary",
+  "NodeSchema",
+  "NodeStatus",
+  "PartialParseResult",
+  "PathSegment",
+  "PropContract",
+  "PropKind",
+  "PropSpec",
+  "ResolvedNode",
+  "RouteMatch",
+  "RouteNavSchema",
+  "RouteSchema",
+  "RoutesSchema",
+  "SchemaMigration",
+  "SchemaPath",
+  "SchemaReference",
+  "SchemaValue",
+  "ScreenSchema",
+  "SlotComponent",
+  "SlotRegistry",
+  "StreamSource",
+  "StreamState",
   "TableColors",
   "TableDensity",
   "TableDesign",
   "TableDesignProps",
   "TableDesignSlot",
+  "ToastVariant",
+  "UnresolvedNode",
   "UploadStatus",
   "UseTableStateOptions",
   "UseTableStateResult",
+  "ValidateOptions",
+  "ValidationReport",
+  "ValidationVerdict",
+  "VocabularyContract",
+  "WhenSchema",
+  "auditTree",
+  "axzyCatalog",
+  "axzyCatalogTypes",
+  "buildNavigationTree",
+  "buildVocabularyContract",
+  "countPendingNodes",
+  "createBindingResolver",
+  "createCatalog",
+  "createLimitTracker",
   "createValidationSchema",
   "enMessages",
   "esMessages",
+  "flattenRoutes",
+  "formatPath",
+  "formatVocabularyForPrompt",
+  "getCatalogEntry",
   "getContrastTextColor",
+  "getExclusionReason",
+  "hasPath",
+  "isExcludedType",
   "isLightColor",
-  "resolveCssColor"
+  "isNodePending",
+  "issue",
+  "joinRoutePath",
+  "matchRoute",
+  "migrateSchema",
+  "navContainsRoute",
+  "parsePartialSchema",
+  "parsePath",
+  "propPath",
+  "pushPath",
+  "readPath",
+  "renderNode",
+  "resolveCssColor",
+  "resolveLimits",
+  "resolveNode",
+  "routeHref",
+  "validateRoutes",
+  "validateSchema"
  ]
 }

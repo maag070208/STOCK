@@ -182,9 +182,10 @@ The iOS screens are checked by eye on the simulator, in light and dark mode, unt
 |---|---|
 | Invoice `OPEN`, order `CREATED` | Gray (planned) |
 | Invoice `PENDING` | Yellow (mock) |
-| Invoice `IN_ASSIGNMENT`, order `FULFILLING` | Blue (development) |
+| Invoice `IN_ASSIGNMENT` | Blue (development) |
+| Order `FULFILLING` | Blue (development) |
 | Order `FULFILLED` | Lavender (integrated) |
 | Invoice `CLOSED`, order `VALIDATED` | Green (production) |
-| Order `CANCELLED` | No tone in the design. A sixth badge, in the `danger` color, would have to be added to the design file |
+| Invoice `CANCELLED`, order `CANCELLED` | Red (`danger`) |
 
 4. **Navigation in the app.** The design has no bottom bar or drawer. The pattern is chosen in F1, when the app has more than one screen.

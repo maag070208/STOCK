@@ -71,11 +71,12 @@ class PlacementViewModel(
 	val state: StateFlow<PlacementState> = mutableState.asStateFlow()
 
 	private var running: Job? = null
+	private var operationKey: String? = null
 	private var lastScan: String? = null
 
-	// What the operator still has to place: their counted assignments of the invoices in assignment.
 	fun load() {
 		running?.cancel()
+		operationKey = null
 		mutableState.value = PlacementState(loading = true)
 		running = viewModelScope.launch {
 			mutableState.value = try {
@@ -94,20 +95,20 @@ class PlacementViewModel(
 	fun open(target: PlacementTarget) {
 		running?.cancel()
 		lastScan = null
-		val remaining = Decimals.subtract(target.assignment.countedQuantity.orEmpty(), target.assignment.placedQuantity) ?: ""
-		mutableState.value = PlacementState(targets = emptyList(), target = target, remaining = remaining)
+		operationKey = null
+		mutableState.value = PlacementState(targets = emptyList(), target = target, remaining = remainingOf(target.assignment))
 	}
 
-	// The hero's back from the form: return to the list and read it fresh.
 	fun back() {
 		lastScan = null
+		operationKey = null
 		load()
 	}
 
-	// Leaving the page: whatever was open is let go, and the next entry loads it fresh.
 	fun clear() {
 		running?.cancel()
 		lastScan = null
+		operationKey = null
 		mutableState.value = PlacementState()
 	}
 
@@ -134,8 +135,7 @@ class PlacementViewModel(
 		mutableState.value = mutableState.value.copy(lines = mutableState.value.lines.filterIndexed { i, _ -> i != index }, lineError = null)
 	}
 
-	// The placements as the operator entered them. A row that is not a quantity, or a sum that is not what was
-	// counted, never reaches the API.
+	// Any positive part of the remaining quantity can be saved; only empty, zero or excessive placements are refused.
 	fun save() {
 		val current = mutableState.value
 		val target = current.target ?: return
@@ -145,23 +145,24 @@ class PlacementViewModel(
 				return
 			}
 
-			current.lines.any { !Decimals.isValid(it.quantity) } -> {
+			current.lines.any { !Decimals.isValid(it.quantity) || Decimals.same(it.quantity, "0") } -> {
 				mutableState.value = current.copy(lineError = quantityInvalid())
 				return
 			}
 
-			current.placedTotal?.let { Decimals.same(it, current.remaining) } != true -> {
+			current.placedTotal == null || Decimals.above(current.placedTotal!!, current.remaining) -> {
 				mutableState.value = current.copy(lineError = totalMismatch())
 				return
 			}
 		}
+		val key = operationKey ?: com.axzydev.stock.data.api.newOperationKey().also { operationKey = it }
 		running?.cancel()
 		mutableState.value = current.copy(saving = true, lineError = null, error = null)
 		running = viewModelScope.launch {
 			val bodies = current.lines.map { PlacementBody(it.locationId, it.quantity) }
 			mutableState.value = try {
-				val saved = session.withToken { token -> receiving.placements(token, target.assignment.id, bodies) }
-				mutableState.value.copy(saving = false, saved = saved)
+				val saved = session.withToken { token -> receiving.placements(token, target.assignment.id, bodies, key) }
+				mutableState.value.copy(saving = false, target = target.copy(assignment = saved), remaining = remainingOf(saved), saved = saved)
 			} catch (e: CancellationException) {
 				throw e
 			} catch (e: ApiError) {
@@ -172,13 +173,37 @@ class PlacementViewModel(
 		}
 	}
 
+	fun continuePlacement() {
+		val current = mutableState.value
+		val saved = current.saved ?: return
+		val target = current.target ?: return
+		operationKey = null
+		lastScan = null
+		mutableState.value = current.copy(
+			target = target.copy(assignment = saved),
+			remaining = remainingOf(saved),
+			scan = "",
+			lines = emptyList(),
+			error = null,
+			scanError = null,
+			lineError = null,
+			saving = false,
+			saved = null,
+		)
+	}
+
+	private fun remainingOf(assignment: com.axzydev.stock.data.receipts.AssignmentView): String =
+		assignment.remainingQuantity
+			?: Decimals.subtract(assignment.acceptedQuantity ?: assignment.countedQuantity.orEmpty(), assignment.placedQuantity)
+			.orEmpty()
+
 	private suspend fun targetsOf(token: String): List<PlacementTarget> =
 		receiving.mine(token)
-			.filter { it.invoice.status.code == IN_ASSIGNMENT }
+			.filter { it.invoice.status.code in ACTIVE }
 			.flatMap { receipt ->
 				receipt.lines.flatMap { line ->
 					line.assignments
-						.filter { it.countedQuantity != null && it.outcome == MATCH && !it.placed }
+						.filter { it.readyToPlace && !it.placed }
 						.map { PlacementTarget(it, receipt.invoice.number, receipt.invoice.warehouse.id, line.product, line.unit) }
 				}
 			}
@@ -218,11 +243,6 @@ class PlacementViewModel(
 	}
 
 	private companion object {
-		// The invoice status whose assignments are counted and settled, so they are ready to place
-		// (docs/modules/material-receiving.md sections 6 to 8).
-		const val IN_ASSIGNMENT = "IN_ASSIGNMENT"
-
-		// Counted and equal to what was expected: a match, or a discrepancy that was adjusted.
-		const val MATCH = "MATCH"
+		val ACTIVE = setOf("PENDING", "IN_ASSIGNMENT")
 	}
 }

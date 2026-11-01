@@ -14,6 +14,8 @@ test("the search box and the chip become the filters of the request, combined", 
 	// The three chips: Todas asks for nothing, Cerradas for CLOSED, Abiertas for every status that is not closed.
 	expect(invoiceFilters({ search: "", chip: "closed" })).toEqual({ status: ["CLOSED"] });
 	expect(invoiceFilters({ search: "", chip: "open" })).toEqual({ status: openStatuses() });
+	expect(invoiceFilters({ search: "", chip: "placement" })).toEqual({ status: ["IN_ASSIGNMENT"] });
+	expect(invoiceFilters({ search: "", chip: "cancelled" })).toEqual({ status: ["CANCELLED"] });
 	// The search travels as it was written, without the spaces around it, and combines with the chip.
 	expect(invoiceFilters({ search: "  aceros  ", chip: "closed" })).toEqual({ search: "aceros", status: ["CLOSED"] });
 });
@@ -21,6 +23,8 @@ test("the search box and the chip become the filters of the request, combined", 
 test("a chip is read from the query of the list, and anything else is Todas", () => {
 	expect(statusChip("open")).toBe("open");
 	expect(statusChip("closed")).toBe("closed");
+	expect(statusChip("placement")).toBe("placement");
+	expect(statusChip("cancelled")).toBe("cancelled");
 	expect(statusChip("all")).toBe("all");
 	expect(statusChip("nope")).toBe("all");
 	expect(statusChip(null)).toBe("all");

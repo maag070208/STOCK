@@ -1,732 +1,23 @@
-# AXZY UI System — paquete de contexto para IA
+<!-- GENERADO por scripts/build-llm-docs.mjs — no editar a mano. -->
 
-> Pegá este archivo entero en el chat (o súbelo como conocimiento del proyecto). Contiene todo lo
-> necesario para que un modelo escriba código correcto con `@axzydev/axzy_ui_system`: instalación real,
-> reglas, accesibilidad, trampas, ejemplos de producción y el catálogo de componentes.
->
-> Librería: `@axzydev/axzy_ui_system` · versión de referencia: `1.5.0` ·
-> 61 componentes. Generado el 2026-10-15.
->
-> Estructura: **Parte 1** guía de uso · **Parte 2** ejemplos reales · **Parte 3** catálogo de componentes.
-> Las rutas que se citan dentro (`docs/…`, `LLM_DOCS.md`) son del repo de la librería: este paquete ya
-> incluye lo esencial, así que no las necesitas para escribir código.
+# Catálogo de componentes (para IA)
 
----
+Generado desde el código con el compilador de TypeScript: **64 componentes**, 779 props, 12 hooks. Versión de la librería: `1.7.2`.
 
+Para regenerarlo: `pnpm docs:llm`.
 
-## Parte 1 — Guía de uso
+## Índice
 
-> **Cómo usar este documento.** Es el contexto que le pasas a un modelo para que genere código con esta
-> librería. Léelo en este orden: §1–§4 (qué es y reglas), §5–§9 (cómo se compone cada tipo de pantalla),
-> §10–§12 (theming, i18n y accesibilidad), **§13 trampas conocidas** (evita los errores más caros) y §14
-> recetas. Para la lista completa de props de un componente, usa `docs/llm/catalogo.md` (generado desde el
-> código) o `docs/<capa>/<componente>.md`. Para el detalle del theming, `LLM_DOCS.md`.
+- **Atoms** (22): `ITAvatar`, `ITBadget`, `ITButton`, `ITCheckbox`, `ITChip`, `ITDivider`, `ITFlex`, `ITGrid`, `ITImage`, `ITInput`, `ITInputNumber`, `ITLoader`, `ITPopover`, `ITProgress`, `ITRadioGroup`, `ITSegmentedControl`, `ITSkeleton`, `ITSlider`, `ITSlideToggle`, `ITStack`, `ITText`, `ITTextarea`
+- **Molecules** (25): `ITAccordion`, `ITAlert`, `ITBreadcrumbs`, `ITCalendar`, `ITCard`, `ITChipInput`, `ITDatePicker`, `ITDropdownMenu`, `ITEmptyState`, `ITField`, `ITFormHeader`, `ITJSONEditor`, `ITJsonRenderer`, `ITLineBarChart`, `ITMaskedInput`, `ITMultiSelect`, `ITPagination`, `ITSearchSelect`, `ITSelect`, `ITStatCard`, `ITStepper`, `ITTable`, `ITTabs`, `ITTimePicker`, `ITWysiwyg`
+- **Organisms** (12): `ITConfirmDialog`, `ITDataTable`, `ITDialog`, `ITDrawer`, `ITDropfile`, `ITFormBuilder`, `ITNavbar`, `ITPageHeader`, `ITSearchTable`, `ITSidebar`, `ITToast`, `ITTripleFilter`
+- **Templates** (2): `ITLayout`, `ITPage`
+- **Providers y otros** (3): `ITI18nProvider`, `ITSchemaRenderer`, `ITThemeProvider`
+- **Hooks** (12): `useClickOutside`, `useDebouncedSearch`, `useEditableRow`, `useFloatingPanel`, `useTableState`, `useJsonRender`, `useITTheme`, `useITThemeSafe`, `useITFlatAppearance`, `useITAppearance`, `useITTranslation`, `useSchemaStream`
 
-| Documento | Para qué |
-| --- | --- |
-| **Este archivo** (`docs/llm/GUIA.md`) | Cómo pensar y escribir código con el sistema |
-| `docs/llm/catalogo.md` | **Generado**: 61 componentes con todos sus props, tipos, defaults y ejemplo |
-| `docs/llm/catalogo.json` | El mismo catálogo en JSON (para pegarlo en contexto o indexarlo) |
-| **`docs/llm/ejemplos-reales.md`** | **Así se usa en producción** (CYC ERP): capas de CSS, provider real, chassis, páginas de listado/formulario/tablero, tabla con API y toasts |
-| `LLM_DOCS.md` | Theming a fondo: variables CSS `--it-*`, layout chassis, patrones |
-| `docs/<capa>/<componente>.md` | Referencia por componente (props + ejemplos + textos i18n) |
-| `DESIGN.md` | Lenguaje visual del sandbox y del portafolio (dev-only) |
+## Atoms
 
----
-
-### 1. Qué es
-
-Librería de componentes **React + TypeScript + Tailwind CSS v4** (`@axzydev/axzy_ui_system`), publicada en
-npm. 61 componentes organizados en capas atómicas — la dependencia va **siempre hacia abajo**:
-
-```
-atoms  <  molecules  <  organisms  <  templates
-```
-
-- **atoms**: `ITButton`, `ITInput`, `ITText`, `ITBadget`, `ITSlideToggle`, `ITStack`, `ITGrid`, …
-- **molecules**: `ITTable`, `ITSelect`, `ITDatePicker`, `ITCard`, `ITTabs`, `ITWysiwyg`, …
-- **organisms**: `ITDataTable`, `ITDialog`, `ITToast`, `ITSidebar`, `ITFormBuilder`, `ITPageHeader`, …
-- **templates**: `ITLayout` (chassis completo), `ITPage` (página con cabecera y estados).
-
-### 2. Puesta en marcha (receta completa)
-
-```css
-/* src/index.css — el orden de capas manda por encima del orden de imports */
-@layer theme, base, axzy-ui-system, components, utilities;
-
-@import "tailwindcss";
-@import "@axzydev/axzy_ui_system/dist/index.css" layer(axzy-ui-system);
-/* o el build ya capado del propio paquete: */
-/* @import "@axzydev/axzy_ui_system/layered.css"; */
-```
-
-```tsx
-// src/main.tsx
-import { ITThemeProvider } from "@axzydev/axzy_ui_system";
-import "@app/index.css";
-
-// Opcional: fija el modo por defecto ANTES de montar (si no, es "system").
-if (!localStorage.getItem("it-theme-dark-mode")) localStorage.setItem("it-theme-dark-mode", "light");
-
-createRoot(document.getElementById("root")!).render(
-  <React.StrictMode>
-    <ITThemeProvider theme={{ primary: "#3056B8" }} appearance="flat" radius={10} shadow={1} showFab={false}>
-      <App />
-    </ITThemeProvider>
-  </React.StrictMode>
-);
-```
-
-Claves de esta receta (todas verificadas en producción, ver `ejemplos-reales.md`):
-
-1. **Las capas se declaran explícitamente** y el CSS de la librería entra en `layer(axzy-ui-system)`
-   **antes** de `utilities`: así tu Preflight no pisa su reset y tus utilidades sí pueden ajustar la
-   librería. Si la capa de la librería queda después de `utilities`, tus ajustes necesitan el sufijo `!`
-   de Tailwind v4 (`m-0! px-4!`).
-2. **`dist/index.css` va en el CSS, no en `main.tsx`** (si tu app también importa Tailwind, dos
-   importaciones compiten).
-3. **Dark mode**: el provider usa la clave `it-theme-dark-mode` (`"light" | "dark" | "system"`) y arranca
-   en `system`. Escríbela antes de renderizar para fijar otro default.
-4. **Tokens**: para ajustar superficies que inyecta el provider, usa un selector que gane —
-   `:root[data-it-appearance="flat"] { --it-layout-bg: #f5f6fa; }`.
-5. **Config de producción del provider**: `appearance`, `radius`, `density`, `shadow`, `showFab={false}` y
-   una paleta propia (incluye los bloques `layout` y `table`).
-6. React ≥ 18 como peer. Ninguna otra librería de UI.
-
-### 3. Reglas de oro
-
-1. **Nunca hardcodees colores.** Usa las utilidades del tema: `bg-primary-600`, `text-slate-600`,
-   `border-slate-200`… y las variables `var(--it-*)` cuando escribas CSS propio.
-2. **Nunca hardcodees textos visibles.** Todo sale de `useITTranslation()` → `t("namespace.key")`.
-3. **Un solo acento por vista**, usado como señal (borde, foco, un CTA). Los colores semánticos
-   (`danger`, `warning`, `success`, `info`) son para estado, no decoración.
-4. **Un componente por capa**: si un atom necesita un molecule, la pieza está mal ubicada.
-5. **`className` es la válvula de escape**: los componentes aceptan `className` (y muchos
-   `containerClassName`, `labelClassName`, `contentClassName`) para ajustes puntuales.
-6. **Los textos siempre vía `ITText`** dentro de componentes de la librería (es el átomo de tipografía).
-7. **La accesibilidad no es opcional**: todo control necesita nombre accesible (§12).
-8. **Todo lo que el usuario puede tocar tiene estados**: `disabled`, `loading`, `error`, `empty`.
-9. **No inventes props**: consulta `docs/llm/catalogo.md`, que se genera desde el código.
-10. **Composición antes que configuración**: prefiere `ITStack`/`ITGrid`/`ITFlex` + componentes simples
-    antes que un componente gigante con 30 props.
-
-### 4. Convenciones de props
-
-La mayoría de los componentes comparten estos nombres. Si dudas, asume esto:
-
-| Prop | Valores típicos | Nota |
-| --- | --- | --- |
-| `size` | `"sm" \| "md" \| "lg"` | Escala única del sistema |
-| `color` | `"primary" \| "secondary" \| "success" \| "danger" \| "warning" \| "info" \| "purple" \| "gray"` | Clave semántica de la paleta |
-| `variant` | Depende del componente (`"filled" \| "outlined" \| "raised" \| "rounded" \| "text" \| …`) | Estilo visual |
-| `label` | `string` | Texto del control o su nombre accesible |
-| `value` / `onChange` | Controlado | Si acepta `value`, es controlado |
-| `initialX` | Estado inicial | Para uso no controlado |
-| `className` | `string` | Clases extra del contenedor |
-| `disabled`, `loading`, `error` | `boolean` / `string` | Estados |
-
-**Controlado vs no controlado**: `ITSlideToggle` usa `isOn` + `onToggle`; `ITInput`/`ITSelect` usan
-`value` + `onChange`; los que tienen `initialState`/`defaultX` funcionan sin estado externo.
-
-### 5. Componer una pantalla
-
-```tsx
-import { ITLayout, ITPageHeader, ITStack, ITGrid, ITCard, ITButton } from "@axzydev/axzy_ui_system";
-
-<ITLayout
-  topBar={{ logoText: "Mi App", userMenu: { userName: "Ana", userEmail: "ana@x.dev" } }}
-  sidebar={{ navigationItems: [{ id: "home", label: "Inicio", icon: <FaHome />, isActive: true }] }}
->
-  <ITPageHeader title="Panel" description="Resumen del día" actions={<ITButton>Exportar</ITButton>} />
-  <ITStack spacing={5}>
-    <ITGrid container spacing={4}>
-      <ITGrid item xs={12} lg={6}><ITCard title="Ventas">…</ITCard></ITGrid>
-      <ITGrid item xs={12} lg={6}><ITCard title="Tickets">…</ITCard></ITGrid>
-    </ITGrid>
-  </ITStack>
-</ITLayout>
-```
-
-- `ITLayout` = chassis (topbar + sidebar + contenido). `ITPage` = página con `title`, `description`,
-  `breadcrumbs`, `actions`, `loading`, `error`, `empty`, `maxWidth`, `horizontalPadding`.
-- `ITStack` (vertical), `ITFlex` (flex), `ITGrid` (retícula 12 columnas) resuelven el layout.
-- **Importante**: `ITLayout`/`ITNavbar` ocupan la altura del viewport (`h-screen`). Para embeberlos en
-  otra superficie pasa `className="!h-full"` y dales un contenedor con altura (§13).
-
-### 6. Formularios
-
-```tsx
-<ITStack spacing={4}>
-  <ITField label="Correo" htmlFor="email" required error={errors.email} helpText="Lo usamos para avisos">
-    <ITInput id="email" name="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-  </ITField>
-
-  <ITSelect
-    name="role"
-    label="Rol"
-    value={role}
-    onChange={(e) => setRole(e.target.value)}
-    options={[{ label: "Admin", value: "admin" }, { label: "Staff", value: "staff" }]}
-  />
-
-  <ITSlideToggle label="Recibir avisos" isOn={newsletter} onToggle={setNewsletter} />
-</ITStack>
-```
-
-- **`ITField`** agrupa etiqueta, obligatorio, ayuda y error de cualquier control (`error` acepta
-  `string | boolean`).
-- Cada control tiene su propio `label`; **si lo omites, pasa al menos `ariaLabel`** (o el control queda
-  sin nombre accesible).
-- Formik + Yup están soportados (son dependencias): usa `ITField` + los tipos de `src/types/yup.types.ts`
-  para mapear `errors`/`touched` a la UI.
-- `ITFormBuilder` arma formularios declarativos desde un esquema; `ITWysiwyg` para texto enriquecido;
-  `ITMaskedInput` para máscaras; `ITChipInput`/`ITMultiSelect` para listas de valores.
-
-### 7. Datos y tablas
-
-| Componente | Cuándo |
-| --- | --- |
-| `ITTable` | Datos **en memoria**, con paginación, filtros por columna, cards en móvil |
-| `ITDataTable` | Datos **del servidor** (`fetchData`), filtros externos, virtualización |
-| `ITSearchTable` | Búsqueda + tabla con barra de filtros ya resuelta |
-| `ITStatCard`, `ITLineBarChart`, `ITProgress` | Métricas y gráficas |
-| `ITBadget`, `ITChip` | Estados y etiquetas dentro de celdas |
-
-- Pasa `columns` (con `key`, `label`, `render`, filtros) y `data`/`fetchData`.
-- En móvil, `renderCard` convierte cada fila en tarjeta (si no lo pasas, se usa el layout de tabla).
-
-### 8. Feedback y overlays
-
-- `ITDialog` / `ITDrawer` / `ITConfirmDialog`: overlays con foco y `Esc` gestionados.
-- `ITToast`: mensaje efímero autocontenido (`message`, `type`, `duration`, `position`, `onClose`).
-  No hay provider: renderiza el `ITToast` donde quieras y despídelo con `onClose`.
-- `ITLoader`, `ITSkeleton`, `ITEmptyState`: estados de carga/vacío (obligatorios en listas y tablas).
-- `ITAlert`: aviso en línea (no modal) para errores de formulario o avisos de sistema.
-
-### 9. Navegación
-
-`ITTabs`, `ITStepper`, `ITBreadcrumbs`, `ITPagination`, `ITDropdownMenu`, `ITSegmentedControl`,
-`ITToggle` (vía `ITSlideToggle`). Para el chrome: `ITSidebar` (riel que se expande al pasar el cursor y
-drawer en móvil) + `ITTopBar`; `ITNavbar` es la variante todo-en-uno.
-
-### 10. Theming
-
-```tsx
-<ITThemeProvider
-  theme={{ primary: "#2563eb", danger: "#dc2626" }}   // se fusiona con la paleta por defecto
-  appearance="flat"      // "soft" (por defecto) | "flat"
-  radius={10}            // radio global en px para toda la escala rounded-*
-  density={0.95}         // 0.5–1.5: comprime tipografía/espaciados basados en rem
-  shadow={2}             // 0–3
-  showFab={false}        // oculta el diseñador de temas flotante
->
-```
-
-- `useITTheme()` → `{ palette, colors, setPalette, updateColor, resetTheme, applyPreset,
-  resolvedTheme, darkModeMode, setDarkModeMode, appearance }`.
-- **Dark mode es por clase**: el provider pone/quitá `.dark` en `<html>`; tus clases deben ser
-  `bg-white dark:bg-slate-900`, y el CSS propio se escribe con `@variant dark (&:is(.dark &))`.
-- Los colores del tema viven en variables CSS `--color-*` y los tokens de componentes en `--it-*`
-  (lista completa en `LLM_DOCS.md`): **usa esas variables** en CSS propio, nunca hex sueltos.
-- El provider genera escalas dinámicas (`--color-primary-50…950`) a partir del color base y las
-  recalcula en dark mode.
-
-### 11. i18n
-
-```tsx
-const { t, formatNumber, formatCurrency, formatDate, locale } = useITTranslation();
-t("common.save");                    // "Guardar"
-formatCurrency(1234.5, "EUR");       // "1.234,50 €"
-```
-
-- Claves `namespace.key` en `src/i18n/locales/es.ts` y `en.ts` (**paridad obligatoria**).
-- Sin `ITI18nProvider` la salida es idéntica al español por defecto.
-- **Los props explícitos ganan sobre el catálogo** (si pasas `label`, se usa tu texto).
-- Formateo: siempre por el hook (`formatNumber`, `formatCurrency`, `formatDate`, `dateLocale`).
-
-### 12. Accesibilidad (no negociable)
-
-- **Todo control necesita nombre accesible**: `label` en `ITInput`/`ITSelect`/`ITField`;
-  `label`/`ariaLabel` en `ITSlideToggle`; `ariaLabel` en botones de solo icono.
-- **Nada de interactivos anidados**: nunca un `<button>`/`ITButton` dentro de un `<a>`.
-- **Contraste AA**: el acento de la paleta resuelta se queda corto en algunos tonos. Regla práctica:
-  relleno con texto blanco → `primary-700`; texto de acento sobre blanco → `primary-700`;
-  sobre fondos tintados → `primary-800`; en dark → `primary-500`. `primary-600` solo para texto grande.
-- **Foco visible siempre** (`focus-visible:ring-2`), y no lo elimines con `outline-none` sin reemplazo.
-- Usa los landmarks una vez: un `<main>` por documento; `header`/`nav`/`aside` con nombre si se repiten.
-- Respeta `prefers-reduced-motion` en animaciones propias.
-
-### 13. Trampas conocidas (esto ahorra horas)
-
-1. **El CSS por componente no viaja**: solo se publica `dist/index.css`. Si añades keyframes o CSS
-   propios, ponlos en tu hoja con prefijo (`it-`) bajo `@layer components`.
-2. **Tailwind no ve clases construidas en runtime**: `grid-cols-${n}` o `col-span-${n}` no existen en el
-   bundle. Usa clases literales o un safelist (`@source inline("grid-cols-1 …")`). Aplica igual si
-   consumes la librería.
-3. **`col-span-full` se emite después de `col-span-N`**: no pongas las dos en el mismo item.
-4. **`ITNavbar`/`ITLayout` fuerzan `h-screen`**: para embeberlos, dales un contenedor con altura y
-   `className="!h-full"`; si no, se estiran a 100vh.
-5. **El provider inyecta overrides `!important` en dark** para utilidades comunes (`.bg-white`,
-   `.text-slate-*`). No pelees con él usando hex sueltos: usa las variables `--it-*` / utilidades del tema.
-6. **`ITSidebar` colapsado**: el riel se expande al pasar el cursor; en móvil es un drawer. No hay botón
-   de colapso.
-7. **Iconos**: usa `react-icons` (ya es dependencia) y nunca emojis en la UI.
-8. **`ITText`**: úsalo para todo texto dentro de componentes; `muted` aplica `--color-text-muted`.
-9. **`ITPage` trae padding y `max-width` propios**: para una página a sangre usa `noPadding` y, si
-   necesitas control total, `className="m-0! px-4! max-w-screen!"`.
-10. **Capas de CSS**: si tu capa de la librería acaba después de `utilities`, tus utilidades no ganan a
-   los estilos de la librería salvo con el sufijo `!` (`m-0!`, `px-4!`). Con el orden recomendado
-   (`axzy-ui-system` antes de `utilities`) no hace falta.
-11. **El id del diálogo es una clase interna** (`.it-dialog-panel`): para redimensionarlo sin prop, una
-   regla propia (fuera de capas) es suficiente con el orden recomendado.
-12. **Verifica antes de publicar**: `pnpm lint` (0 errores), `pnpm bundle` y, si tocas el sandbox,
-   `pnpm audit:sandbox` (axe con el set completo + recortes de contenido).
-
-### 14. Recetas
-
-**Formulario con estados y validación**
-
-```tsx
-const [values, setValues] = useState({ email: "", role: "" });
-const [errors, setErrors] = useState<Record<string, string>>({});
-
-<ITStack spacing={4}>
-  <ITField label="Correo" htmlFor="email" required error={errors.email}>
-    <ITInput id="email" name="email" value={values.email}
-      onChange={(e) => setValues({ ...values, email: e.target.value })} />
-  </ITField>
-  <ITSelect name="role" label="Rol" value={values.role}
-    onChange={(e) => setValues({ ...values, role: e.target.value })}
-    options={[{ label: "Admin", value: "admin" }]} />
-  <ITFlex justify="end" gap={3}>
-    <ITButton variant="outlined" color="gray">Cancelar</ITButton>
-    <ITButton onClick={submit}>Guardar</ITButton>
-  </ITFlex>
-</ITStack>
-```
-
-**Listado con carga, vacío y error**
-
-```tsx
-{loading ? <ITSkeleton lines={5} /> :
- data.length === 0 ? <ITEmptyState title="Sin resultados" description="Ajusta los filtros" action={<ITButton>Crear</ITButton>} /> :
- <ITTable columns={columns} data={data} title="Usuarios" />}
-```
-
-**Tabla del servidor**
-
-```tsx
-<ITDataTable
-  columns={columns}
-  fetchData={async ({ page, pageSize, filters }) => {
-    const res = await api.list({ page, pageSize, ...filters });
-    return { rows: res.items, total: res.total };
-  }}
-/>
-```
-
-**Diálogo de confirmación + toast**
-
-```tsx
-<ITConfirmDialog open={open} title="Eliminar registro" description="No se puede deshacer"
-  onConfirm={remove} onCancel={() => setOpen(false)} />
-{toast && <ITToast message="Registro eliminado" type="success" onClose={() => setToast(null)} />}
-```
-
-### 15. Cómo pedirle código a una IA con esta guía
-
-Dale **estos archivos** como contexto: `docs/llm/GUIA.md` + `docs/llm/catalogo.md` +
-`docs/llm/ejemplos-reales.md` (patrones de producción; el que más ayuda a acertar de primeras) y
-`LLM_DOCS.md` solo si va a tocar theming. Después pide así:
-
-> Usa AXZY UI System. Compón una pantalla de listado de clientes con `ITLayout` + `ITPageHeader`, una
-> `ITDataTable` alimentada por `fetchData`, estados de carga/vacío, un `ITConfirmDialog` para borrar y un
-> `ITToast` de confirmación. Respeta las reglas de §3 y la accesibilidad de §12; si necesitas un prop que
-> no conoces, búscalo en el catálogo antes de usarlo.
-
-Pedir explícitamente «consulta el catálogo antes de inventar un prop» es lo que evita el 90% de las
-alucinaciones con esta librería.
-
-### 16. Mapa del repo (por si hace falta el código)
-
-```
-src/components/<capa>/<componente>/<componente>.tsx     implementación
-src/components/<capa>/<componente>/<componente>.props.ts props + JSDoc (fuente de verdad)
-src/index.ts                                            exports públicos
-src/i18n/locales/{es,en}.ts                             catálogo de textos
-docs/llm/                                               esta guía + catálogo generado + ejemplos reales
-docs/<capa>/<componente>.md                             referencia por componente
-docs/i18n/{conventions,strings}.md                      convenciones y catálogo maestro de textos
-DESIGN.md                                               lenguaje visual de sandbox y portafolio
-scripts/audit-sandbox.mjs                               auditoría (axe + recortes) del sandbox
-```
-
-
----
-
-## Parte 2 — Ejemplos reales de producción
-
-Extraído de **CYC ERP** (`~/DEV/CYC/web`), una app real con React 19 + Vite + Tailwind v4 + Redux +
-react-router. Todo lo de aquí está **en producción**: úsalo como plantilla antes que inventar.
-
-> Estos ejemplos cubren la parte que **no** está en el README: cómo se deja la instalación al 100 (capas
-> de CSS, dark mode por defecto, overrides de tokens), cómo se compone el chassis en un guard de rutas, y
-> cómo se escriben páginas de listado, formulario y tablero con la librería.
-
-- Versión usada: `@axzydev/axzy_ui_system ^1.4.7`
-- React 19 · Vite 6 · Tailwind `4.3.3` (`@tailwindcss/vite`) · `react-i18next` para los textos de la app
-
----
-
-### 1. CSS: capas, orden y overrides (`src/app/index.css`)
-
-```css
-/* 1) El orden de capas manda por encima del orden de imports.
-      `axzy-ui-system` va DESPUÉS de `base` (su reset no lo pisa tu app) y
-      ANTES de `utilities` (tus utilidades de Tailwind siguen ganando cuando
-      necesitas ajustar algo de la librería). */
-@layer theme, base, axzy-ui-system, components, utilities;
-
-@import "tailwindcss";
-@import "@axzydev/axzy_ui_system/dist/index.css" layer(axzy-ui-system);
-/* Alternativa: el propio paquete publica la versión ya capada
-   @import "@axzydev/axzy_ui_system/layered.css"; */
-
-/* 2) Tokens del provider que quieras ajustar por CSS.
-      `ITThemeProvider` inyecta estos `--it-*`; un selector con atributo
-      (`:root[data-it-appearance="flat"]`) gana sobre la inyección del provider. */
-:root[data-it-appearance="flat"] {
-  --it-layout-bg: #f5f6fa;
-  --it-sidebar-border: #e8eaf0;
-  --it-topbar-border: #e8eaf0;
-}
-
-/* 3) Pisar una clase interna cuando el componente no expone prop para eso.
-      Con el orden de capas de arriba NO hace falta `!important`; si tu capa de
-      la librería va después de `utilities`, sí (ver §8). */
-.it-dialog-panel {
-  width: min(94vw, 900px);
-}
-
-html {
-  scroll-behavior: smooth;
-  overflow-x: hidden;
-}
-```
-
-**Por qué importa**: `dist/index.css` es un build de Tailwind ya compilado con sus propias capas
-`theme/base/components/utilities`. Si tu app también importa Tailwind sin capas explícitas, acabas con
-**dos** juegos de capas con el mismo nombre y gana el que se registró último (normalmente tu Preflight, que
-no conoce los tokens de AXZY). Con `layer(axzy-ui-system)` + el orden declarado, no depende del orden de
-los imports.
-
-### 2. Entrada: dark mode por defecto y config del provider (`src/app/main.tsx`)
-
-```tsx
-import { ITThemePalette, ITThemeProvider } from "@axzydev/axzy_ui_system";
-import "@shared/i18n/config";              // tu i18next antes de renderizar
-import "@app/index.css";
-import { store } from "@app/store";
-import ToastProvider from "@app/toast/ToastProvider";
-import { Provider } from "react-redux";
-import { HashRouter } from "react-router-dom";
-import App from "./App";
-
-// El provider arranca en "system" (según el SO). Si quieres un default propio,
-// escribe su clave de localStorage ANTES de montar la app.
-if (!localStorage.getItem("it-theme-dark-mode")) {
-  localStorage.setItem("it-theme-dark-mode", "light");   // "light" | "dark" | "system"
-}
-
-const customTheme: ITThemePalette = {
-  primary: "#3056B8",
-  secondary: "#27469B",
-  ternary: "#EEF2FB",
-  alert: "#F97316",
-  warning: "#F59E0B",
-  danger: "#DC2626",
-  info: "#0EA5E9",
-  success: "#16A34A",
-  layout: { sidebarBg: "#F5F6FA", sidebarText: "#334155", navbarBg: "#FFFFFF", navbarText: "#1E293B" },
-  table: { headerBg: "#F8FAFC", headerText: "#475569", rowBg: "#FFFFFF", rowText: "#1E293B", rowHover: "#F5F7FB" },
-};
-
-createRoot(document.getElementById("root")!).render(
-  <React.StrictMode>
-    <Provider store={store}>
-      <ITThemeProvider
-        theme={customTheme}
-        appearance="flat"   // lenguaje visual plano (bordes finos, sin sombras)
-        radius={10}         // radio global de la escala rounded-*
-        shadow={1}          // intensidad de sombras
-        density={1}         // 0.5–1.5
-        showFab={false}     // sin diseñador de temas flotante en producción
-      >
-        <ToastProvider>
-          <HashRouter>
-            <App />
-          </HashRouter>
-        </ToastProvider>
-      </ITThemeProvider>
-    </Provider>
-  </React.StrictMode>
-);
-```
-
-### 3. Chassis en un guard de rutas (`src/app/guards/PrivateRoutes.tsx`)
-
-Toda la app autenticada vive dentro de **un** `ITLayout`; el menú se arma desde un catálogo y se filtra
-por permisos.
-
-```tsx
-import { ITLayout, type ITSidebarProps, type ITNavigationItem } from "@axzydev/axzy_ui_system";
-import { Outlet } from "react-router-dom";
-
-const NAV_ICONS: Record<string, ReactNode> = { home: <FaHouseUser size={14} />, students: <FaUserGraduate size={14} /> };
-
-export default function PrivateRoutes() {
-  const { t } = useTranslation(["common"]);
-  const { user } = useSelector((s: RootState) => s.auth);
-
-  const navigationItems: ITNavigationItem[] = APP_SCREENS
-    .filter((s) => isScreenVisible(s, user))              // permisos por pantalla
-    .map((s) => ({
-      id: s.id,
-      label: t(`nav.${s.id}`),
-      icon: NAV_ICONS[s.id],
-      isActive: location.pathname.startsWith(s.path),
-      action: () => navigate(s.path),
-    }));
-
-  const sidebar: ITSidebarProps = {
-    navigationItems,
-    notification: { count: unread, icon: <FaBell />, label: t("notifications"), onClick: () => navigate("/notifications") },
-  };
-
-  return (
-    <ITLayout
-      topBar={{
-        logo: <img src={cycMark} alt="" className="h-8" />,
-        logoText: "CYC ERP",
-        userMenu: { userName: user?.name ?? "", userEmail: user?.email ?? "", menuItems: [{ label: t("logout"), onClick: handleLogout }] },
-      }}
-      sidebar={sidebar}
-    >
-      <Outlet />
-    </ITLayout>
-  );
-}
-```
-
-### 4. Página de listado con tabla server-side
-
-`src/pages/students/StudentsListPage.tsx` (73 líneas: cabecera, KPIs y tabla):
-
-```tsx
-import { ITButton, ITFlex, ITPage, ITText } from "@axzydev/axzy_ui_system";
-
-<ITPage
-  className="m-0! px-4! max-w-screen!"   // ITPage trae su propio padding/max-width: se pisa con `!`
-  noPadding
-  breadcrumbs={crumbs({ label: t("common:nav.students") })}
-  title={t("list.title")}
-  description={t("list.description", { count: fx.total })}
-  icon={<FaUserGraduate size={20} />}
-  actions={
-    <ITFlex gap={2}>
-      <ITButton variant="outlined" color="secondary" onClick={fx.reload}>
-        <ITFlex align="center" gap={1}>
-          <FaSync size={11} />
-          <ITText className="font-bold text-[11px]">{t("common:actions.reload")}</ITText>
-        </ITFlex>
-      </ITButton>
-      <ITButton variant="filled" color="primary" onClick={() => navigate("/students/new")}>
-        <ITFlex align="center" gap={1}>
-          <FaPlus size={11} />
-          <ITText className="font-bold text-[11px]">{t("list.new")}</ITText>
-        </ITFlex>
-      </ITButton>
-    </ITFlex>
-  }
->
-  <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-    <KpiTile label={t("kpi.total")} value={fx.summary?.total ?? "—"} icon={<FaUsers size={16} />} />
-  </div>
-  <StudentsTable fx={fx} onOpen={(student) => navigate(`/students/${student.id}`)} />
-</ITPage>
-```
-
-La tabla tipada con `Column<T>` y `fetchData` (así se conecta una API real):
-
-```tsx
-import { ITDataTable, ITBadget, ITText } from "@axzydev/axzy_ui_system";
-import type { Column, ITDataTableFetchParams, ITDataTableResponse } from "@axzydev/axzy_ui_system";
-
-const columns: Column<Student>[] = [
-  {
-    key: "studentNumber",
-    label: t("table.studentNumber"),
-    type: "string",
-    width: 130,
-    filter: true,
-    sortable: false,
-    render: (s) => <ITText className="font-mono text-[12px] font-black text-slate-700">{s.studentNumber}</ITText>,
-  },
-  { key: "name", label: t("table.name"), type: "string", filter: true, render: (s) => <ITText className="text-[12px]">{s.fullName}</ITText> },
-  { key: "status", label: t("table.status"), type: "string", render: (s) => <ITBadget label={s.status} /> },
-];
-
-<ITDataTable
-  columns={columns as unknown as Column<Record<string, unknown>>[]}
-  fetchData={fx.fetchTableData as unknown as (p: ITDataTableFetchParams) => Promise<ITDataTableResponse<Record<string, unknown>>>}
-  reloadTrigger={fx.reloadKey}       // cambia el número y la tabla vuelve a pedir datos
-  onRowClick={(row) => onOpen(row as unknown as Student)}
-  defaultItemsPerPage={25}
-  itemsPerPageOptions={[25, 50, 100]}
-  layout="fixed"
-  density="compact"
-  virtualized
-  virtualizedMaxHeight={400}
-  rowHeight={50}
-/>
-```
-
-**El hook que alimenta la tabla** (filtros, orden y paginación los manda la tabla):
-
-```ts
-const fetchTableData = useCallback(async (params: ITDataTableFetchParams) => {
-  const res = await studentApi.table({
-    page: params.page, limit: params.limit, filters: params.filters, sort: params.sort,
-  });
-  setTotal(res.total);
-  return {
-    data: res.data as unknown as Record<string, unknown>[],
-    total: res.total,
-  };
-}, []);
-// …
-const reload = () => setReloadKey((k) => k + 1);   // se pasa como `reloadTrigger`
-```
-
-> El doble cast (`as unknown as Column<Record<string, unknown>>[]`) es el precio de que la tabla sea
-> genérica por dentro y tipada por fuera. Es el patrón que usa CYC y evita `any` sueltos.
-
-### 5. Página de formulario con estados
-
-`ITPage` ya resuelve `loading`/`error`/`backAction`; la página solo orquesta (53 líneas):
-
-```tsx
-<ITPage
-  className="m-0! px-4! max-w-screen!"
-  noPadding
-  breadcrumbs={crumbs({ label: t("common:nav.students"), to: "/students" }, { label: id ? t("form.titleEdit") : t("form.titleNew") })}
-  title={id ? t("form.titleEdit") : t("form.titleNew")}
-  description={student ? `${student.studentNumber} · ${student.fullName}` : undefined}
-  icon={<FaUserGraduate size={20} />}
-  loading={loading}
-  error={error}
-  backAction={() => navigate(id ? `/students/${id}` : "/students")}
->
-  {(!id || student) && (
-    <StudentForm
-      student={student}
-      onCancel={() => navigate("/students")}
-      onSaved={(saved, created) => {
-        notify.success(created ? t("form.created") : t("form.saved"));
-        navigate(`/students/${saved.id}`);
-      }}
-    />
-  )}
-</ITPage>
-```
-
-### 6. Tablero con filtros en la cabecera
-
-Los filtros del tablero viven en `actions` de `ITPage` (no en una barra aparte) y encadenan
-dependencias (al cambiar ciclo/curso se limpia el grupo):
-
-```tsx
-<ITPage
-  className="m-0! px-4! max-w-screen!"
-  noPadding
-  title={t("home.title")}
-  description={t("home.welcome", { name: user?.name ?? "" })}
-  icon={<FaHouseUser size={20} />}
-  actions={
-    <ITFlex align="center" gap={2} wrap="wrap" className="justify-end">
-      <div className="w-[168px]">
-        <ITSelect
-          size="sm"
-          name="termId"
-          label={t("reports:home.term")}
-          value={filters.termId ?? ""}
-          placeholder={t("reports:activeTerm")}
-          options={terms.map((term) => ({ value: term.id, label: term.name }))}
-          onChange={(e) => set("termId", e.target.value)}
-        />
-      </div>
-    </ITFlex>
-  }
->
-  <DashboardView filters={filters} />
-</ITPage>
-```
-
-### 7. Toasts globales (patrón portal + store)
-
-`ITToast` es un componente tonto: **tú** decides dónde vive y cuándo se va. En CYC hay un provider con
-portal sobre el store:
-
-```tsx
-// app/toast/useNotify.ts — la API que usan las páginas
-export const useNotify = () => {
-  const dispatch = useDispatch();
-  const success = (message: string) => dispatch(showToast({ message, type: "success" }));
-  const error = (message: string) => dispatch(showToast({ message, type: "error", duration: 4000 }));
-  return { success, error };
-};
-
-// app/toast/ToastProvider.tsx — un solo toast global, encima de todo
-{isVisible &&
-  createPortal(
-    <div className="fixed inset-0 z-[99999] pointer-events-none">
-      <ITToast message={message} type={type} duration={duration} position={position}
-        onClose={() => dispatch(hideToast())} />
-    </div>,
-    document.body
-  )}
-```
-
-### 8. Reglas aprendidas (esto es lo que faltaba en la doc)
-
-1. **Capas primero**: `@layer theme, base, axzy-ui-system, components, utilities;` + importar el CSS de la
-   librería con `layer(...)`. Si la capa de la librería queda **después** de `utilities`, cualquier
-   utilidad tuya que deba ganarle necesita el sufijo `!` de Tailwind v4 (`m-0! px-4! max-w-screen!`), que
-   es justo lo que hace CYC en sus páginas.
-2. **`ITPage` ya trae padding y max-width**: para una página a sangre usa `noPadding` y, si necesitas
-   control total, `className="m-0! px-4! max-w-screen!"`.
-3. **Dark mode por defecto**: escribe `it-theme-dark-mode` (`"light" | "dark" | "system"`) en
-   `localStorage` antes de montar; el provider lo lee al inicializar.
-4. **Los tokens se ajustan por CSS**: `:root[data-it-appearance="flat"] { --it-layout-bg: …; }` gana sobre
-   lo que inyecta el provider. Para clases internas (`.it-dialog-panel`), una regla propia **fuera de
-   capas** basta con el orden recomendado.
-5. **i18n conviven**: la librería cae a su catálogo en español si no montas `ITI18nProvider`; la app puede
-   usar `react-i18next` para lo suyo sin conflicto. Si quieres que la librería siga tu idioma, monta
-   `<ITI18nProvider locale={...} messages={...}>`.
-6. **Permisos en la UI**: los `actions` de `ITPage` se renderizan condicionados (`canExport && …`), y el
-   menú se filtra por permiso antes de pasarlo a `ITLayout`.
-7. **La tabla es genérica**: tipa tus columnas con `Column<T>` y castea al pasarlas; el `fetchData` debe
-   devolver `{ data, total }`.
-8. **Un solo toast global** con portal: no montes un `ITToast` por página.
-
-
----
-
-## Parte 3 — Catálogo de componentes (props completos)
-
-### Atoms
-
-#### `ITAvatar`
+### `ITAvatar`
 
 - **Capa:** Atoms
 - **Fuente:** `src/components/atoms/avatar/avatar.tsx`
@@ -751,7 +42,7 @@ export const useNotify = () => {
 
 `*` = obligatorio.
 
-#### `ITBadget`
+### `ITBadget`
 
 - **Capa:** Atoms
 - **Fuente:** `src/components/atoms/badget/badget.tsx`
@@ -774,7 +65,7 @@ export const useNotify = () => {
 
 `*` = obligatorio.
 
-#### `ITButton`
+### `ITButton`
 
 - **Capa:** Atoms
 - **Fuente:** `src/components/atoms/button/button.tsx`
@@ -790,11 +81,11 @@ export const useNotify = () => {
 | --- | --- | --- | --- |
 | `label` | `string` | — | Button text label. Overridden if `children` is provided. |
 | `children` | `React.ReactNode` | — | Custom content to render inside the button. Takes precedence over `label`. |
-| `icon` | `React.ReactNode` | — | Icon element rendered before the label. |
+| `icon` | `React.ReactNode` | — | Icon element rendered before the label. With `variant="icon-only"` and no `label`/`children` it becomes the only content and is centered in the square button. |
 | `onClick` | `() => void` | — | Click handler for the button. |
 | `color` | `"gray" \| "purple" \| "info" \| "success" \| "warning" \| "error" \| "primary" \| "secondary" \| "danger"` | `"primary"` | Color theme key. Values come from the semantic color palette (e.g. `"primary"`, `"secondary"`, `"success"`, `"danger"`, `"warning"`, `"info"`, `"purple"`, `"error"`, `"gray"`). |
-| `size` | `SizesTypes` | `"md"` | Button size. Valid values: `"sm"`, `"md"`, `"lg"`. |
-| `variant` | `string` | `"filled"` | Button visual style. Valid values: `"filled"`, `"outlined"`, `"raised"`, `"rounded"`, `"text"`, `"raised-text"`, `"icon-only"`, `"link"`. |
+| `size` | `SizesTypes` | `"md"` | Button size. Valid values: `"sm"`, `"md"`, `"lg"`. In `variant="icon-only"` it also scales the square padding (`buttonIconPadding`: `sm` 0.5rem, `md` 0.625rem, `lg` 0.75rem). |
+| `variant` | `string` | `"filled"` | Button visual style. Valid values: `"filled"`, `"outlined"`, `"raised"`, `"rounded"`, `"text"`, `"raised-text"`, `"icon-only"`, `"link"`. `"icon-only"` renders a centered square icon button; combine it with `icon` and `ariaLabel`. |
 | `disabled` | `boolean` | `false` | Disables the button interaction and applies reduced opacity. |
 | `className` | `string` | — | Additional CSS class names for the button element. |
 | `type` | `"button" \| "reset" \| "submit"` | `"button"` | HTML button type attribute. Valid values: `"submit"`, `"reset"`, `"button"`. |
@@ -803,7 +94,7 @@ export const useNotify = () => {
 
 `*` = obligatorio.
 
-#### `ITCheckbox`
+### `ITCheckbox`
 
 - **Capa:** Atoms
 - **Fuente:** `src/components/atoms/checkbox/checkbox.tsx`
@@ -827,7 +118,7 @@ export const useNotify = () => {
 
 `*` = obligatorio.
 
-#### `ITChip`
+### `ITChip`
 
 - **Capa:** Atoms
 - **Fuente:** `src/components/atoms/chip/chip.tsx`
@@ -856,7 +147,7 @@ export const useNotify = () => {
 
 `*` = obligatorio.
 
-#### `ITDivider`
+### `ITDivider`
 
 - **Capa:** Atoms
 - **Fuente:** `src/components/atoms/divider/divider.tsx`
@@ -879,7 +170,7 @@ export const useNotify = () => {
 
 `*` = obligatorio.
 
-#### `ITFlex`
+### `ITFlex`
 
 - **Capa:** Atoms
 - **Fuente:** `src/components/atoms/flex/flex.tsx`
@@ -909,10 +200,11 @@ export const useNotify = () => {
 | `style` | `React.CSSProperties` | — | Inline styles |
 | `as` | `React.ElementType` | — | Custom HTML element type to render instead of the default `div` |
 | `onClick` | `(e: React.MouseEvent) => void` | — | Click handler |
+| `onScroll` | `(e: React.UIEvent<HTMLElement>) => void` | — | Scroll handler (useful for scrollable chat/log panels) |
 
 `*` = obligatorio.
 
-#### `ITGrid`
+### `ITGrid`
 
 - **Capa:** Atoms
 - **Fuente:** `src/components/atoms/grid/grid.tsx`
@@ -945,7 +237,7 @@ export const useNotify = () => {
 
 `*` = obligatorio.
 
-#### `ITImage`
+### `ITImage`
 
 - **Capa:** Atoms
 - **Fuente:** `src/components/atoms/image/image.tsx`
@@ -967,11 +259,12 @@ export const useNotify = () => {
 | `alt` | `string` | — | Alt text for accessibility |
 | `className` | `string` | — | Additional CSS classes |
 | `fallback` | `string` | — | Fallback image URL shown when the primary `src` fails to load |
+| `fit` | `"contain" \| "cover"` | — | How the image fills its box: "cover" crops to fill (default), "contain" shows the whole image |
 | `onClick` | `() => void` | — | Click handler |
 
 `*` = obligatorio.
 
-#### `ITInput`
+### `ITInput`
 
 - **Capa:** Atoms
 - **Fuente:** `src/components/atoms/input/input.tsx`
@@ -1030,7 +323,7 @@ export const useNotify = () => {
 
 `*` = obligatorio.
 
-#### `ITInputNumber`
+### `ITInputNumber`
 
 - **Capa:** Atoms
 - **Fuente:** `src/components/atoms/input-number/input-number.tsx`
@@ -1079,7 +372,7 @@ export const useNotify = () => {
 
 `*` = obligatorio.
 
-#### `ITLoader`
+### `ITLoader`
 
 - **Capa:** Atoms
 - **Fuente:** `src/components/atoms/loader/loader.tsx`
@@ -1100,7 +393,7 @@ export const useNotify = () => {
 
 `*` = obligatorio.
 
-#### `ITPopover`
+### `ITPopover`
 
 - **Capa:** Atoms
 - **Fuente:** `src/components/atoms/popover/popover.tsx`
@@ -1130,7 +423,7 @@ export const useNotify = () => {
 
 `*` = obligatorio.
 
-#### `ITProgress`
+### `ITProgress`
 
 - **Capa:** Atoms
 - **Fuente:** `src/components/atoms/progress/progress.tsx`
@@ -1157,7 +450,7 @@ export const useNotify = () => {
 
 `*` = obligatorio.
 
-#### `ITRadioGroup`
+### `ITRadioGroup`
 
 - **Capa:** Atoms
 - **Fuente:** `src/components/atoms/radio/radio.tsx`
@@ -1193,7 +486,7 @@ export const useNotify = () => {
 
 `*` = obligatorio.
 
-#### `ITSegmentedControl`
+### `ITSegmentedControl`
 
 - **Capa:** Atoms
 - **Fuente:** `src/components/atoms/segmented-control/segmented-control.tsx`
@@ -1225,7 +518,7 @@ export const useNotify = () => {
 
 `*` = obligatorio.
 
-#### `ITSkeleton`
+### `ITSkeleton`
 
 - **Capa:** Atoms
 - **Fuente:** `src/components/atoms/skeleton/skeleton.tsx`
@@ -1252,7 +545,7 @@ export const useNotify = () => {
 
 `*` = obligatorio.
 
-#### `ITSlider`
+### `ITSlider`
 
 - **Capa:** Atoms
 - **Fuente:** `src/components/atoms/slider/slider.tsx`
@@ -1286,7 +579,7 @@ export const useNotify = () => {
 
 `*` = obligatorio.
 
-#### `ITSlideToggle`
+### `ITSlideToggle`
 
 - **Capa:** Atoms
 - **Fuente:** `src/components/atoms/slide/slide.tsx`
@@ -1319,7 +612,7 @@ export const useNotify = () => {
 
 `*` = obligatorio.
 
-#### `ITStack`
+### `ITStack`
 
 - **Capa:** Atoms
 - **Fuente:** `src/components/atoms/stack/stack.tsx`
@@ -1351,7 +644,7 @@ export const useNotify = () => {
 
 `*` = obligatorio.
 
-#### `ITText`
+### `ITText`
 
 - **Capa:** Atoms
 - **Fuente:** `src/components/atoms/text/text.tsx`
@@ -1374,7 +667,7 @@ export const useNotify = () => {
 
 `*` = obligatorio.
 
-#### `ITTextarea`
+### `ITTextarea`
 
 - **Capa:** Atoms
 - **Fuente:** `src/components/atoms/textarea/textarea.tsx`
@@ -1408,12 +701,14 @@ export const useNotify = () => {
 | `name` | `string` | — | Name attribute for form submission and label association via `htmlFor`. |
 | `maxLength` | `number` | — | Maximum number of characters allowed. |
 | `resize` | `"none" \| "both" \| "horizontal" \| "vertical"` | — | Resize behavior of the textarea: "none" \| "vertical" \| "horizontal" \| "both". |
+| `onKeyDown` | `(event: React.KeyboardEvent<HTMLTextAreaElement>) => void` | — | Keydown handler (e.g. Enter to send in a chat composer). |
+| `autoFocus` | `boolean` | — | Autofocus the textarea. |
 
 `*` = obligatorio.
 
-### Molecules
+## Molecules
 
-#### `ITAccordion`
+### `ITAccordion`
 
 - **Capa:** Molecules
 - **Fuente:** `src/components/molecules/accordion/accordion.tsx`
@@ -1441,7 +736,7 @@ export const useNotify = () => {
 
 `*` = obligatorio.
 
-#### `ITAlert`
+### `ITAlert`
 
 - **Capa:** Molecules
 - **Fuente:** `src/components/molecules/alert/alert.tsx`
@@ -1467,7 +762,7 @@ export const useNotify = () => {
 
 `*` = obligatorio.
 
-#### `ITBreadcrumbs`
+### `ITBreadcrumbs`
 
 - **Capa:** Molecules
 - **Fuente:** `src/components/molecules/breadcrumbs/breadcrumbs.tsx`
@@ -1493,7 +788,7 @@ export const useNotify = () => {
 
 `*` = obligatorio.
 
-#### `ITCalendar`
+### `ITCalendar`
 
 - **Capa:** Molecules
 - **Fuente:** `src/components/molecules/calendar/calendar.tsx`
@@ -1526,11 +821,11 @@ export const useNotify = () => {
 
 `*` = obligatorio.
 
-#### `ITCard`
+### `ITCard`
 
 - **Capa:** Molecules
 - **Fuente:** `src/components/molecules/card/card.tsx`
-- **Qué es:** Versatile card container with optional image, title, body content, and action footer. Supports interactive hover states.
+- **Qué es:** Versatile card container with optional image, title, body content, and action footer. Supports interactive hover states and pastel `tone` tiles. Follows the provider `appearance` (`soft`, `flat`, `bento`).
 
 ```tsx
 <ITCard title="Welcome" image="/hero.jpg" actions={<ITButton label="Learn more" />}>
@@ -1542,8 +837,10 @@ export const useNotify = () => {
 
 | Prop | Tipo | Por defecto | Descripción |
 | --- | --- | --- | --- |
+| `tone` | `ITCardTone` | — | Pastel tile: tints the card background with the `--color-<tone>-soft` token of the palette, overriding the default white surface. In `soft`/`flat` appearances it also uses `--color-<tone>-soft-border` for the border; in `bento` the card stays borderless. Works in every appearance and in dark mode. Omit it for the regular surface. |
 | `onClick` | `() => void` | — | Click handler. When provided, the card becomes interactive with hover shadow effect. |
 | `title` | `string` | — | Card title displayed in the header area. |
+| `headerActions` | `React.ReactNode` | — | Optional actions rendered at the right of the title row (e.g. a play button). |
 | `image` | `string` | — | Image source URL displayed at the top of the card. |
 | `alt` | `string` | `"Card Image"` | Alt text for the card image. |
 | `children` | `React.ReactNode` | — | Card body content. Rendered below the title. |
@@ -1556,7 +853,7 @@ export const useNotify = () => {
 
 `*` = obligatorio.
 
-#### `ITChipInput`
+### `ITChipInput`
 
 - **Capa:** Molecules
 - **Fuente:** `src/components/molecules/chip-input/chip-input.tsx`
@@ -1596,7 +893,7 @@ export const useNotify = () => {
 
 `*` = obligatorio.
 
-#### `ITDatePicker`
+### `ITDatePicker`
 
 - **Capa:** Molecules
 - **Fuente:** `src/components/molecules/date-picker/datePicker.tsx`
@@ -1638,7 +935,7 @@ export const useNotify = () => {
 
 `*` = obligatorio.
 
-#### `ITDropdownMenu`
+### `ITDropdownMenu`
 
 - **Capa:** Molecules
 - **Fuente:** `src/components/molecules/dropdown-menu/dropdown-menu.tsx`
@@ -1668,7 +965,7 @@ export const useNotify = () => {
 
 `*` = obligatorio.
 
-#### `ITEmptyState`
+### `ITEmptyState`
 
 - **Capa:** Molecules
 - **Fuente:** `src/components/molecules/empty-state/empty-state.tsx`
@@ -1696,7 +993,7 @@ export const useNotify = () => {
 
 `*` = obligatorio.
 
-#### `ITField`
+### `ITField`
 
 - **Capa:** Molecules
 - **Fuente:** `src/components/molecules/field/field.tsx`
@@ -1724,7 +1021,7 @@ export const useNotify = () => {
 
 `*` = obligatorio.
 
-#### `ITFormHeader`
+### `ITFormHeader`
 
 - **Capa:** Molecules
 - **Fuente:** `src/components/molecules/form-header/form-header.tsx`
@@ -1744,7 +1041,73 @@ export const useNotify = () => {
 
 `*` = obligatorio.
 
-#### `ITLineBarChart`
+### `ITJSONEditor`
+
+- **Capa:** Molecules
+- **Fuente:** `src/components/molecules/json-editor/json-editor.tsx`
+- **Qué es:** Editor de JSON con resaltado de sintaxis, gutter con números y plegado, errores señalados por línea y columna, árbol navegable y acciones de formato. No añade dependencias: el resaltado se pinta en una capa bajo el `<textarea>` nativo, así que se conservan el deshacer del navegador, el pegado, el dictado y el corrector. La validación la hace `JSON.parse`, de modo que el coloreado funciona igual mientras el documento está a medio escribir.
+
+```tsx
+```tsx
+<ITJSONEditor value={json} onChange={setJson} onParse={handleParse} height={420} />
+```
+```
+
+**Props**
+
+| Prop | Tipo | Por defecto | Descripción |
+| --- | --- | --- | --- |
+| `value` | `string` | `""` | Documento JSON como cadena. Si es `undefined`, el editor arranca vacío. |
+| `onChange` | `(value: string) => void` | — | Se dispara con el texto completo cada vez que cambia (teclado, pegado o barra de acciones). |
+| `onParse` | `(parsed: unknown, isValid: boolean, error?: string) => void` | — | Se dispara tras cada validación con el valor parseado y su estado. |
+| `placeholder` | `string` | — | Texto de ayuda que se muestra cuando el documento está vacío. |
+| `readOnly` | `boolean` | `false` | Bloquea la edición: desaparecen las acciones que modifican el texto. |
+| `mode` | `ITJSONEditorMode` | `"text"` | Modo inicial: `"text"` (código) o `"tree"` (árbol navegable). |
+| `showModeSwitch` | `boolean` | `true` | Permite alternar entre texto y árbol desde la barra. |
+| `showToolbar` | `boolean` | `true` | Muestra la barra superior de acciones. |
+| `showValidation` | `boolean` | `true` | Muestra el indicador de válido/ inválido con línea y columna del error. |
+| `showStatusBar` | `boolean` | `true` | Estadísticas del pie: líneas, nodos, profundidad y tamaño. |
+| `showLineNumbers` | `boolean` | `true` | Muestra los números de línea del gutter. |
+| `showFoldGutter` | `boolean` | `true` | Muestra el gutter de plegado de bloques `{…}` / `[…]`. |
+| `showTransformActions` | `boolean` | `true` | Habilita las acciones de la barra (formatear, minificar, ordenar, escapar). |
+| `showCopyButton` | `boolean` | `true` | Habilita el botón de copiar el documento completo. |
+| `showImportButton` | `boolean` | `true` | Habilita la carga de un `.json` desde disco. |
+| `showDownloadButton` | `boolean` | `true` | Habilita la descarga del documento como `.json`. |
+| `showViewSettings` | `boolean` | `true` | Muestra la fila de ajustes de vista (ajuste de línea, números, plegado, indentación). |
+| `indentSize` | `number` | `2` | Espacios por nivel de indentación, entre 0 y 8. |
+| `wrapLines` | `boolean` | `false` | Ajusta las líneas largas al ancho del editor. Desactivado mantiene el scroll horizontal y el gutter sincronizado. |
+| `treeShowLines` | `boolean` | `false` | Ofrece números de línea y plegado también en la vista de árbol. |
+| `canvasTheme` | `ITJSONEditorTheme` | `"ink"` | Paleta del lienzo: `"ink"` (tinta oscura, por defecto) o `"light"`. |
+| `height` | `string \| number` | `340` | Altura del área de edición: número en píxeles o cualquier medida CSS. |
+| `minWidth` | `string \| number` | — | Ancho mínimo del editor. Útil dentro de layouts que comprimen. |
+| `actions` | `React.ReactNode` | — | Acciones extra que se añaden al final de la barra, antes de copiar/descargar. |
+| `className` | `string` | — | Clases para el contenedor raíz. |
+| `id` | `string` | — | Identificador HTML del contenedor raíz, para anclarlo desde fuera o en pruebas. |
+| `textareaClassName` | `string` | — | Clases para el `<textarea>`, por si hay que afinar la tipografía. |
+| `errorLine` | `number` | — | Línea (1-based) que hay que marcar como errónea cuando el fallo lo detecta la aplicación y no el propio editor. |
+
+`*` = obligatorio.
+
+### `ITJsonRenderer`
+
+- **Capa:** Molecules
+- **Fuente:** `src/components/molecules/json-renderer/json-renderer.tsx`
+- **Qué es:** Render UI from JSON schema using AXZY UI System components.
+
+```tsx
+<ITJsonRenderer json={{ type: "button", props: { label: "Click me" } }} />
+```
+
+**Props**
+
+| Prop | Tipo | Por defecto | Descripción |
+| --- | --- | --- | --- |
+| `json` **\*** | `JsonComponentNode \| JsonComponentNode[]` | — | JSON structure to render |
+| `className` | `string` | — | Additional CSS class names |
+
+`*` = obligatorio.
+
+### `ITLineBarChart`
 
 - **Capa:** Molecules
 - **Fuente:** `src/components/molecules/line-bar-chart/line-bar-chart.tsx`
@@ -1760,6 +1123,8 @@ export const useNotify = () => {
 | `barLabel` | `string` | `i18n `lineBarChart.barLabel` ("Serie B")` | Nombre de la serie de barras (leyenda y tooltip). |
 | `lineColor` | `string` | — | Color de la línea (por defecto el verde de la casa). |
 | `barColor` | `string` | — | Color de las barras. |
+| `showLine` | `boolean` | `true` | Muestra la serie de línea. |
+| `showBars` | `boolean` | `true` | Muestra la serie de barras. |
 | `height` | `number` | — | — |
 | `formatValue` | `(value: number) => string` | — | Formatea los valores del tooltip; por defecto número con separadores. |
 | `formatAxis` | `(value: number) => string` | — | Texto del eje Y; por defecto número compacto. |
@@ -1767,7 +1132,7 @@ export const useNotify = () => {
 
 `*` = obligatorio.
 
-#### `ITMaskedInput`
+### `ITMaskedInput`
 
 - **Capa:** Molecules
 - **Fuente:** `src/components/molecules/masked-input/masked-input.tsx`
@@ -1811,7 +1176,7 @@ export const useNotify = () => {
 
 `*` = obligatorio.
 
-#### `ITMultiSelect`
+### `ITMultiSelect`
 
 - **Capa:** Molecules
 - **Fuente:** `src/components/molecules/multi-select/multi-select.tsx`
@@ -1856,7 +1221,7 @@ export const useNotify = () => {
 
 `*` = obligatorio.
 
-#### `ITPagination`
+### `ITPagination`
 
 - **Capa:** Molecules
 - **Fuente:** `src/components/molecules/pagination/pagination.tsx`
@@ -1894,7 +1259,7 @@ export const useNotify = () => {
 
 `*` = obligatorio.
 
-#### `ITSearchSelect`
+### `ITSearchSelect`
 
 - **Capa:** Molecules
 - **Fuente:** `src/components/molecules/search-select/search-select.tsx`
@@ -1968,7 +1333,7 @@ export const useNotify = () => {
 
 `*` = obligatorio.
 
-#### `ITSelect`
+### `ITSelect`
 
 - **Capa:** Molecules
 - **Fuente:** `src/components/molecules/select/select.tsx`
@@ -1998,7 +1363,7 @@ export const useNotify = () => {
 
 `*` = obligatorio.
 
-#### `ITStatCard`
+### `ITStatCard`
 
 - **Capa:** Molecules
 - **Fuente:** `src/components/molecules/stat-card/stat-card.tsx`
@@ -2015,6 +1380,9 @@ export const useNotify = () => {
 | `label` **\*** | `string` | — | The metric label displayed above the value. |
 | `value` **\*** | `string \| number` | — | The primary numeric or string value shown in the card. |
 | `trend` | `string` | — | Optional trend indicator text (e.g. "+12%", "-3"). |
+| `hint` | `string` | — | Optional secondary line under the value (context, not a trend). |
+| `progress` | `number` | — | Optional progress 0–100 rendered under the hint. |
+| `progressColor` | `"gray" \| "purple" \| "info" \| "success" \| "warning" \| "error" \| "primary" \| "secondary" \| "danger"` | `"primary"` | Semantic color for the progress bar. |
 | `trendDirection` | `"up" \| "down" \| "neutral"` | — | Direction of the trend, used to color the trend badge. |
 | `icon` | `React.ReactNode` | — | Icon element rendered next to the label in the top-right corner. |
 | `color` | `string` | — | Background color class for the card (e.g. "bg-primary-50 dark:bg-primary-950/20"). |
@@ -2024,7 +1392,7 @@ export const useNotify = () => {
 
 `*` = obligatorio.
 
-#### `ITStepper`
+### `ITStepper`
 
 - **Capa:** Molecules
 - **Fuente:** `src/components/molecules/stepper/stepper.tsx`
@@ -2061,7 +1429,7 @@ export const useNotify = () => {
 
 `*` = obligatorio.
 
-#### `ITTable`
+### `ITTable`
 
 - **Capa:** Molecules
 - **Fuente:** `src/components/molecules/table/table.tsx`
@@ -2129,11 +1497,11 @@ export const useNotify = () => {
 
 `*` = obligatorio.
 
-#### `ITTabs`
+### `ITTabs`
 
 - **Capa:** Molecules
 - **Fuente:** `src/components/molecules/tabs/tabs.tsx`
-- **Qué es:** Tabbed navigation component with "line" and "pill" visual variants. Manages its own active state internally via a defaultActiveId.
+- **Qué es:** Tabbed navigation component with "line" and "pill" visual variants. Manages its own active state internally via a defaultActiveId. With `appearance="bento"` the "pill" variant becomes a rounded track with an ink active pill.
 
 ```tsx
 <ITTabs
@@ -2159,7 +1527,7 @@ export const useNotify = () => {
 
 `*` = obligatorio.
 
-#### `ITTimePicker`
+### `ITTimePicker`
 
 - **Capa:** Molecules
 - **Fuente:** `src/components/molecules/time-picker/timePicker.tsx`
@@ -2196,7 +1564,7 @@ export const useNotify = () => {
 
 `*` = obligatorio.
 
-#### `ITWysiwyg`
+### `ITWysiwyg`
 
 - **Capa:** Molecules
 - **Fuente:** `src/components/molecules/wysiwyg/wysiwyg.tsx`
@@ -2231,9 +1599,9 @@ export const useNotify = () => {
 
 `*` = obligatorio.
 
-### Organisms
+## Organisms
 
-#### `ITConfirmDialog`
+### `ITConfirmDialog`
 
 - **Capa:** Organisms
 - **Fuente:** `src/components/organisms/confirm-dialog/confirm-dialog.tsx`
@@ -2269,7 +1637,7 @@ export const useNotify = () => {
 
 `*` = obligatorio.
 
-#### `ITDataTable`
+### `ITDataTable`
 
 - **Capa:** Organisms
 - **Fuente:** `src/components/organisms/data-table/dataTable.tsx`
@@ -2343,7 +1711,7 @@ export const useNotify = () => {
 
 `*` = obligatorio.
 
-#### `ITDialog`
+### `ITDialog`
 
 - **Capa:** Organisms
 - **Fuente:** `src/components/organisms/dialog/dialog.tsx`
@@ -2372,11 +1740,12 @@ export const useNotify = () => {
 | `className` | `string` | — | Additional CSS classes for the dialog panel. |
 | `title` | `string` | — | Optional heading displayed at the top of the dialog. |
 | `useFormHeader` | `boolean` | `false` | When true and `title` is provided, renders an ITFormHeader instead of the default title bar. |
+| `padded` | `boolean` | `true` | When false, the card has no padding: the title row and body are flush to the edges, so the content can draw its own sections. |
 | `fullScreen` | `boolean` | `false` | Makes the dialog fill the entire viewport. |
 
 `*` = obligatorio.
 
-#### `ITDrawer`
+### `ITDrawer`
 
 - **Capa:** Organisms
 - **Fuente:** `src/components/organisms/drawer/drawer.tsx`
@@ -2411,7 +1780,7 @@ export const useNotify = () => {
 
 `*` = obligatorio.
 
-#### `ITDropfile`
+### `ITDropfile`
 
 - **Capa:** Organisms
 - **Fuente:** `src/components/organisms/dropfile/dropfile.tsx`
@@ -2434,7 +1803,8 @@ export const useNotify = () => {
 | --- | --- | --- | --- |
 | `onFileSelect` **\*** | `(file: File \| null) => void` | — | Called when a file is selected or cleared. |
 | `onCancel` | `() => void` | — | Called when the user cancels the current selection. |
-| `onSubmit` | `(file: File) => void` | — | Called when the user confirms and submits the file. |
+| `onSubmit` | `(file: File) => void \| Promise<void>` | — | Called when the user confirms and submits the file. With `autoUpload`, it runs right after selection and may return a promise that drives the status. |
+| `autoUpload` | `boolean` | `false` | Sube en cuanto se elige el archivo, sin paso de confirmar. Usa `onSubmit` como la subida: el estado pasa a subiendo y luego a subido, o a error si la promesa falla. |
 | `acceptedFileTypes` | `FileTypeEnum[]` | — | List of accepted MIME types. |
 | `contentClassName` | `string` | — | Additional classes for the preview/content area. |
 | `containerClassName` | `string` | — | Additional classes for the outermost container. |
@@ -2448,7 +1818,7 @@ export const useNotify = () => {
 
 `*` = obligatorio.
 
-#### `ITFormBuilder`
+### `ITFormBuilder`
 
 - **Capa:** Organisms
 - **Fuente:** `src/components/organisms/form-builder/formBuilder.tsx`
@@ -2491,7 +1861,7 @@ errors={formik.errors}
 
 `*` = obligatorio.
 
-#### `ITNavbar`
+### `ITNavbar`
 
 - **Capa:** Organisms
 - **Fuente:** `src/components/organisms/navbar/navbar.tsx`
@@ -2538,7 +1908,7 @@ errors={formik.errors}
 
 `*` = obligatorio.
 
-#### `ITPageHeader`
+### `ITPageHeader`
 
 - **Capa:** Organisms
 - **Fuente:** `src/components/organisms/page-header/page-header.tsx`
@@ -2572,7 +1942,7 @@ errors={formik.errors}
 
 `*` = obligatorio.
 
-#### `ITSearchTable`
+### `ITSearchTable`
 
 - **Capa:** Organisms
 - **Fuente:** `src/components/organisms/searchTable/searchTable.tsx`
@@ -2633,7 +2003,7 @@ errors={formik.errors}
 
 `*` = obligatorio.
 
-#### `ITSidebar`
+### `ITSidebar`
 
 - **Capa:** Organisms
 - **Fuente:** `src/components/organisms/sidebar/sidebar.tsx`
@@ -2683,7 +2053,7 @@ errors={formik.errors}
 
 `*` = obligatorio.
 
-#### `ITToast`
+### `ITToast`
 
 - **Capa:** Organisms
 - **Fuente:** `src/components/organisms/toast/toast.tsx`
@@ -2706,7 +2076,7 @@ errors={formik.errors}
 
 `*` = obligatorio.
 
-#### `ITTripleFilter`
+### `ITTripleFilter`
 
 - **Capa:** Organisms
 - **Fuente:** `src/components/organisms/triple-filter/tripleFilter.tsx`
@@ -2723,9 +2093,9 @@ errors={formik.errors}
 
 `*` = obligatorio.
 
-### Templates
+## Templates
 
-#### `ITLayout`
+### `ITLayout`
 
 - **Capa:** Templates
 - **Fuente:** `src/components/templates/layout/layout.tsx`
@@ -2753,7 +2123,7 @@ errors={formik.errors}
 
 `*` = obligatorio.
 
-#### `ITPage`
+### `ITPage`
 
 - **Capa:** Templates
 - **Fuente:** `src/components/templates/page/page.tsx`
@@ -2803,9 +2173,9 @@ errors={formik.errors}
 
 `*` = obligatorio.
 
-### Providers y otros
+## Providers y otros
 
-#### `ITI18nProvider`
+### `ITI18nProvider`
 
 - **Capa:** Providers y otros
 - **Fuente:** `src/i18n/provider.tsx`
@@ -2832,7 +2202,37 @@ errors={formik.errors}
 
 `*` = obligatorio.
 
-#### `ITThemeProvider`
+### `ITSchemaRenderer`
+
+- **Capa:** Providers y otros
+- **Fuente:** `src/json-renderer/kernel/SchemaRenderer.tsx`
+- **Qué es:** Pinta una pantalla completa a partir de un esquema. Nunca lanza por culpa del esquema: los problemas se convierten en avisos que se entregan por `onIssue` (y se acumulan en `issuesRef` si quieres leerlos).
+
+```tsx
+<ITSchemaRenderer schema={{ version: 1, id: "demo", content: { type: "ITText", text: "Hola" } }} />
+```
+
+**Props**
+
+| Prop | Tipo | Por defecto | Descripción |
+| --- | --- | --- | --- |
+| `schema` **\*** | `ScreenSchema` | — | Esquema de pantalla a pintar. Admite un árbol parcial (streaming). |
+| `catalog` | `Catalog` | — | Catálogo de componentes permitidos. Por defecto, el de AXZY. |
+| `limits` | `Partial<EngineLimits>` | — | Presupuesto de nodos, profundidad y tiempos. |
+| `params` | `Record<string, SchemaValue>` | — | Valores de la ruta para `$param`. Los pone el host; el esquema no puede crearlos. |
+| `dataHandlers` | `Record<string, DataHandler>` | — | Handlers de datos que registra el host, por nombre. Las fuentes de `data` los referencian con `handler`. Conviene memoizarlo: cada fuente se resuelve contra él. |
+| `slots` | `SlotRegistry` | — | Bloques JSX que registra el host, por nombre. Un nodo `{ "type": "slot", "props": { "name": "…" } }` monta el componente con ese nombre; el esquema no puede elegir otro. |
+| `effects` | `EffectRegistry` | — | Efectos que cumple el host. Una acción con `then`, `onError` o efectos sueltos los ejecuta después de su handler; `toast` y `navigate` son los más comunes. |
+| `capabilities` | `readonly string[]` | — | Capacidades que concede el host (`["usuarios.leer", …]`). Un nodo o la pantalla que declara `requires` solo se pinta si todas están concedidas; si no, avisa con `JR060`. Sin esta prop, cualquier `requires` se deniega. |
+| `resolveValue` | `(value: unknown, path: SchemaPath) => unknown` | — | Resuelve los valores que no son referencias del motor (por ejemplo, textos `{ i18n }`). Las referencias `$source`, `$state` y `$param` las resuelve el motor. |
+| `resolveAction` | `(node: NodeSchema, prop: string, action: unknown, path: SchemaPath) => ((...args: unknown[]) => void) \| undefined` | — | Traduce una acción declarada a un handler ejecutable. Sin esta prop, las acciones se ignoran y se avisa una sola vez por nodo. |
+| `pendingFallback` | `React.ReactNode` | — | Qué pintar mientras un nodo está pendiente (streaming). |
+| `onIssue` | `(issue: JsonEngineIssue) => void` | — | Se llama por cada aviso del motor, con código y ruta. |
+| `className` | `string` | — | Clases del contenedor raíz. |
+
+`*` = obligatorio.
+
+### `ITThemeProvider`
 
 - **Capa:** Providers y otros
 - **Fuente:** `src/components/theme-provider/themeProvider.tsx`
@@ -2858,52 +2258,63 @@ errors={formik.errors}
 
 `*` = obligatorio.
 
-### Hooks
+## Hooks
 
-#### `useClickOutside`
+### `useClickOutside`
 
 - **Firma:** `(ref: React.RefObject<HTMLElement>, callback: () => void): void`
 - **Fuente:** `src/hooks/useClickOutside.ts`
 
-#### `useDebouncedSearch`
+### `useDebouncedSearch`
 
 - **Firma:** `({ initialValue, debounceMs, onSearch, }: UseDebouncedSearchOptions): UseDebouncedSearchResult`
 - **Fuente:** `src/hooks/useDebouncedSearch.ts`
 
-#### `useEditableRow`
+### `useEditableRow`
 
 - **Firma:** `<T>({ row, columns, getNestedValue, validationSchema, }: UseEditableRowOptions<T>): UseEditableRowResult<T>`
 - **Fuente:** `src/hooks/useEditableRow.ts`
 
-#### `useFloatingPanel`
+### `useFloatingPanel`
 
 - **Firma:** `(anchorRef: import("/Users/axzy/DEV/AXZY/AXZY_UI_SYSTEM/node_modules/.pnpm/@types+react@19.0.8/node_modules/@types/react/index").RefObject<HTMLElement \| null>, isOpen: boolean, { estimatedHeight, offset, matchWidth, ali…`
 - **Fuente:** `src/hooks/useFloatingPanel.ts`
 - **Qué hace:** Computes a fixed position for a floating panel anchored to an element. Positions are relative to the viewport, so the panel must be rendered through a portal (e.g. into `document.body`) to escape ancestors with `overflow: hidden` or `transform`, which otherwise clip or re-anchor it. When there is not enough room below, the panel flips above and its bottom edge is pinned to the anchor's top, so it always stays adjacent regardless of its real height. Repositions on scroll, resize, and panel resize.
 
-#### `useTableState`
+### `useTableState`
 
 - **Firma:** `({ defaultItemsPerPage, initialSort, }?: UseTableStateOptions): UseTableStateResult`
 - **Fuente:** `src/hooks/useTableState.ts`
 
-#### `useITTheme`
+### `useJsonRender`
+
+- **Firma:** `(json: JsonComponentNode \| JsonComponentNode[]): import("/Users/axzy/DEV/AXZY/AXZY_UI_SYSTEM/node_modules/.pnpm/@types+react@19.0.8/node_modules/@types/react/jsx-runtime").JSX.Element`
+- **Fuente:** `src/hooks/useJsonRender.tsx`
+
+### `useITTheme`
 
 - **Firma:** `(): import("/Users/axzy/DEV/AXZY/AXZY_UI_SYSTEM/src/theme/theme-context").ITThemeContextType`
 - **Fuente:** `src/theme/theme-context.ts`
 
-#### `useITThemeSafe`
+### `useITThemeSafe`
 
 - **Firma:** `(): import("/Users/axzy/DEV/AXZY/AXZY_UI_SYSTEM/src/theme/theme-context").ITThemeContextType \| undefined`
 - **Fuente:** `src/theme/theme-context.ts`
 - **Qué hace:** Versión segura de useITTheme que retorna undefined si se usa fuera de ITThemeProvider (no lanza error).
 
-#### `useITFlatAppearance`
+### `useITFlatAppearance`
 
 - **Firma:** `(): boolean`
 - **Fuente:** `src/theme/theme-context.ts`
 - **Qué hace:** `true` cuando el provider pide el lenguaje visual plano (`appearance="flat"`). Fuera de un ITThemeProvider devuelve `false` (aspecto por defecto).
 
-#### `useITTranslation`
+### `useITAppearance`
+
+- **Firma:** `(): ITThemeAppearance`
+- **Fuente:** `src/theme/theme-context.ts`
+- **Qué hace:** Lenguaje visual activo (`"soft"` \| `"flat"` \| `"bento"`). Fuera de un ITThemeProvider devuelve `"soft"` (aspecto por defecto).
+
+### `useITTranslation`
 
 - **Firma:** `(): ITI18nValue`
 - **Fuente:** `src/i18n/useITTranslation.ts`
@@ -2916,8 +2327,19 @@ return <ITButton label={t("common.cancel")} onClick={onCancel} />;
 ```
 ```
 
-### Otros exports (tipos y utilidades)
+### `useSchemaStream`
 
-`Column`, `ColumnFilterMode`, `ColumnFilterValue`, `ColumnFilters`, `FieldConfig`, `FieldConfigV2`, `FileTypeEnum`, `ITAccordionItem`, `ITAccordionProps`, `ITAlertProps`, `ITAvatarProps`, `ITBadgetProps`, `ITBreadcrumbItem`, `ITBreadcrumbsProps`, `ITButtonProps`, `ITCalendarProps`, `ITCardProps`, `ITCheckboxProps`, `ITChipInputProps`, `ITChipProps`, `ITConfirmDialogProps`, `ITDataTableFetchParams`, `ITDataTableProps`, `ITDataTableResponse`, `ITDatePickerProps`, `ITDialogProps`, `ITDividerProps`, `ITDrawerProps`, `ITDropdownMenuItem`, `ITDropdownMenuProps`, `ITEmptyStateProps`, `ITFieldProps`, `ITFlexProps`, `ITFormBuilderProps`, `ITFormHeaderProps`, `ITGridProps`, `ITI18nProviderProps`, `ITI18nValue`, `ITImageProps`, `ITInputNumberProps`, `ITInputProps`, `ITLayoutProps`, `ITLineBarChartProps`, `ITLineBarDatum`, `ITLoaderProps`, `ITLocale`, `ITMaskedInputProps`, `ITMessages`, `ITMessagesByLocale`, `ITMultiSelectOption`, `ITMultiSelectProps`, `ITNavbarProps`, `ITNavigationItem`, `ITNavigationSubItem`, `ITNavigationSubItemEntry`, `ITNavigationSubItemGroup`, `ITPageHeaderProps`, `ITPageProps`, `ITPaginationProps`, `ITPopoverProps`, `ITProgressProps`, `ITRadioGroupProps`, `ITRadioOption`, `ITSearchSelectProps`, `ITSearchTableProps`, `ITSegmentedControlProps`, `ITSelectProps`, `ITSidebarBrand`, `ITSidebarNotification`, `ITSidebarProps`, `ITSkeletonProps`, `ITSlideToggleProps`, `ITSliderProps`, `ITStackProps`, `ITStatCardProps`, `ITStepperProps`, `ITTabItem`, `ITTableProps`, `ITTabsProps`, `ITTextProps`, `ITTextareaProps`, `ITThemeAppearance`, `ITThemeConfig`, `ITThemePalette`, `ITThemeProviderProps`, `ITTimePickerProps`, `ITToastProps`, `ITTripleFilterOption`, `ITTripleFilterProps`, `ITWysiwygProps`, `TableColors`, `TableDensity`, `TableDesign`, `TableDesignProps`, `TableDesignSlot`, `UploadStatus`, `UseTableStateOptions`, `UseTableStateResult`, `createValidationSchema`, `enMessages`, `esMessages`, `getContrastTextColor`, `isLightColor`, `resolveCssColor`
+- **Firma:** `(source: StreamSource \| null \| undefined): StreamState`
+- **Fuente:** `src/json-renderer/stream/useSchemaStream.ts`
+- **Qué hace:** Devuelve el estado de un esquema que llega por trozos.
 
+```tsx
+const estado = useSchemaStream(stream);
+estado.tree;      // árbol pintable, o null si aún no hay nada válido
+estado.streaming; // true mientras la fuente sigue emitiendo
+```
+
+## Otros exports (tipos y utilidades)
+
+`AXZY_CATALOG_ENTRIES`, `AXZY_EXCLUDED_TYPES`, `ActionSchema`, `BindingResolver`, `BindingScope`, `CURRENT_SCHEMA_VERSION`, `Catalog`, `CatalogEntry`, `Column`, `ColumnFilterMode`, `ColumnFilterValue`, `ColumnFilters`, `ComponentContract`, `DEFAULT_LIMITS`, `DEFAULT_MIGRATIONS`, `DataHandler`, `DataLoader`, `DataSourceSchema`, `EffectRegistry`, `EffectSchema`, `EngineLimits`, `FieldConfig`, `FieldConfigV2`, `FileTypeEnum`, `FlatRoute`, `GLOBALLY_FORBIDDEN_PROPS`, `ITAccordionItem`, `ITAccordionProps`, `ITAlertProps`, `ITAvatarProps`, `ITBadgetProps`, `ITBreadcrumbItem`, `ITBreadcrumbsProps`, `ITButtonProps`, `ITCalendarProps`, `ITCardProps`, `ITCardTone`, `ITCheckboxProps`, `ITChipInputProps`, `ITChipProps`, `ITConfirmDialogProps`, `ITDataTableFetchParams`, `ITDataTableProps`, `ITDataTableResponse`, `ITDatePickerProps`, `ITDialogProps`, `ITDividerProps`, `ITDrawerProps`, `ITDropdownMenuItem`, `ITDropdownMenuProps`, `ITEmptyStateProps`, `ITFieldProps`, `ITFlexProps`, `ITFormBuilderProps`, `ITFormHeaderProps`, `ITGridProps`, `ITI18nProviderProps`, `ITI18nValue`, `ITImageProps`, `ITInputNumberProps`, `ITInputProps`, `ITJSONEditorProps`, `ITJsonRenderEngineProps`, `ITJsonRendererProps`, `ITLayoutProps`, `ITLineBarChartProps`, `ITLineBarDatum`, `ITLoaderProps`, `ITLocale`, `ITMaskedInputProps`, `ITMessages`, `ITMessagesByLocale`, `ITMultiSelectOption`, `ITMultiSelectProps`, `ITNavbarProps`, `ITNavigationItem`, `ITNavigationSubItem`, `ITNavigationSubItemEntry`, `ITNavigationSubItemGroup`, `ITPageHeaderProps`, `ITPageProps`, `ITPaginationProps`, `ITPopoverProps`, `ITProgressProps`, `ITRadioGroupProps`, `ITRadioOption`, `ITSearchSelectProps`, `ITSearchTableProps`, `ITSegmentedControlProps`, `ITSelectProps`, `ITSidebarBrand`, `ITSidebarNotification`, `ITSidebarProps`, `ITSkeletonProps`, `ITSlideToggleProps`, `ITSliderProps`, `ITStackProps`, `ITStatCardProps`, `ITStepperProps`, `ITTabItem`, `ITTableProps`, `ITTabsProps`, `ITTextProps`, `ITTextareaProps`, `ITThemeAppearance`, `ITThemeConfig`, `ITThemePalette`, `ITThemeProviderProps`, `ITTimePickerProps`, `ITToastProps`, `ITTripleFilterOption`, `ITTripleFilterProps`, `ITWysiwygProps`, `JsonComponentNode`, `JsonComponentType`, `JsonEngineCode`, `JsonEngineError`, `JsonEngineIssue`, `JsonEngineSeverity`, `LimitTracker`, `MigrationRegistry`, `MigrationResult`, `NavNode`, `NodeBoundary`, `NodeSchema`, `NodeStatus`, `PartialParseResult`, `PathSegment`, `PropContract`, `PropKind`, `PropSpec`, `ResolvedNode`, `RouteMatch`, `RouteNavSchema`, `RouteSchema`, `RoutesSchema`, `SchemaMigration`, `SchemaPath`, `SchemaReference`, `SchemaValue`, `ScreenSchema`, `SlotComponent`, `SlotRegistry`, `StreamSource`, `StreamState`, `TableColors`, `TableDensity`, `TableDesign`, `TableDesignProps`, `TableDesignSlot`, `ToastVariant`, `UnresolvedNode`, `UploadStatus`, `UseTableStateOptions`, `UseTableStateResult`, `ValidateOptions`, `ValidationReport`, `ValidationVerdict`, `VocabularyContract`, `WhenSchema`, `auditTree`, `axzyCatalog`, `axzyCatalogTypes`, `buildNavigationTree`, `buildVocabularyContract`, `countPendingNodes`, `createBindingResolver`, `createCatalog`, `createLimitTracker`, `createValidationSchema`, `enMessages`, `esMessages`, `flattenRoutes`, `formatPath`, `formatVocabularyForPrompt`, `getCatalogEntry`, `getContrastTextColor`, `getExclusionReason`, `hasPath`, `isExcludedType`, `isLightColor`, `isNodePending`, `issue`, `joinRoutePath`, `matchRoute`, `migrateSchema`, `navContainsRoute`, `parsePartialSchema`, `parsePath`, `propPath`, `pushPath`, `readPath`, `renderNode`, `resolveCssColor`, `resolveLimits`, `resolveNode`, `routeHref`, `validateRoutes`, `validateSchema`
 

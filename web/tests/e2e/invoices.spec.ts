@@ -29,8 +29,9 @@ test("office creates an invoice in the modal and assigns its line from the detai
 	await captureMaterial(page, screws, "100");
 	await expect(page.getByText("1 línea · 100 piezas")).toBeVisible();
 
-	// The assignment from the line: a split that does not add up is blocked before it is sent.
-	await page.getByRole("button", { name: "Asignar" }).click();
+	// The assignment from the line: a split that does not add up is blocked before it is sent. The action of the row is
+	// named for itself, so "Asignar toda la factura" does not answer for it.
+	await page.getByRole("button", { name: "Asignar", exact: true }).click();
 	const dialog = page.getByRole("dialog");
 	await pickSearchOption(page, "operator-0", a.name, a.name);
 	await dialog.locator('input[name="share-0"]').fill("60");
@@ -46,6 +47,14 @@ test("office creates an invoice in the modal and assigns its line from the detai
 	await expect(page.getByText("Pendiente")).toBeVisible();
 	await expect(page.getByRole("row", { name: new RegExp(a.name) })).toContainText("60");
 	await expect(page.getByRole("row", { name: new RegExp(b.name) })).toContainText("40");
+
+	// The common path assigns the whole invoice in one action and replaces the previous split.
+	await page.getByRole("button", { name: "Asignar toda la factura" }).click();
+	const bulk = page.getByRole("dialog");
+	await pickSearchOption(page, "bulk-operator", a.name, a.name);
+	await bulk.getByRole("button", { name: "Asignar", exact: true }).click();
+	await expect(page.getByRole("row", { name: new RegExp(a.name) })).toContainText("100");
+	await expect(page.getByRole("row", { name: new RegExp(b.name) })).toHaveCount(0);
 });
 
 test("a discrepancy is adjusted by the warehouse's manager or by office, and not by someone without the permission", async ({ page, browser }) => {
@@ -64,7 +73,7 @@ test("a discrepancy is adjusted by the warehouse's manager or by office, and not
 	const assignment = created.lines[0].assignments[0].id as string;
 	// The operator signs in on the app and counts 80 of the 100.
 	const login = await call("POST", "/auth/login", { body: { username: a.username, password: a.password }, channel: "app" });
-	await call("POST", `/receipts/assignments/${assignment}/count`, { token: login.json.token, body: { countedQuantity: 80 }, channel: "app" });
+	await call("POST", `/receipts/assignments/${assignment}/count`, { token: login.json.token, body: { countedQuantity: 80 }, channel: "app", headers: { "Idempotency-Key": uniqueName("count-") } });
 
 	// Someone who can see invoices but not resolve discrepancies sees no action.
 	const reader = await newUser(["OFFICE"]);
@@ -87,11 +96,11 @@ test("a discrepancy is adjusted by the warehouse's manager or by office, and not
 	await expect(row).toContainText("-20");
 	await row.getByRole("button", { name: "Ajustar" }).click();
 	const dialog = page.getByRole("dialog");
-	await expect(dialog.getByRole("button", { name: "Ajustar" })).toBeDisabled();
+	await expect(dialog.getByRole("button", { name: "Aceptar conteo" })).toBeDisabled();
 	await dialog.getByLabel("Nota").fill("El proveedor envió 80");
-	await dialog.getByRole("button", { name: "Ajustar" }).click();
+	await dialog.getByRole("button", { name: "Aceptar conteo" }).click();
 	await expect(page.getByRole("table").getByRole("row").filter({ hasText: created.number })).toHaveCount(0);
 	await page.goto(`/#/invoices/${created.id}`);
-	await expect(page.getByText("En asignación")).toBeVisible();
+	await expect(page.getByText("Por ubicar")).toBeVisible();
 	await expect(page.getByRole("row", { name: new RegExp(a.name) })).toContainText("80");
 });

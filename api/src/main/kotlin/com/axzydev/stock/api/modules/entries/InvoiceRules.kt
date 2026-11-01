@@ -7,8 +7,8 @@ import java.time.LocalDate
 // The rules of material entry and receiving that need no database (material-entry.md, material-receiving.md).
 object InvoiceRules {
 
-	// The INVOICE_STATUS values the code moves through (material-receiving.md section 8). They are catalog codes.
-	enum class Status { OPEN, PENDING, IN_ASSIGNMENT, CLOSED }
+	// Catalog codes. CLOSED means fully received and placed; CANCELLED means explicitly not received.
+	enum class Status { OPEN, PENDING, IN_ASSIGNMENT, CLOSED, CANCELLED }
 
 	private val NUMBER = Regex("^[A-Z0-9/-]+$")
 
@@ -36,23 +36,14 @@ object InvoiceRules {
 	// counted − expected: zero is a match, anything else a discrepancy.
 	fun difference(expected: BigDecimal, counted: BigDecimal): BigDecimal = counted - expected
 
-	// The adjustment (material-receiving.md section 5): the expected quantity becomes the counted one, and the line moves
-	// by the same difference, so the line still equals the sum of its assignments. Gives (expected, line) after it.
-	fun adjust(line: BigDecimal, expected: BigDecimal, counted: BigDecimal): Pair<BigDecimal, BigDecimal> =
-		counted to line + difference(expected, counted)
-
-	// Whether an invoice can be closed by hand (F8): only while nothing has been counted yet, because from there on the
-	// operators' work decides when it closes, and only if it has something to close.
-	fun canClose(status: Status, lines: Long, countedShares: Long): ErrorCode? =
-		when {
-			status == Status.CLOSED -> ErrorCode.INVOICE_STATUS_INVALID
-			countedShares > 0 -> ErrorCode.INVOICE_STATUS_INVALID
-			lines == 0L -> ErrorCode.INVOICE_WITHOUT_LINES
-			else -> null
-		}
-
-	// Each status moves only to the next: OPEN, PENDING, IN_ASSIGNMENT, CLOSED.
-	fun canMove(from: Status, to: Status): Boolean = to.ordinal == from.ordinal + 1
+	fun canMove(from: Status, to: Status): Boolean =
+		from to to in setOf(
+			Status.OPEN to Status.PENDING,
+			Status.PENDING to Status.IN_ASSIGNMENT,
+			Status.IN_ASSIGNMENT to Status.CLOSED,
+			Status.OPEN to Status.CANCELLED,
+			Status.PENDING to Status.CANCELLED,
+		)
 
 	// What is placed of an assignment never adds up to more than was counted.
 	fun placementFits(counted: BigDecimal, placed: BigDecimal, adding: List<BigDecimal>): Boolean =

@@ -44,6 +44,7 @@ data class AssignmentView(
 	val operator: Ref,
 	@Serializable(with = DecimalText::class) val expectedQuantity: String,
 	@Serializable(with = DecimalText::class) val countedQuantity: String? = null,
+	@Serializable(with = DecimalText::class) val acceptedQuantity: String? = null,
 	// counted − expected, once counted.
 	@Serializable(with = DecimalText::class) val difference: String? = null,
 	// MATCH or DISCREPANCY, once counted.
@@ -51,6 +52,9 @@ data class AssignmentView(
 	val countNotes: String? = null,
 	val countedAt: String? = null,
 	@Serializable(with = DecimalText::class) val placedQuantity: String,
+	@Serializable(with = DecimalText::class) val remainingQuantity: String? = null,
+	val settled: Boolean = false,
+	val readyToPlace: Boolean = false,
 	val placed: Boolean = false,
 	val placements: List<PlacementView> = emptyList(),
 )
@@ -112,8 +116,10 @@ class ReceivingApi(engine: HttpClientEngine, private val baseUrl: String, privat
 
 	private val http = apiClient(engine)
 
-	suspend fun mine(token: String): List<MyReceipt> =
-		http.get("$baseUrl/receipts/mine") { fromApp(language(), token) }.bodyOrThrow()
+	suspend fun mine(token: String, productId: String? = null): List<MyReceipt> {
+		val path = if (productId == null) "$baseUrl/receipts/mine" else "$baseUrl/receipts/mine?productId=$productId"
+		return http.get(path) { fromApp(language(), token) }.bodyOrThrow()
+	}
 
 	suspend fun discrepancies(token: String): List<Discrepancy> =
 		http.post("$baseUrl/receipts/discrepancies/query") {
@@ -122,20 +128,18 @@ class ReceivingApi(engine: HttpClientEngine, private val baseUrl: String, privat
 			setBody(TableQuery(limit = PAGE_LIMIT))
 		}.bodyOrThrow<Page<Discrepancy>>().data
 
-	// What the operator counted for an assignment. The API refuses a negative or over-precise quantity with its
-	// own message; the app only refuses what it can see is not a number at all.
-	suspend fun count(token: String, assignmentId: String, countedQuantity: String, notes: String?): AssignmentView =
+	suspend fun count(token: String, assignmentId: String, countedQuantity: String, notes: String?, key: String): AssignmentView =
 		http.post("$baseUrl/receipts/assignments/$assignmentId/count") {
 			fromApp(language(), token)
+			headers.append("Idempotency-Key", key)
 			jsonBody()
 			setBody(CountBody(countedQuantity, notes?.takeIf { it.isNotBlank() }))
 		}.bodyOrThrow()
 
-	// Where the operator put what they counted. The API needs every placement in one warehouse's locations, and
-	// refuses a total above the counted quantity with its own message.
-	suspend fun placements(token: String, assignmentId: String, placements: List<PlacementBody>): AssignmentView =
+	suspend fun placements(token: String, assignmentId: String, placements: List<PlacementBody>, key: String): AssignmentView =
 		http.post("$baseUrl/receipts/assignments/$assignmentId/placements") {
 			fromApp(language(), token)
+			headers.append("Idempotency-Key", key)
 			jsonBody()
 			setBody(PlacementsBody(placements))
 		}.bodyOrThrow()

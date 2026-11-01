@@ -6,8 +6,10 @@
     "search": "Search by number or supplier",
     "statusFilter": "Status",
     "chipAll": "All",
-    "chipOpen": "Open",
-    "chipClosed": "Closed",
+    "chipOpen": "Receiving",
+    "chipPlacement": "Ready to place",
+    "chipClosed": "Completed",
+    "chipCancelled": "Cancelled",
     "empty": "No invoices match that filter.",
     "clearFilters": "Clear filters"
   },
@@ -29,9 +31,15 @@
     "summaryPieces_other": "{{count}} pieces"
   },
   "closing": {
-    "button": "Close invoice",
-    "done": "Invoice closed",
-    "readOnly": "The invoice is closed: read only."
+    "readOnly": "The invoice is completed or cancelled: read only."
+  },
+  "cancellation": {
+    "button": "Cancel invoice",
+    "title": "Cancel invoice",
+    "note": "Reason",
+    "noteHint": "Explain why this invoice will not be received.",
+    "confirm": "Confirm cancellation",
+    "done": "Invoice cancelled"
   },
   "columns": {
     "number": "Number",
@@ -51,7 +59,7 @@
     "lines": "Materials",
     "addLine": "Add material",
     "product": "Material",
-    "productSearch": "Search by code or name",
+    "productSearch": "Scan or search by barcode, code or name",
     "quantity": "Quantity",
     "unit": "Unit",
     "remove": "Remove",
@@ -78,11 +86,19 @@
     "lines": "Lines",
     "assign": "Assign",
     "reassign": "Change assignment",
+    "assignAll": "Assign whole invoice",
+    "invoiced": "Invoiced",
     "expected": "Expected",
     "counted": "Counted",
+    "accepted": "Accepted",
     "placed": "Placed",
+    "remaining": "Remaining",
+    "locations": "Locations",
+    "noLocations": "No locations",
+    "progress": "{{counted}} counted · {{placed}} placed of {{lines}}",
     "notCounted": "Not counted",
     "match": "Match",
+    "readyToPlace": "Ready to place",
     "discrepancy": "Discrepancy",
     "date": "Date",
     "warehouse": "Warehouse",
@@ -96,9 +112,17 @@
     "title": "Assign {{product}}",
     "line": "Line quantity: {{quantity}}"
   },
+  "bulkDialog": {
+    "title": "Assign whole invoice",
+    "operator": "Operator",
+    "lines_one": "{{count}} complete line will be assigned.",
+    "lines_other": "{{count}} complete lines will be assigned.",
+    "save": "Assign",
+    "done": "Invoice assigned"
+  },
   "discrepancies": {
     "title": "Discrepancies",
-    "description": "Counts that do not match what was expected. Adjust each one to what was counted; the invoice line changes by the same amount.",
+    "description": "Counts that do not match what was expected. Accept the physical count without changing the original invoice quantity.",
     "columns": {
       "invoice": "Invoice",
       "warehouse": "Warehouse",
@@ -113,10 +137,10 @@
   },
   "adjustDialog": {
     "title": "Adjust discrepancy",
-    "body": "The expected quantity goes from {{expected}} to {{counted}} ({{difference}}).",
+    "body": "{{counted}} will be accepted; {{expected}} was expected ({{difference}}). The original invoice does not change.",
     "note": "Note",
     "noteHint": "Explain the adjustment. It stays in the audit log.",
-    "confirm": "Adjust",
+    "confirm": "Accept count",
     "done": "Discrepancy adjusted."
   },
   "staff": {

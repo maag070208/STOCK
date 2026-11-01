@@ -61,13 +61,22 @@ class InvoiceController(
 		return ResponseEntity.status(stored.status).contentType(MediaType.APPLICATION_JSON).body(stored.body)
 	}
 
-	// The warehouses an invoice can name: every active one. Who creates invoices needs them without reading locations.
-	// Closing by hand, for the invoice captured fast (F8-03). It is audited, and it moves to CLOSED in one step.
 	@PostMapping("/{id}/closure")
 	@RequiresPermission(InvoiceService.CREATE)
 	fun close(@PathVariable id: UUID, user: CurrentUser, locale: Locale): InvoiceView =
 		invoices.close(user, id, locale.language)
 
+	@PostMapping("/{id}/cancellation")
+	@RequiresPermission(InvoiceService.CREATE)
+	fun cancel(@PathVariable id: UUID, @RequestBody request: CancellationRequest, user: CurrentUser, locale: Locale): InvoiceView =
+		invoices.cancel(user, id, request, locale.language)
+
+	@PutMapping("/{id}/assignments")
+	@RequiresPermission(InvoiceService.ASSIGN)
+	fun bulkAssign(@PathVariable id: UUID, @RequestBody request: BulkAssignmentRequest, user: CurrentUser, locale: Locale): InvoiceView =
+		invoices.bulkAssign(user, id, request, locale.language)
+
+	// The warehouses an invoice can name: every active one. Who creates invoices needs them without reading locations.
 	@GetMapping("/warehouse-options")
 	@RequiresPermission(InvoiceService.CREATE)
 	fun warehouseOptions(): List<Ref> = invoices.warehouseOptions()

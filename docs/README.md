@@ -51,7 +51,7 @@ Index of the project documentation. If a decision is not written here, it is not
 - [modules/suppliers.md](modules/suppliers.md): suppliers, their contacts, fiscal and payment data.
 - [modules/customers.md](modules/customers.md): customers and their contacts. Mirrors suppliers.
 - [modules/locations.md](modules/locations.md): warehouses, locations (`K05A`), groups by aisle and rack, and stock per location.
-- [modules/material-receiving.md](modules/material-receiving.md): counting, adjustment of differences, and placement.
+- [modules/material-receiving.md](modules/material-receiving.md): counting, acceptance of differences, and placement.
 - [modules/stock.md](modules/stock.md): stock API: movements, balances, lists, and the opening inventory.
 - [modules/identity.md](modules/identity.md): identity and access API: sessions, users, roles, policies, catalogs, audit log.
 
@@ -62,3 +62,4 @@ Index of the project documentation. If a decision is not written here, it is not
 - Phase F1 is done (2026-10-14): access, catalogs and the audit log in the API, the web console, and sign-in on the app. See its closure in [phases/F1-access-and-catalogs.md](phases/F1-access-and-catalogs.md).
 - Phase F2 is done (2026-10-14): warehouses and locations, materials with the import of the legacy file, suppliers and customers, in the API and the web. See its closure in [phases/F2-master-data.md](phases/F2-master-data.md).
 - Phases F3 (labels, printers and lookup) and F4 (stock and material entry) are next. They can run in parallel.
+- The receiving redesign of [plan-mejora-stockflow.md](plan-mejora-stockflow.md) is in code (2026-10-31): an invoice completes only when everything is received and placed, an open difference blocks only its line, counts and placements are idempotent, the invoiced quantity is never rewritten, counting leads straight to placement, and the web lists work as queues.

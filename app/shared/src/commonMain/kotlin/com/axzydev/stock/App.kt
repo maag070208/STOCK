@@ -215,9 +215,14 @@ fun App(
 									client = client,
 									user = current.user,
 									modules = modules,
+									receipts = receipts,
 									onOpenModule = {
 										moduleId = it.id
 										pageId = null
+									},
+									onOpenPage = { module, page ->
+										moduleId = module.id
+										pageId = page.id
 									},
 									onSignOut = session::signOut,
 								)
@@ -227,14 +232,29 @@ fun App(
 								else -> when (entry.module.id) {
 									"receipts" -> when (page.id) {
 										DISCREPANCIES -> DiscrepanciesScreen(discrepancies) { pageId = null }
-										COUNT -> CountScreen(count) {
-											count.clear()
-											pageId = null
-										}
-										PLACEMENT -> PlacementScreen(placement) {
-											placement.clear()
-											pageId = null
-										}
+										COUNT -> CountScreen(
+											count = count,
+											onBack = {
+												count.clear()
+												pageId = null
+											},
+											onPlace = { target ->
+												placement.open(target)
+												pageId = PLACEMENT
+											},
+										)
+										PLACEMENT -> PlacementScreen(
+											placement = placement,
+											onBack = {
+												placement.clear()
+												pageId = null
+											},
+											onNext = {
+												placement.clear()
+												count.clear()
+												pageId = COUNT
+											},
+										)
 										else -> MyReceiptsScreen(receipts) { pageId = null }
 									}
 

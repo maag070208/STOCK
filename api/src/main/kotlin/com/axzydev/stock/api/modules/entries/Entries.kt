@@ -69,16 +69,16 @@ class ReceiptAssignment(
 	var id: UUID? = null
 
 	var countedQuantity: BigDecimal? = null
+	var acceptedQuantity: BigDecimal? = null
 	var countNotes: String? = null
 	var countedAt: Instant? = null
 	var placedQuantity: BigDecimal = BigDecimal.ZERO
 
 	val counted: Boolean get() = countedQuantity != null
 
-	// Counted and equal to what was expected: a match, or a discrepancy that was adjusted.
-	val settled: Boolean get() = countedQuantity?.compareTo(expectedQuantity) == 0
+	val settled: Boolean get() = countedQuantity != null && acceptedQuantity?.compareTo(countedQuantity) == 0
 
-	val placed: Boolean get() = countedQuantity != null && placedQuantity.compareTo(countedQuantity) == 0
+	val placed: Boolean get() = settled && placedQuantity.compareTo(acceptedQuantity) == 0
 }
 
 @Entity
@@ -123,6 +123,19 @@ interface ReceiptAssignmentRepository : JpaRepository<ReceiptAssignment, UUID> {
 
 	fun findByOperatorId(operatorId: UUID): List<ReceiptAssignment>
 
+	@Query(
+		value = """
+		select a.* from receipt_assignments a
+		join invoice_lines l on l.id = a.line_id
+		join invoices i on i.id = l.invoice_id
+		join catalog_item s on s.id = i.status_id
+		where a.operator_id = :operatorId and s.code in (:statuses)
+		and (:productId is null or l.product_id = cast(:productId as uuid))
+		""",
+		nativeQuery = true,
+	)
+	fun findActiveWork(operatorId: UUID, statuses: Collection<String>, productId: UUID?): List<ReceiptAssignment>
+
 	// How many shares of an invoice were counted: from there on the invoice closes itself, never by hand (F8-03).
 	@Query("select count(a) from ReceiptAssignment a where a.lineId in (select l.id from InvoiceLine l where l.invoiceId = :invoiceId) and a.countedQuantity is not null")
 	fun countCountedOfInvoice(invoiceId: UUID): Long
@@ -135,6 +148,7 @@ interface ReceiptAssignmentRepository : JpaRepository<ReceiptAssignment, UUID> {
 	@Query(
 		"""
 		select a from ReceiptAssignment a where a.countedQuantity is not null and a.countedQuantity <> a.expectedQuantity
+		and a.acceptedQuantity is null
 		and a.lineId in (select l.id from InvoiceLine l where l.invoiceId in (select i.id from Invoice i where i.warehouseId in :warehouses))
 		""",
 	)

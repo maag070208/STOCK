@@ -97,6 +97,9 @@ class CountViewModelTest {
 		assertNotNull(target)
 		assertEquals("a1", target.assignment.id)
 		assertEquals("F-100", target.invoice)
+		assertEquals("w1", target.warehouseId)
+		assertEquals("10.000000", view.state.value.quantity)
+		assertEquals("p1", requests.first { it.url.encodedPath == "/api/v1/receipts/mine" }.url.parameters["productId"])
 		view.editQuantity("8")
 		view.save()
 		advanceUntilIdle()
@@ -104,7 +107,34 @@ class CountViewModelTest {
 		assertEquals(HttpMethod.Post, count.method)
 		assertEquals("/api/v1/receipts/assignments/a1/count", count.url.encodedPath)
 		assertEquals("Bearer access-1", count.headers[HttpHeaders.Authorization])
+		assertTrue(count.headers["Idempotency-Key"]?.isNotBlank() == true)
 		assertEquals("DISCREPANCY", view.state.value.saved?.outcome)
+	}
+
+	@Test
+	fun aRetryKeepsTheSameOperationKey() = runTest {
+		var calls = 0
+		val (products, receiving) = apis { request ->
+			when {
+				request.url.encodedPath == "/api/v1/products/lookup" -> reply(product)
+				request.url.encodedPath == "/api/v1/receipts/mine" -> reply(mine)
+				request.url.encodedPath.endsWith("/count") -> {
+					calls += 1
+					if (calls == 1) reply("""{"code":"NETWORK","message":"Respuesta perdida","details":[]}""", HttpStatusCode.InternalServerError) else reply(counted)
+				}
+				else -> reply("""{"code":"NOT_FOUND","message":"no route","details":[]}""", HttpStatusCode.NotFound)
+			}
+		}
+		val view = CountViewModel(products, receiving, session, { "obligatorio" }, { "cantidad no válida" }, { "no en asignación" }) { "sin conexión" }
+		view.scanned("M1")
+		advanceUntilIdle()
+		view.save()
+		advanceUntilIdle()
+		view.save()
+		advanceUntilIdle()
+		val keys = requests.filter { it.url.encodedPath.endsWith("/count") }.map { it.headers["Idempotency-Key"] }
+		assertEquals(2, keys.size)
+		assertEquals(1, keys.toSet().size)
 	}
 
 	@Test

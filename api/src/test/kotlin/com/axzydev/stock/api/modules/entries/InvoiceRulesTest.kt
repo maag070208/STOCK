@@ -37,20 +37,14 @@ class InvoiceRulesTest {
 	}
 
 	@Test
-	fun `an adjustment sets the expected quantity to the counted one and moves the line by the same difference`() {
-		// Nails: expected 100, counted 80, the line was 100.
-		assertEquals(d(80) to d(80), InvoiceRules.adjust(line = d(100), expected = d(100), counted = d(80)))
-		// Wire: expected 120, counted 180.
-		assertEquals(d(180) to d(180), InvoiceRules.adjust(line = d(120), expected = d(120), counted = d(180)))
-		// A line of 100 split as 60 and 40; the 60 counted at 50: the line becomes 90.
-		assertEquals(d(50) to d(90), InvoiceRules.adjust(line = d(100), expected = d(60), counted = d(50)))
-		// Nothing arrived: an adjustment to zero is allowed.
-		assertEquals(d(0) to d(40), InvoiceRules.adjust(line = d(100), expected = d(60), counted = d(0)))
-	}
-
-	@Test
-	fun `each status moves only to the next one`() {
-		val allowed = setOf(Status.OPEN to Status.PENDING, Status.PENDING to Status.IN_ASSIGNMENT, Status.IN_ASSIGNMENT to Status.CLOSED)
+	fun `completion follows receiving and cancellation is explicit`() {
+		val allowed = setOf(
+			Status.OPEN to Status.PENDING,
+			Status.PENDING to Status.IN_ASSIGNMENT,
+			Status.IN_ASSIGNMENT to Status.CLOSED,
+			Status.OPEN to Status.CANCELLED,
+			Status.PENDING to Status.CANCELLED,
+		)
 		for (from in Status.entries) for (to in Status.entries) {
 			assertEquals(from to to in allowed, InvoiceRules.canMove(from, to), "$from to $to")
 		}

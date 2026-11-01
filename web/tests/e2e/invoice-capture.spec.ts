@@ -3,18 +3,18 @@
 import { expect, test, type Page } from "../support/test";
 import { businessDate, call, newUser, signInAs, uniqueName } from "../support/api";
 import { entriesFixture, type EntriesFixture } from "../support/entries";
-import { captureMaterial, fillNewInvoice } from "../support/invoices";
+import { captureMaterial, countAndPlace, fillNewInvoice } from "../support/invoices";
 
 // An invoice created through the API, as the office would have captured it before the screens: its lines, and nothing
 // counted, so it is still open.
-async function invoice(f: EntriesFixture, lines: { productId: string; quantity: number }[], number = uniqueName("FF-").toUpperCase()) {
+async function invoice(f: EntriesFixture, lines: { productId: string; quantity: number; assignments?: { operatorId: string; quantity: number }[] }[], number = uniqueName("FF-").toUpperCase()) {
 	const created = await call("POST", "/invoices", {
 		token: f.token,
 		headers: { "Idempotency-Key": uniqueName("k") },
 		body: { number, supplierId: f.supplier.id, invoiceDate: businessDate(), warehouseId: f.warehouse.id, lines },
 	});
 	expect(created.status, JSON.stringify(created.json)).toBe(201);
-	return created.json as { id: string; number: string; lines: { id: string; product: { code: string } }[] };
+	return created.json as { id: string; number: string; lines: { id: string; product: { code: string }; assignments: { id: string }[] }[] };
 }
 
 // The number of an invoice is the title of its page.
@@ -28,8 +28,8 @@ test.describe("the list", () => {
 		const f = await entriesFixture();
 		const screws = await f.product("Tornillo de la lista");
 		const open = await invoice(f, [{ productId: screws.id, quantity: 10 }]);
-		const closed = await invoice(f, [{ productId: screws.id, quantity: 20 }]);
-		expect((await call("POST", `/invoices/${closed.id}/closure`, { token: f.token })).status).toBe(200);
+		const closed = await invoice(f, [{ productId: screws.id, quantity: 20, assignments: [{ operatorId: f.operators[0].id, quantity: 20 }] }]);
+		await countAndPlace(f.operators[0], closed.lines[0].assignments[0].id, f.locations[0], 20);
 		const office = await newUser(["OFFICE"]);
 		await signInAs(page, office);
 		await page.goto("/#/invoices");
@@ -39,8 +39,8 @@ test.describe("the list", () => {
 		await page.getByLabel("Buscar por número o proveedor").fill(f.supplier.name);
 		await expect(page.getByRole("row").filter({ hasText: open.number })).toBeVisible();
 
-		// Cerradas leaves only the closed one.
-		await chip(page, "Cerradas").click();
+		// Completadas leaves only the fully received and placed one.
+		await chip(page, "Completadas").click();
 		await expect(page.getByRole("row").filter({ hasText: closed.number })).toBeVisible();
 		await expect(page.getByRole("row").filter({ hasText: open.number })).toHaveCount(0);
 
@@ -101,7 +101,7 @@ test.describe("the modal", () => {
 		await fillNewInvoice(page, { number, supplier: f.supplier, warehouse: f.warehouse });
 		await page.locator('input[name="number"]').press("Enter");
 		await expect(heading(page, number)).toBeVisible();
-		await expect(page.getByTestId("quick-capture").getByPlaceholder("Busca por código o nombre")).toBeFocused();
+		await expect(page.getByTestId("quick-capture").getByPlaceholder("Escanea o busca por código, barras o nombre")).toBeFocused();
 	});
 
 	test("Cancelar discards the invoice, and the one action saves and lands on its materials", async ({ page }) => {
@@ -127,7 +127,7 @@ test.describe("the modal", () => {
 		await fillNewInvoice(page, { number, supplier: f.supplier, warehouse: f.warehouse });
 		await page.getByRole("button", { name: "Guardar", exact: true }).click();
 		await expect(heading(page, number)).toBeVisible();
-		await expect(page.getByTestId("quick-capture").getByPlaceholder("Busca por código o nombre")).toBeFocused();
+		await expect(page.getByTestId("quick-capture").getByPlaceholder("Escanea o busca por código, barras o nombre")).toBeFocused();
 	});
 });
 
@@ -137,7 +137,7 @@ function lineOf(page: Page, product: { code: string }) {
 }
 
 test.describe("the detail", () => {
-	test("five materials are captured with Enter, a repeated one adds to its line, and the invoice closes by hand", async ({ page }) => {
+	test("five materials are captured with Enter, a repeated one adds to its line, and cancellation needs a reason", async ({ page }) => {
 		const f = await entriesFixture();
 		const office = await newUser(["OFFICE"]);
 		const products = [await f.product("Codo"), await f.product("Tuerca"), await f.product("Clavo"), await f.product("Arandela"), await f.product("Cinta")];
@@ -145,53 +145,44 @@ test.describe("the detail", () => {
 		await signInAs(page, office);
 		await page.goto(`/#/invoices/${target.id}`);
 
-		// Open, with nothing in it: the bar invites the first material, and there is nothing to close yet.
 		await expect(page.getByTestId("quick-capture")).toBeVisible();
 		await expect(page.getByText("Aún no has capturado materiales. Empieza con el material y la cantidad.")).toBeVisible();
-		await expect(page.getByRole("button", { name: "Cerrar factura" })).toHaveCount(0);
-
 		for (const [index, product] of products.entries()) {
 			await captureMaterial(page, product, String((index + 1) * 10));
 			await expect(lineOf(page, product)).toBeVisible();
 		}
 		await expect(page.getByText("5 líneas · 150 piezas")).toBeVisible();
-
-		// The same material again adds to the line that exists: five lines, and the quantity grows.
 		await captureMaterial(page, products[0], "5");
 		await expect(page.getByText("5 líneas · 155 piezas")).toBeVisible();
 		await expect(lineOf(page, products[0])).toContainText("15");
-
-		// Quitar takes a line away.
 		await lineOf(page, products[4]).getByRole("button", { name: "Quitar" }).click();
 		await expect(page.getByText("4 líneas · 105 piezas")).toBeVisible();
 
-		// Closing by hand leaves the invoice closed and read only.
-		await page.getByRole("button", { name: "Cerrar factura" }).click();
-		await expect(page.getByText("Factura cerrada").first()).toBeVisible();
-		await expect(page.getByText("Cerrada").first()).toBeVisible();
+		await page.getByRole("button", { name: "Cancelar factura" }).click();
+		const dialog = page.getByRole("dialog");
+		await expect(dialog.getByRole("button", { name: "Confirmar cancelación" })).toBeDisabled();
+		await dialog.getByLabel("Motivo").fill("El proveedor no entregará la mercancía");
+		await dialog.getByRole("button", { name: "Confirmar cancelación" }).click();
+		await expect(page.getByText("Factura cancelada").first()).toBeVisible();
+		await expect(page.getByText("Cancelada").first()).toBeVisible();
 		await expect(page.getByTestId("quick-capture")).toHaveCount(0);
-		await expect(page.getByRole("button", { name: "Cerrar factura" })).toHaveCount(0);
 	});
 
-	test("a close the API refuses shows its reason", async ({ page }) => {
+	test("an invoice completes only after receiving and placement, and shows its locations", async ({ page }) => {
 		const f = await entriesFixture();
 		const [operator] = f.operators;
 		const screws = await f.product("Tornillo del cierre");
 		const office = await newUser(["OFFICE"]);
-		const target = await invoice(f, [{ productId: screws.id, quantity: 10 }]);
+		const target = await invoice(f, [{ productId: screws.id, quantity: 10, assignments: [{ operatorId: operator.id, quantity: 10 }] }]);
+		await countAndPlace(operator, target.lines[0].assignments[0].id, f.locations[0], 10);
 		await signInAs(page, office);
 		await page.goto(`/#/invoices/${target.id}`);
-		await expect(page.getByRole("button", { name: "Cerrar factura" })).toBeVisible();
 
-		// Somebody assigns and counts the line while this screen is open: the invoice closes itself, and by hand is refused.
-		const assigned = await call("PUT", `/invoices/${target.id}/lines/${target.lines[0].id}/assignments`, { token: f.token, body: { assignments: [{ operatorId: operator.id, quantity: 10 }] } });
-		expect(assigned.status).toBe(200);
-		const assignment = assigned.json.assignments[0].id as string;
-		const login = await call("POST", "/auth/login", { body: { username: operator.username, password: operator.password }, channel: "app" });
-		await call("POST", `/receipts/assignments/${assignment}/count`, { token: login.json.token, body: { countedQuantity: 10 }, channel: "app" });
-
-		await page.getByRole("button", { name: "Cerrar factura" }).click();
-		await expect(page.getByText("La factura no está en el estado que permite esta acción.")).toBeVisible();
+		await expect(page.getByText("Completada").first()).toBeVisible();
+		await expect(page.getByTestId("quick-capture")).toHaveCount(0);
+		await expect(page.getByRole("row", { name: new RegExp(screws.code) })).toContainText("K05A");
+		const refused = await call("POST", `/invoices/${target.id}/closure`, { token: f.token });
+		expect(refused.json.code).toBe("INVOICE_LOCKED");
 	});
 });
 

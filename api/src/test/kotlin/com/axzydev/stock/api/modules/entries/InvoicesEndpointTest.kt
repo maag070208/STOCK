@@ -70,27 +70,20 @@ class InvoicesEndpointTest : ApiTest() {
 	fun `the list is filtered by one status or by several, and by the open ones`() {
 		val f = EntriesFixture(api)
 		val open = f.create(f.body(f.line(f.product("Abierta"), 5))).json
-		// An invoice with an assignment is PENDING, and one with a line assigned and counted is IN_ASSIGNMENT.
 		val pending = f.create(f.body(f.line(f.product("Pendiente"), 10, f.operators[0] to 10))).json
 		val counted = f.create(f.body(f.line(f.product("Contada"), 10, f.operators[0] to 10))).json
 		val share = counted.get("lines").get(0).get("assignments").get(0).get("id").asString()
-		assertEquals(200, api.call("POST", "/receipts/assignments/$share/count", f.operators[0].token, mapOf("countedQuantity" to 10), channel = "app").status)
-		// Nothing of this warehouse can be closed until it has lines and nothing counted: one of them goes to CLOSED.
-		val closed = f.create(f.body(f.line(f.product("Cerrada"), 5))).json
-		assertEquals(200, api.post("/invoices/${closed.get("id").asString()}/closure", f.admin, mapOf<String, Any>()).status)
+		assertEquals(200, api.call("POST", "/receipts/assignments/$share/count", f.operators[0].token, mapOf("countedQuantity" to 10), channel = "app", headers = mapOf("Idempotency-Key" to UUID.randomUUID().toString())).status)
+		assertEquals("IN_ASSIGNMENT", counted.get("status").get("code").asString().let { api.get("/invoices/${counted.get("id").asString()}", f.admin).json.get("status").get("code").asString() })
+		assertEquals(200, api.call("POST", "/receipts/assignments/$share/placements", f.operators[0].token, mapOf("placements" to listOf(mapOf("locationId" to f.locations[0], "quantity" to 10))), channel = "app", headers = mapOf("Idempotency-Key" to UUID.randomUUID().toString())).status)
 
-		// The warehouse of this fixture keeps the query to the invoices of this test.
 		fun query(status: Any): Set<String> =
 			api.post("/invoices/query", f.admin, mapOf("filters" to mapOf("status" to status, "warehouseId" to f.warehouse), "limit" to 100)).json.get("data").list
 				.map { it.get("number").asString() }.toSet()
 
-		// One code, the same as always.
-		assertEquals(setOf(closed.get("number").asString()), query("CLOSED"))
-		// Several, which is what the list's chips ask for: the open ones are the three that are not closed.
+		assertEquals(setOf(counted.get("number").asString()), query("CLOSED"))
 		val openOnes = query(listOf("OPEN", "PENDING", "IN_ASSIGNMENT"))
-		assertTrue(openOnes.containsAll(setOf(open.get("number").asString(), pending.get("number").asString(), counted.get("number").asString())), openOnes.toString())
-		assertTrue(!openOnes.contains(closed.get("number").asString()))
-		// A code nobody knows leaves nothing, and never everything.
+		assertEquals(setOf(open.get("number").asString(), pending.get("number").asString()), openOnes)
 		assertEquals(emptySet<String>(), query(listOf("OPEN", "NOPE")))
 	}
 
@@ -148,25 +141,17 @@ class InvoicesEndpointTest : ApiTest() {
 	}
 
 	@Test
-	fun `an invoice captured with lines and no operators closes by hand, once`() {
+	fun `an unreceived invoice cannot close and can only be cancelled with a reason`() {
 		val f = EntriesFixture(api)
 		val created = f.create(f.body(f.line(f.product("Arandela"), 25))).json
 		val id = created.get("id").asString()
-		// An invoice without lines has nothing to close.
-		val empty = f.create(f.body()).json
-		assertEquals("INVOICE_WITHOUT_LINES", api.post("/invoices/${empty.get("id").asString()}/closure", f.admin, mapOf<String, Any>()).code)
-		// With lines, the office closes it, and it stays closed.
-		val closed = api.post("/invoices/$id/closure", f.admin, mapOf<String, Any>())
-		assertEquals(200, closed.status, closed.body)
-		assertEquals("CLOSED", closed.json.get("status").get("code").asString())
 		assertEquals("INVOICE_STATUS_INVALID", api.post("/invoices/$id/closure", f.admin, mapOf<String, Any>()).code)
-		// Once a share is counted the invoice closes itself, and by hand is refused.
-		val counted = f.create(f.body(f.line(f.product("Tuerca"), 10, f.operators[0] to 10))).json
-		val share = counted.get("lines").get(0).get("assignments").get(0).get("id").asString()
-		assertEquals(200, api.call("POST", "/receipts/assignments/$share/count", f.operators[0].token, mapOf("countedQuantity" to 10), channel = "app").status)
-		assertEquals("INVOICE_STATUS_INVALID", api.post("/invoices/${counted.get("id").asString()}/closure", f.admin, mapOf<String, Any>()).code)
-		// The audit log keeps who closed it.
-		val log = api.post("/audit-log/query", f.admin, mapOf("filters" to mapOf("action" to "INVOICE_CLOSED", "targetType" to "invoice", "targetId" to id)))
+		assertEquals("FIELD_REQUIRED", api.post("/invoices/$id/cancellation", f.admin, mapOf("note" to " ")).code)
+		val cancelled = api.post("/invoices/$id/cancellation", f.admin, mapOf("note" to "Proveedor canceló la entrega"))
+		assertEquals(200, cancelled.status, cancelled.body)
+		assertEquals("CANCELLED", cancelled.json.get("status").get("code").asString())
+		assertEquals("INVOICE_LOCKED", api.post("/invoices/$id/lines", f.admin, mapOf("productId" to f.product(), "quantity" to 1)).code)
+		val log = api.post("/audit-log/query", f.admin, mapOf("filters" to mapOf("action" to "INVOICE_CANCELLED", "targetType" to "invoice", "targetId" to id)))
 		assertEquals(1, log.json.get("total").asInt(), log.body)
 	}
 
@@ -266,6 +251,21 @@ class InvoicesEndpointTest : ApiTest() {
 			fields(api.put(path, f.admin, mapOf("assignments" to listOf(mapOf("operatorId" to outsider.id, "quantity" to 100)))).json),
 		)
 		assertTrue(api.put(path, f.admin, mapOf("assignments" to listOf(mapOf("operatorId" to a.id, "quantity" to 100)))).status == 200)
+	}
+
+	@Test
+	fun `all or selected lines can be assigned to one operator in a single call`() {
+		val f = EntriesFixture(api)
+		val (a, b) = f.operators
+		val inv = f.create(f.body(f.line(f.product("Uno"), 10), f.line(f.product("Dos"), 20))).json
+		val selected = inv.get("lines").get(0).get("id").asString()
+		val partial = api.put("/invoices/${inv.get("id").asString()}/assignments", f.admin, mapOf("operatorId" to a.id, "lineIds" to listOf(selected)))
+		assertEquals(200, partial.status, partial.body)
+		assertEquals(1, partial.json.get("lines").list.flatMap { it.get("assignments").list }.size)
+		val all = api.put("/invoices/${inv.get("id").asString()}/assignments", f.admin, mapOf("operatorId" to b.id))
+		assertEquals(200, all.status, all.body)
+		assertTrue(all.json.get("lines").list.all { line -> line.get("assignments").list.single().let { it.get("operator").get("id").asString() == b.id && it.get("expectedQuantity").asInt() == line.get("quantity").asInt() } })
+		assertEquals("FIELD_REQUIRED", api.put("/invoices/${inv.get("id").asString()}/assignments", f.admin, mapOf("lineIds" to listOf(selected))).code)
 	}
 
 	@Test

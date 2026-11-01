@@ -46,13 +46,15 @@ import com.axzydev.stock.ui.theme.StockFlowType
 // Putting counted goods into locations (docs/modules/material-receiving.md section 7, barcode-scanning.md section 4). The
 // operator picks a counted assignment, scans the location for each part, and the app keeps the sum equal to what is left.
 @Composable
-fun PlacementScreen(placement: PlacementViewModel, onBack: () -> Unit) {
+fun PlacementScreen(placement: PlacementViewModel, onBack: () -> Unit, onNext: () -> Unit) {
 	val state by placement.state.collectAsState()
 	val focus = LocalFocusManager.current
 	val keyboard = LocalSoftwareKeyboardController.current
 
-	// Load the list of what is still to place when entering that page.
-	LaunchedEffect(placement) { placement.load() }
+	// A target opened directly from a count is kept; a fresh page loads the work queue.
+	LaunchedEffect(placement) {
+		if (state.target == null && state.saved == null) placement.load()
+	}
 
 	val search = {
 		focus.clearFocus()
@@ -68,7 +70,7 @@ fun PlacementScreen(placement: PlacementViewModel, onBack: () -> Unit) {
 		backTag = "placement-back",
 	) {
 		when {
-			state.saved != null -> PlacementResult(onBack, placement::load)
+			state.saved != null -> PlacementResult(state.saved!!.placed, placement::continuePlacement, onNext)
 
 			state.target != null -> PlacementForm(state, placement, search)
 
@@ -191,12 +193,12 @@ private fun Remove(label: String, onClick: () -> Unit, tag: String) {
 }
 
 @Composable
-private fun PlacementResult(onBack: () -> Unit, onAnother: () -> Unit) {
+private fun PlacementResult(complete: Boolean, onContinue: () -> Unit, onNext: () -> Unit) {
 	Card(Modifier.testTag("placement-saved")) {
 		AppText(text(Text.PLACED), StockFlowType.bodyLg, StockFlow.colors.success)
 	}
-	PrimaryButton(text(Text.PLACEMENT_ANOTHER), onAnother, tag = "placement-another")
-	PrimaryButton(text(Text.BACK_MODULES), onBack, tag = "placement-done")
+	if (!complete) PrimaryButton(text(Text.PLACEMENT_CONTINUE), onContinue, tag = "placement-continue")
+	PrimaryButton(text(Text.NEXT_MATERIAL), onNext, tag = "placement-next")
 }
 
 // The material of a target: its code and name.

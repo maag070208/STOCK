@@ -11,7 +11,7 @@ import { NewInvoiceDialog } from "@features/invoice/NewInvoiceDialog";
 import { formatDate } from "@shared/lib/format";
 
 // The color of each status of an invoice: open is still being captured, closed is done.
-export const STATUS_COLOR: Record<InvoiceStatus, "gray" | "warning" | "info" | "success"> = { OPEN: "gray", PENDING: "warning", IN_ASSIGNMENT: "info", CLOSED: "success" };
+export const STATUS_COLOR: Record<InvoiceStatus, "gray" | "warning" | "info" | "success" | "danger"> = { OPEN: "gray", PENDING: "warning", IN_ASSIGNMENT: "info", CLOSED: "success", CANCELLED: "danger" };
 
 // The invoices the person can see: every one with ALL, those of their warehouses with AREA (the API decides). One search
 // box and three status chips drive the query (F8-05), and a new invoice is captured in a modal over the list (F8-06).
@@ -101,7 +101,9 @@ export function InvoicesPage() {
 	const chips: { id: StatusChip; label: string }[] = [
 		{ id: "all", label: t("list.chipAll") },
 		{ id: "open", label: t("list.chipOpen") },
+		{ id: "placement", label: t("list.chipPlacement") },
 		{ id: "closed", label: t("list.chipClosed") },
+		{ id: "cancelled", label: t("list.chipCancelled") },
 	];
 
 	return (

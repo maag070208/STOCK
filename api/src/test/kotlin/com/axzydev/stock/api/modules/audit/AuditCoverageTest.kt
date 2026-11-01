@@ -151,16 +151,15 @@ class AuditCoverageTest : ApiTest() {
 		written += Triple("INVOICE_STATUS_CHANGED", "invoice", invoiceId)
 		val assignment = assigned.json.get("assignments").get(0).get("id").asString()
 		write("RECEIPT_COUNTED", "receipt_assignment", assignment) {
-			api.call("POST", "/receipts/assignments/$assignment/count", operator.token, mapOf("countedQuantity" to 9), channel = "app")
+			api.call("POST", "/receipts/assignments/$assignment/count", operator.token, mapOf("countedQuantity" to 9), channel = "app", headers = mapOf("Idempotency-Key" to UUID.randomUUID().toString()))
 		}
 		write("DISCREPANCY_ADJUSTED", "receipt_assignment", assignment) { api.post("/receipts/assignments/$assignment/adjustment", admin, mapOf("note" to "Faltó uno")) }
 		write("RECEIPT_PLACED", "receipt_assignment", assignment) {
-			api.call("POST", "/receipts/assignments/$assignment/placements", operator.token, mapOf("placements" to listOf(mapOf("locationId" to f.locations[0], "quantity" to 9))), channel = "app")
+			api.call("POST", "/receipts/assignments/$assignment/placements", operator.token, mapOf("placements" to listOf(mapOf("locationId" to f.locations[0], "quantity" to 9))), channel = "app", headers = mapOf("Idempotency-Key" to UUID.randomUUID().toString()))
 		}
 
-		// The fast capture: an invoice with lines and no operators, closed by hand (F8-03).
-		val fast = f.create(f.body(f.line(f.product(), 5))).json
-		write("INVOICE_CLOSED", "invoice", fast.get("id").asString()) { api.post("/invoices/${fast.get("id").asString()}/closure", admin, mapOf<String, Any>()) }
+		val cancelled = f.create(f.body(f.line(f.product(), 5))).json
+		write("INVOICE_CANCELLED", "invoice", cancelled.get("id").asString()) { api.post("/invoices/${cancelled.get("id").asString()}/cancellation", admin, mapOf("note" to "No llegará")) }
 
 		// Orders, from creation to validation, with the three reassignment actions on the way.
 		val o = OrdersFixture(api)

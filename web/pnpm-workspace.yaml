@@ -1,0 +1,4 @@
+allowBuilds:
+  unrs-resolver: set this to true or false
+minimumReleaseAgeExclude:
+  - '@axzydev/axzy_ui_system@1.8.15'

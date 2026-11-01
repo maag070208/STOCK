@@ -21,6 +21,7 @@ import kotlinx.coroutines.launch
 data class CountTarget(
 	val assignment: AssignmentView,
 	val invoice: String,
+	val warehouseId: String,
 	val product: Ref,
 	val unit: UnitRef?,
 )
@@ -61,6 +62,7 @@ class CountViewModel(
 	val state: StateFlow<CountState> = mutableState.asStateFlow()
 
 	private var running: Job? = null
+	private var operationKey: String? = null
 
 	// The camera reads the same label many times a second: the last value it gave is not looked up again.
 	private var lastScan: String? = null
@@ -79,7 +81,6 @@ class CountViewModel(
 
 	fun submit() = find(mutableState.value.query.trim())
 
-	// A material from the list of several the name matched.
 	fun choose(product: LookupProduct) {
 		running?.cancel()
 		val base = mutableState.value.copy(products = emptyList(), looking = true)
@@ -89,9 +90,9 @@ class CountViewModel(
 		}
 	}
 
-	// The assignment to count, from the list of several.
 	fun choose(target: CountTarget) {
-		mutableState.value = mutableState.value.copy(targets = emptyList(), target = target)
+		operationKey = null
+		mutableState.value = mutableState.value.copy(targets = emptyList(), target = target, quantity = target.assignment.expectedQuantity)
 	}
 
 	fun editQuantity(value: String) {
@@ -102,7 +103,6 @@ class CountViewModel(
 		mutableState.value = mutableState.value.copy(notes = value)
 	}
 
-	// The count, as the operator sees it. A blank or a negative quantity never reaches the API.
 	fun save() {
 		val current = mutableState.value
 		val target = current.target ?: return
@@ -111,11 +111,12 @@ class CountViewModel(
 			quantity.isEmpty() -> mutableState.value = current.copy(quantityError = required())
 			!QUANTITY.matches(quantity) -> mutableState.value = current.copy(quantityError = quantityInvalid())
 			else -> {
+				val key = operationKey ?: com.axzydev.stock.data.api.newOperationKey().also { operationKey = it }
 				running?.cancel()
 				mutableState.value = current.copy(saving = true, quantityError = null, error = null)
 				running = viewModelScope.launch {
 					mutableState.value = guard {
-						val saved = session.withToken { token -> receiving.count(token, target.assignment.id, quantity, current.notes) }
+						val saved = session.withToken { token -> receiving.count(token, target.assignment.id, quantity, current.notes, key) }
 						mutableState.value.copy(saving = false, saved = saved)
 					}
 				}
@@ -126,47 +127,48 @@ class CountViewModel(
 	fun clear() {
 		running?.cancel()
 		lastScan = null
+		operationKey = null
 		mutableState.value = CountState()
 	}
 
-	// The scanned or typed value as a material, then the operator's open assignments of it.
 	private fun find(value: String) {
 		if (value.isEmpty()) {
 			mutableState.value = mutableState.value.copy(fieldError = required())
 			return
 		}
 		running?.cancel()
+		operationKey = null
 		mutableState.value = CountState(query = value, looking = true)
 		running = viewModelScope.launch {
 			val base = mutableState.value
 			mutableState.value = guarded(base) { token ->
 				val result = products.lookup(token, value)
 				val single = result.products.singleOrNull()
-				// One material is looked through; several, found by name, are a list to pick from first.
 				if (single == null) base.copy(looking = false, products = result.products)
 				else targetsFor(token, value, single.id)
 			}
 		}
 	}
 
-	// The open assignments of one material: the invoices still PENDING and this operator's own lines.
 	private suspend fun targetsFor(token: String, query: String, productId: String): CountState {
-		val targets = receiving.mine(token)
+		val targets = receiving.mine(token, productId)
 			.filter { it.invoice.status.code == OPEN }
 			.flatMap { receipt ->
 				receipt.lines
 					.filter { it.product.id == productId }
-					.flatMap { line -> line.assignments.map { CountTarget(it, receipt.invoice.number, line.product, line.unit) } }
+					.flatMap { line ->
+						line.assignments
+							.filter { !it.placed && !com.axzydev.stock.data.Decimals.above(it.placedQuantity, "0") }
+							.map { CountTarget(it, receipt.invoice.number, receipt.invoice.warehouse.id, line.product, line.unit) }
+					}
 			}
 		return when {
 			targets.isEmpty() -> CountState(query = query, error = notInAssignment())
-			targets.size == 1 -> CountState(query = query, target = targets.single())
+			targets.size == 1 -> CountState(query = query, target = targets.single(), quantity = targets.single().assignment.expectedQuantity)
 			else -> CountState(query = query, targets = targets)
 		}
 	}
 
-	// A lookup or a read that failed leaves the query as it was and shows the API's own message, or the app's when
-	// there is no connection.
 	private suspend fun guarded(base: CountState, block: suspend (token: String) -> CountState): CountState =
 		try {
 			session.withToken(block)
@@ -190,11 +192,7 @@ class CountViewModel(
 		}
 
 	private companion object {
-		// A counted quantity is a non-negative decimal, as the API's own rule reads it (InvoiceRules.counted). A
-		// negative or a letter never leaves the app.
 		val QUANTITY = Regex("^[0-9]+(\\.[0-9]+)?$")
-
-		// The invoice statuses whose assignments are still to count (docs/modules/material-receiving.md section 4).
 		const val OPEN = "PENDING"
 	}
 }

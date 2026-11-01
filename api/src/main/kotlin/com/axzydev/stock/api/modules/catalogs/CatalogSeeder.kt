@@ -14,8 +14,9 @@ object SeedCatalogs {
 			listOf(
 				SeedItem("OPEN", "Abierta", "Open"),
 				SeedItem("PENDING", "Pendiente", "Pending"),
-				SeedItem("IN_ASSIGNMENT", "En asignación", "In assignment"),
-				SeedItem("CLOSED", "Cerrada", "Closed", """{"terminal": true}"""),
+				SeedItem("IN_ASSIGNMENT", "Por ubicar", "Ready to place"),
+				SeedItem("CLOSED", "Completada", "Completed", """{"terminal": true}"""),
+				SeedItem("CANCELLED", "Cancelada", "Cancelled", """{"terminal": true}"""),
 			),
 		),
 		SeedCatalog(

@@ -24,8 +24,8 @@ export const invoiceApi = {
 	removeLine: (id: string, lineId: string) => del<void>(`/invoices/${id}/lines/${lineId}`),
 	setAssignments: (id: string, lineId: string, assignments: { operatorId: string; quantity: number }[]) =>
 		put<InvoiceLine>(`/invoices/${id}/lines/${lineId}/assignments`, { assignments }),
-	// The fast flow closes by hand what never had operators (F8-03).
-	close: (id: string) => post<Invoice>(`/invoices/${id}/closure`),
+	bulkAssign: (id: string, operatorId: string, lineIds?: string[]) => put<Invoice>(`/invoices/${id}/assignments`, { operatorId, ...(lineIds ? { lineIds } : {}) }),
+	cancel: (id: string, note: string) => post<Invoice>(`/invoices/${id}/cancellation`, { note }),
 };
 
 export const staffApi = {

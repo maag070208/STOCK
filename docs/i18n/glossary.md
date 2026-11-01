@@ -20,8 +20,9 @@
 |---|---|---|
 | `OPEN` | Abierta | Open |
 | `PENDING` | Pendiente | Pending |
-| `IN_ASSIGNMENT` | En asignación | In assignment |
-| `CLOSED` | Cerrada | Closed |
+| `IN_ASSIGNMENT` | Por ubicar | Ready to place |
+| `CLOSED` | Completada | Completed |
+| `CANCELLED` | Cancelada | Cancelled |
 
 ## Order status (`ORDER_STATUS`)
 

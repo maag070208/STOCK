@@ -34,14 +34,14 @@ class CatalogsEndpointTest : ApiTest() {
 		val catalogs = api.get("/catalogs", admin).json.list.associate { it.get("code").asString() to it }
 		for (seed in listOf("INVOICE_STATUS", "ORDER_STATUS", "UNIT_OF_MEASURE")) assertTrue(catalogs.getValue(seed).get("isSystem").asBoolean(), seed)
 
-		assertEquals(listOf("OPEN", "PENDING", "IN_ASSIGNMENT", "CLOSED"), codes("/catalogs/INVOICE_STATUS/items", admin))
+		assertEquals(listOf("OPEN", "PENDING", "IN_ASSIGNMENT", "CLOSED", "CANCELLED"), codes("/catalogs/INVOICE_STATUS/items", admin))
 		assertEquals(listOf("CREATED", "FULFILLING", "FULFILLED", "VALIDATED", "CANCELLED"), codes("/catalogs/ORDER_STATUS/items", admin))
 		assertEquals(listOf("PIECE"), codes("/catalogs/UNIT_OF_MEASURE/items", admin))
 
 		val spanish = api.get("/catalogs/INVOICE_STATUS/items", admin).json.list
-		assertEquals(listOf("Abierta", "Pendiente", "En asignación", "Cerrada"), spanish.map { it.get("label").asString() })
+		assertEquals(listOf("Abierta", "Pendiente", "Por ubicar", "Completada", "Cancelada"), spanish.map { it.get("label").asString() })
 		val english = api.call("GET", "/catalogs/INVOICE_STATUS/items", admin, headers = mapOf("Accept-Language" to "en")).json.list
-		assertEquals(listOf("Open", "Pending", "In assignment", "Closed"), english.map { it.get("label").asString() })
+		assertEquals(listOf("Open", "Pending", "Ready to place", "Completed", "Cancelled"), english.map { it.get("label").asString() })
 		assertEquals("Abierta", english[0].get("labels").get("es").get("label").asString())
 
 		// Behavior reads attributes, not names.

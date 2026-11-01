@@ -59,23 +59,25 @@ class LabelsEndpointTest : ApiTest() {
 	}
 
 	@Test
-	fun `a template without XZ, with a forbidden command or an unknown placeholder is refused, and no version is created`() {
+	fun `a template without XZ, with a forbidden command or a placeholder that is not a name is refused, and no version is created`() {
 		assertEquals(setOf("zpl" to "ZPL_BLOCK_INVALID"), fields(template(body = zpl.removeSuffix("^XZ")).json))
 		assertEquals(setOf("zpl" to "ZPL_COMMAND_NOT_ALLOWED"), fields(template(body = zpl.replace("^PQ", "~JR^PQ")).json))
-		assertEquals(setOf("zpl" to "ZPL_PLACEHOLDER_UNKNOWN"), fields(template(body = zpl.replace("Etiqueta", "{{name}}")).json))
+		assertEquals(setOf("zpl" to "ZPL_PLACEHOLDER_UNKNOWN"), fields(template(body = zpl.replace("Etiqueta", "{{precio oferta}}")).json))
+		// A placeholder the key does not suggest is a name the person wrote: it prints empty until something fills it.
+		assertEquals(201, template(body = zpl.replace("Etiqueta", "{{precio}}")).status)
 		val id = api.get("/label-templates", api.adminToken()).json.list.single { it.get("key").asString() == "PRODUCT" }.get("id").asString()
 		val before = api.get("/label-templates/$id", api.adminToken()).json.get("version").asInt()
-		val refused = api.patch("/label-templates/$id", api.adminToken(), mapOf("zpl" to productZpl.replace("{{barcode}}", "{{rack}}")))
+		val refused = api.patch("/label-templates/$id", api.adminToken(), mapOf("zpl" to productZpl.replace("{{barcode}}", "{{9precio}}")))
 		assertEquals(setOf("zpl" to "ZPL_PLACEHOLDER_UNKNOWN"), fields(refused.json))
-		assertEquals("La plantilla usa un campo que no existe para este tipo de etiqueta.", refused.json.get("details").get(0).get("message").asString())
+		assertEquals("El campo de la plantilla no tiene un nombre válido.", refused.json.get("details").get(0).get("message").asString())
 		assertEquals(before, api.get("/label-templates/$id", api.adminToken()).json.get("version").asInt())
 	}
 
 	@Test
 	fun `the validation report names each problem as the editor types`() {
-		val report = api.post("/label-templates/validate", api.adminToken(), mapOf("key" to "PRODUCT", "zpl" to productZpl.replace("^PQ", "^HH^PQ").replace("{{name}}", "{{rack}}")))
+		val report = api.post("/label-templates/validate", api.adminToken(), mapOf("key" to "PRODUCT", "zpl" to productZpl.replace("^PQ", "^HH^PQ").replace("{{name}}", "{{precio oferta}}")))
 		assertEquals(200, report.status, report.body)
-		assertEquals(setOf("ZPL_COMMAND_NOT_ALLOWED" to "^HH", "ZPL_PLACEHOLDER_UNKNOWN" to "rack"), report.json.get("problems").list.map { it.get("code").asString() to it.get("token").asString() }.toSet())
+		assertEquals(setOf("ZPL_COMMAND_NOT_ALLOWED" to "^HH", "ZPL_PLACEHOLDER_UNKNOWN" to "precio oferta"), report.json.get("problems").list.map { it.get("code").asString() to it.get("token").asString() }.toSet())
 	}
 
 	@Test

@@ -52,6 +52,10 @@ data class UpdateLineRequest(val quantity: BigDecimal? = null)
 
 data class AssignmentsRequest(val assignments: List<AssignmentBody>? = null)
 
+data class CancellationRequest(val note: String? = null)
+
+data class BulkAssignmentRequest(val operatorId: UUID? = null, val lineIds: List<UUID>? = null)
+
 // Material entry (material-entry.md): the invoice, its lines, and the assignment of each line to operators.
 // Counting, adjusting and placing are in ReceivingService.
 @Service
@@ -110,18 +114,25 @@ class InvoiceService(
 	@Transactional(readOnly = true)
 	fun get(user: CurrentUser, id: UUID, language: String): InvoiceView = views.full(readable(user, id), language)
 
-	// Closing by hand (F8-03): for the invoice captured fast, which never had operators. Only while nothing has been
-	// counted, so the work of the receiving is never thrown away; from there on it closes itself.
+	// CLOSED is reserved for fully received and placed invoices. Legacy clients get an explicit refusal.
 	@Transactional
 	fun close(user: CurrentUser, id: UUID, language: String): InvoiceView {
 		val invoice = readable(user, id)
+		if (status(invoice) == Status.CLOSED || status(invoice) == Status.CANCELLED) throw ApiException(ErrorCode.INVOICE_LOCKED)
+		throw ApiException(ErrorCode.INVOICE_STATUS_INVALID)
+	}
+
+	@Transactional
+	fun cancel(user: CurrentUser, id: UUID, request: CancellationRequest, language: String): InvoiceView {
+		val invoice = readable(user, id)
+		requireStatus(invoice, Status.OPEN, Status.PENDING)
+		if (assignments.countCountedOfInvoice(id) > 0) throw ApiException(ErrorCode.INVOICE_STATUS_INVALID)
+		val note = request.note?.trim().orEmpty()
+		if (note.isEmpty()) throw ValidationException(listOf(FieldError("note", ErrorCode.FIELD_REQUIRED)))
+		if (note.length > 500) throw ValidationException(listOf(FieldError("note", ErrorCode.FIELD_TOO_LONG)))
 		val current = status(invoice)
-		val lines = lines.countByInvoiceId(invoice.id!!)
-		val counted = assignments.countCountedOfInvoice(invoice.id!!)
-		InvoiceRules.canClose(current, lines, counted)?.let { throw ApiException(it) }
-		invoice.statusId = statusId(Status.CLOSED)
-		touch(invoice)
-		audit.record(user.actor, "INVOICE_CLOSED", "invoice", id.toString(), before = mapOf("status" to current.name), after = mapOf("status" to Status.CLOSED.name, "lines" to lines))
+		move(user.actor, invoice, Status.CANCELLED)
+		audit.record(user.actor, "INVOICE_CANCELLED", "invoice", id.toString(), before = mapOf("status" to current.name), after = mapOf("status" to Status.CANCELLED.name, "note" to note))
 		return views.full(invoice, language)
 	}
 
@@ -241,6 +252,38 @@ class InvoiceService(
 		return views.line(line, language)
 	}
 
+	@Transactional
+	fun bulkAssign(user: CurrentUser, invoiceId: UUID, request: BulkAssignmentRequest, language: String): InvoiceView {
+		val invoice = readable(user, invoiceId)
+		user.requireWrite(ASSIGN, invoice.warehouseId)
+		requireStatus(invoice, Status.OPEN, Status.PENDING)
+		if (request.operatorId == null) throw ValidationException(listOf(FieldError("operatorId", ErrorCode.FIELD_REQUIRED)))
+		if (request.operatorId !in staff.operators(invoice.warehouseId).keys) {
+			throw ValidationException(listOf(FieldError("operatorId", ErrorCode.CATALOG_VALUE_INVALID)))
+		}
+		val all = lines.findByInvoiceId(invoiceId)
+		val wanted = request.lineIds?.toSet()
+		val selected = all.filter { wanted == null || it.id in wanted }
+		if (selected.isEmpty() || (wanted != null && selected.size != wanted.size)) {
+			throw ValidationException(listOf(FieldError("lineIds", if (selected.isEmpty() && wanted == null) ErrorCode.FIELD_REQUIRED else ErrorCode.CATALOG_VALUE_INVALID)))
+		}
+		val current = assignments.findByLineIdIn(selected.map { it.id!! })
+		if (current.any { it.counted }) throw ApiException(ErrorCode.ASSIGNMENT_LOCKED)
+		val now = clock.instant()
+		selected.forEach { line ->
+			val previous = current.filter { it.lineId == line.id }
+			assignments.deleteAll(previous)
+			assignments.save(ReceiptAssignment(line.id!!, request.operatorId, line.quantity, now, now))
+			audit.record(
+				user.actor, "RECEIPT_ASSIGNMENTS_CHANGED", "invoice", invoiceId.toString(),
+				mapOf("lineId" to line.id.toString(), "shares" to previous.map { "${it.operatorId}:${it.expectedQuantity}" }),
+				mapOf("lineId" to line.id.toString(), "shares" to listOf("${request.operatorId}:${line.quantity}")),
+			)
+		}
+		if (status(invoice) == Status.OPEN) move(user.actor, invoice, Status.PENDING) else touch(invoice)
+		return views.full(invoice, language)
+	}
+
 	// For receiving: an invoice the person may read, by id.
 	fun readable(user: CurrentUser, id: UUID): Invoice {
 		val invoice = invoices.findById(id).orElseThrow { ApiException(ErrorCode.NOT_FOUND) }
@@ -261,7 +304,7 @@ class InvoiceService(
 
 	fun requireStatus(invoice: Invoice, vararg allowed: Status) {
 		val current = status(invoice)
-		if (current == Status.CLOSED) throw ApiException(ErrorCode.INVOICE_LOCKED)
+		if (current == Status.CLOSED || current == Status.CANCELLED) throw ApiException(ErrorCode.INVOICE_LOCKED)
 		if (current !in allowed) throw ApiException(ErrorCode.INVOICE_STATUS_INVALID)
 	}
 

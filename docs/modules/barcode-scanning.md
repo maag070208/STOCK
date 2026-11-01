@@ -34,14 +34,15 @@ A scan never creates a product or a line. It only finds an existing one.
 
 The scanned material must belong to what the operator is working on. This is the rule that stops the wrong material from being counted, picked or moved.
 
-### Entry (count)
+### Entry (count and placement)
 
-1. The operator opens the assignments given to them.
-2. Scans the material. The app finds the open assignments of that product.
+1. The operator opens the work of the receipt: their assignments still to count or place. The home shows both queues with how much is pending in each.
+2. Scans the material. The app asks the API for that product's current work (`GET /receipts/mine?productId=`), so the answer is what is pending, not the operator's history.
 3. If the product is in one assignment, the app opens it. If it is in several, from different invoices, the app lists them and the operator picks one.
-4. The operator enters the counted quantity. The count rules are in [material-receiving.md](material-receiving.md).
+4. The operator enters the counted quantity. A count that matches is accepted at once and the app offers `Ubicar ahora`; a difference waits for the office and the app offers `Siguiente material`, so the rest of the invoice is not blocked.
+5. In `Ubicar ahora` the operator scans the location, enters the quantity and saves. A part can be saved and the rest placed later from the same screen; when the accepted quantity is fully placed, `Siguiente material` returns to the scan, ready for the next material.
 
-A product with no open assignment for this operator is rejected with `PRODUCT_NOT_IN_ASSIGNMENT`.
+A product with no open assignment for this operator is rejected with `PRODUCT_NOT_IN_ASSIGNMENT`, and a line with a difference that was not accepted is not placed until it is (`ASSIGNMENT_NOT_SETTLED`).
 
 ### Exit (pick)
 

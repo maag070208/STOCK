@@ -61,14 +61,15 @@ Messages with `{{name}}` take values from the error's details.
 | `IMPORT_CONTROL_MISMATCH` | La suma de existencias del archivo no coincide con su total de control. | The stock in the file does not add up to its control total. |
 | `CONTACT_CHANNEL_REQUIRED` | Indica un correo o un teléfono para el contacto. | Give the contact an email or a phone. |
 | `ASSIGNMENT_TOTAL_MISMATCH` | Las cantidades asignadas deben sumar la cantidad de la línea. | The assigned quantities must add up to the line quantity. |
-| `ASSIGNMENT_LOCKED` | Ya hay un conteo de esta línea: sus asignaciones ya no se pueden cambiar. | This line has a count: its assignments can no longer change. |
+| `ASSIGNMENT_LOCKED` | La asignación ya tiene movimientos o un conteo que impide cambiarla. | This assignment has movements or a count that prevents changing it. |
+| `ASSIGNMENT_NOT_SETTLED` | Resuelve la diferencia de esta asignación antes de ubicarla. | Resolve this assignment's difference before placing it. |
 | `INVOICE_STATUS_INVALID` | La factura no está en el estado que permite esta acción. | The invoice is not in the status that allows this action. |
-| `INVOICE_LOCKED` | La factura está cerrada y ya no se puede cambiar. | The invoice is closed and can no longer change. |
+| `INVOICE_LOCKED` | La factura está completada o cancelada y ya no se puede cambiar. | The invoice is completed or cancelled and can no longer change. |
 | `INVOICE_WITHOUT_LINES` | La factura no tiene materiales que cerrar. | The invoice has no lines to close. |
-| `PLACEMENT_EXCEEDS_COUNT` | Lo colocado supera la cantidad contada. | What is placed is more than what was counted. |
+| `PLACEMENT_EXCEEDS_COUNT` | Lo colocado supera la cantidad pendiente por ubicar. | What is placed is more than what is left to place. |
 | `ZPL_BLOCK_INVALID` | La plantilla debe ser una sola etiqueta: un ^XA al inicio y un ^XZ al final. | The template must be one label: a ^XA at the start and a ^XZ at the end. |
 | `ZPL_COMMAND_NOT_ALLOWED` | La plantilla usa un comando ZPL que no está permitido. | The template uses a ZPL command that is not allowed. |
-| `ZPL_PLACEHOLDER_UNKNOWN` | La plantilla usa un campo que no existe para este tipo de etiqueta. | The template uses a field this label type does not have. |
+| `ZPL_PLACEHOLDER_UNKNOWN` | El campo de la plantilla no tiene un nombre válido. | The template's field name is not valid. |
 | `SCOPE_NOT_SUPPORTED` | El permiso no admite ese alcance. | The permission does not support that scope. |
 | `NOT_FOUND` | No se encontró el registro. | The record was not found. |
 | `METHOD_NOT_ALLOWED` | Esta operación no está permitida. | This operation is not allowed. |

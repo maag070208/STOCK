@@ -12,7 +12,9 @@ Example, `INVOICE_STATUS`:
 |---|---|---|
 | `OPEN` | Abierta | none |
 | `PENDING` | Pendiente | none |
-| `CLOSED` | Cerrada | `terminal: true` |
+| `IN_ASSIGNMENT` | Por ubicar | none |
+| `CLOSED` | Completada | `terminal: true` |
+| `CANCELLED` | Cancelada | `terminal: true` |
 
 ## 1.1 Two shapes
 

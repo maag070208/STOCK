@@ -4,8 +4,8 @@
 > necesario para que un modelo escriba código correcto con `@axzydev/axzy_ui_system`: instalación real,
 > reglas, accesibilidad, trampas, ejemplos de producción y el catálogo de componentes.
 >
-> Librería: `@axzydev/axzy_ui_system` · versión de referencia: `1.5.0` ·
-> 61 componentes. Generado el 2026-10-15.
+> Librería: `@axzydev/axzy_ui_system` · versión de referencia: `1.7.2` ·
+> 64 componentes. Generado el 2026-10-29.
 >
 > Estructura: **Parte 1** guía de uso · **Parte 2** ejemplos reales · **Parte 3** catálogo de componentes.
 > Las rutas que se citan dentro (`docs/…`, `LLM_DOCS.md`) son del repo de la librería: este paquete ya
@@ -218,7 +218,7 @@ drawer en móvil) + `ITTopBar`; `ITNavbar` es la variante todo-en-uno.
 ```tsx
 <ITThemeProvider
   theme={{ primary: "#2563eb", danger: "#dc2626" }}   // se fusiona con la paleta por defecto
-  appearance="flat"      // "soft" (por defecto) | "flat"
+  appearance="flat"      // "soft" (por defecto) | "flat" | "bento"
   radius={10}            // radio global en px para toda la escala rounded-*
   density={0.95}         // 0.5–1.5: comprime tipografía/espaciados basados en rem
   shadow={2}             // 0–3
@@ -351,7 +351,109 @@ Dale **estos archivos** como contexto: `docs/llm/GUIA.md` + `docs/llm/catalogo.m
 Pedir explícitamente «consulta el catálogo antes de inventar un prop» es lo que evita el 90% de las
 alucinaciones con esta librería.
 
-### 16. Mapa del repo (por si hace falta el código)
+### 16. Motor de pantallas (JSON) y configuración global
+
+Además de componentes sueltos, la librería trae un **motor declarativo**: una pantalla
+descrita en JSON que se valida contra una lista blanca y se pinta sin ejecutar código.
+
+Para construir una pantalla, sigue [`docs/json-renderer/GUIA-PANTALLAS.md`](../json-renderer/GUIA-PANTALLAS.md),
+paso a paso. Seguridad y límites: [`docs/json-renderer/SEGURIDAD.md`](../json-renderer/SEGURIDAD.md).
+
+```tsx
+import { ITSchemaRenderer, validateSchema, parsePartialSchema } from "@axzydev/axzy_ui_system";
+
+const informe = validateSchema(esquema);      // "valid" | "partial" | "invalid"
+const { tree } = parsePartialSchema(texto);   // tolera JSON a medias (streaming)
+
+<ITSchemaRenderer
+  schema={esquema}
+  resolveValue={(valor) => valor}             // { i18n } → texto, { $source } → datos
+  resolveAction={(nodo, prop, accion) => () => {} } // { action } → handler del host
+  onIssue={(issue) => console.warn(issue.code, issue.path)}
+/>
+```
+
+```json
+{
+  "$schema": "axzy/screen",
+  "version": 1,
+  "id": "usuarios.lista",
+  "title": { "i18n": "usuarios.title" },
+  "content": [
+    { "type": "ITCard", "props": { "title": "Usuarios" }, "children": [
+      { "type": "ITDataTable", "props": {
+        "columns": [{ "key": "nombre", "label": "Nombre", "type": "string", "sortable": true, "filter": true }],
+        "fetchData": { "$source": "usuarios" },
+        "defaultItemsPerPage": 10 } }
+    ] }
+  ]
+}
+```
+
+**Reglas que no se negocian**
+
+- El esquema **nunca** ejecuta código, hace red ni pinta HTML. Todo sale de listas blancas del host.
+- `type` tiene que estar en el catálogo; una prop no declarada se ignora con aviso.
+- Las referencias se resuelven en el host: `{ "i18n": "clave" }`, `{ "$source": "fuente" }`,
+  `{ "action": "nombre", "args": { … } }`. **Nunca** metas funciones, nodos React ni URLs en el JSON.
+- El nodo puede traer `id` (ancla en el DOM) y `$status: "pending"` (lo pone el parser, no el autor).
+- Presupuesto: nodos máximos y profundidad; al excederse, `JR013` y la pantalla se corta, no se cae.
+
+**Códigos de aviso** (contrato estable, no renumerar): `JR010` tipo desconocido · `JR011` prop
+inválida o prohibida · `JR012` componente aislado · `JR013` presupuesto · `JR014` `id` que no llegó
+al DOM · `JR020` esquema inválido · `JR021` nodo inválido · `JR040` acción no registrada ·
+`JR070` falta migración · `JR080` stream cortado.
+
+**Catálogo y contrato de vocabulario**
+
+- Lista blanca: `src/json-renderer/catalog/axzyCatalog.ts` (18 tipos, 123 props al día de hoy).
+- Antes de inventar un `type`, consulta `docs/json-renderer/VOCABULARIO.md` o
+  `pnpm docs:json-renderer` (genera el contrato y un nodo mínimo que funciona por componente).
+- Alcance y fases: `docs/json-renderer/ALCANCE.md` y `PLAN-IMPLEMENTACION.md`.
+
+**Configuración global con `axzy.json`**
+
+Lo que no es pantalla (tema, densidad, radios, sombras, apariencia) se declara una vez:
+
+```json
+{
+  "$schema": "axzy/config",
+  "version": 1,
+  "density": 0.98,
+  "radius": 10,
+  "shadow": 2,
+  "appearance": "soft",
+  "showFab": true,
+  "theme": { "primary": "#06b6d4", "danger": "#ef4444" }
+}
+```
+
+```ts
+import { mergeAxzyConfig } from "./sandbox/axzyConfig";
+
+const config = mergeAxzyConfig(await (await fetch("/axzy.json")).json());
+<ITThemeProvider {...config} />   // density, radius, shadow, appearance, showFab, theme
+```
+
+- El merge es tolerante: valores faltantes o inválidos caen al default; densidad se recorta a
+  0.5–1.5, radio a 0–24 y sombra a 0–3.
+- En el sandbox vive en `public/axzy.json`; en una app real, en tu propio archivo de configuración.
+
+**Shell y páginas en el demo**
+
+- `public/demo/app/layout.json` declara marca, módulos, iconos por nombre, badges y sub-items con
+  `query` (que filtran de verdad: `?estado=Activo`).
+- `public/demo/app/<página>.json` es el cuerpo de cada página.
+- El host (`src/showcases/DemoJsonDashboard.tsx`) monta `ITLayout` + `ITPage` y resuelve iconos,
+  etiquetas, datos y acciones. **ITLayout no puede ser un nodo del esquema**: recibe ReactNode y
+  funciones. El JSON nombra; el host resuelve.
+- Pantallas que necesitan código (editor, mapa, formulario) son del host, o híbridas: el esquema
+  pinta y una acción abre la parte TSX (así funciona el CRUD del demo).
+
+**Rutas del demo** (sandbox, dev-only): `#demo` portafolio en JSON · `#demo/app/inicio` dashboard ·
+`#demo/app/docs` documentación viva con `ITJSONEditor`.
+
+### 17. Mapa del repo (por si hace falta el código)
 
 ```
 src/components/<capa>/<componente>/<componente>.tsx     implementación
@@ -772,7 +874,7 @@ Props: orientation: DividerOrientation · className: string · color: string · 
 
 A complete flexbox container with all alignment and spacing options.
 
-Props: children: React.ReactNode · direction: FlexDirection · align: FlexAlign · justify: FlexJustify · wrap: FlexWrap · gap: number · grow: number | boolean · shrink: number | boolean · basis: string | number · className: string · style: React.CSSProperties · as: React.ElementType · onClick: (e: React.MouseEvent) => void
+Props: children: React.ReactNode · direction: FlexDirection · align: FlexAlign · justify: FlexJustify · wrap: FlexWrap · gap: number · grow: number | boolean · shrink: number | boolean · basis: string | number · className: string · style: React.CSSProperties · as: React.ElementType · onClick: (e: React.MouseEvent) => void · onScroll: (e: React.UIEvent<HTMLElement>) => void
 
 #### `ITGrid` — atoms
 
@@ -784,7 +886,7 @@ Props: children: React.ReactNode · container: boolean · item: boolean · spaci
 
 Image component with automatic fallback on load error. Displays the primary `src` image and gracefully switches to the `fallback` image if loading fails.
 
-Props: src*: string · alt: string · className: string · fallback: string · onClick: () => void
+Props: src*: string · alt: string · className: string · fallback: string · fit: "contain" | "cover" · onClick: () => void
 
 #### `ITInput` — atoms
 
@@ -862,7 +964,7 @@ Props: children: React.ReactNode · className: string · as: React.ElementType �
 
 Multi-line text input with optional label, validation error display, character limit, and configurable resize behavior.
 
-Props: value: string · onChange: (value: string) => void · label: string · placeholder: string · rows: number · disabled: boolean · error: string · className: string · name: string · maxLength: number · resize: "none" | "both" | "horizontal" | "vertical"
+Props: value: string · onChange: (value: string) => void · label: string · placeholder: string · rows: number · disabled: boolean · error: string · className: string · name: string · maxLength: number · resize: "none" | "both" | "horizontal" | "vertical" · onKeyDown: (event: React.KeyboardEvent<HTMLTextAreaElement> · autoFocus: boolean
 
 #### `ITAccordion` — molecules
 
@@ -890,9 +992,9 @@ Props: events: CalendarEvent[] · mode: "week" | "day" | "month" · onEventClick
 
 #### `ITCard` — molecules
 
-Versatile card container with optional image, title, body content, and action footer. Supports interactive hover states.
+Versatile card container with optional image, title, body content, and action footer. Supports interactive hover states and pastel `tone` tiles. Follows the provider `appearance` (`soft`, `flat`, `bento`).
 
-Props: onClick: () => void · title: string · image: string · alt: string · children: React.ReactNode · actions: React.ReactNode · className: string · imageClassName: string · titleClassName: string · contentClassName: string · actionClassName: string
+Props: tone: ITCardTone · onClick: () => void · title: string · headerActions: React.ReactNode · image: string · alt: string · children: React.ReactNode · actions: React.ReactNode · className: string · imageClassName: string · titleClassName: string · contentClassName: string · actionClassName: string
 
 #### `ITChipInput` — molecules
 
@@ -930,11 +1032,23 @@ Colored header bar for modals and forms with an optional close button. Uses the 
 
 Props: title*: string · onClose: () => void · className: string
 
+#### `ITJSONEditor` — molecules
+
+Editor de JSON con resaltado de sintaxis, gutter con números y plegado, errores señalados por línea y columna, árbol navegable y acciones de formato. No añade dependencias: el resaltado se pinta en una capa bajo el `<textarea>` nativo, así que se conservan el deshacer del navegador, el pegado, el dictado y el corrector. La validación la hace `JSON.parse`, de modo que el coloreado funciona igual mientras el documento está a medio escribir.
+
+Props: value: string · onChange: (value: string) => void · onParse: (parsed: unknown, isValid: boolean, error?: stri · placeholder: string · readOnly: boolean · mode: ITJSONEditorMode · showModeSwitch: boolean · showToolbar: boolean · showValidation: boolean · showStatusBar: boolean · showLineNumbers: boolean · showFoldGutter: boolean · showTransformActions: boolean · showCopyButton: boolean · showImportButton: boolean · showDownloadButton: boolean · showViewSettings: boolean · indentSize: number · wrapLines: boolean · treeShowLines: boolean · canvasTheme: ITJSONEditorTheme · height: string | number · minWidth: string | number · actions: React.ReactNode · className: string · id: string · textareaClassName: string · errorLine: number
+
+#### `ITJsonRenderer` — molecules
+
+Render UI from JSON schema using AXZY UI System components.
+
+Props: json*: JsonComponentNode | JsonComponentNode[] · className: string
+
 #### `ITLineBarChart` — molecules
 
 Barras + línea en SVG puro (sin librería de gráficas). Pensado para comparar dos series por periodo —ingresos contra gastos, cobrado contra proyectado—: las barras van al fondo y la línea con su área encima, con tooltip al pasar el cursor. El SVG escala con `viewBox`, así que el trazo y el texto no se deforman al cambiar el ancho del contenedor.
 
-Props: data*: ITLineBarDatum[] · ariaLabel*: string · lineLabel: string · barLabel: string · lineColor: string · barColor: string · height: number · formatValue: (value: number) => string · formatAxis: (value: number) => string · className: string
+Props: data*: ITLineBarDatum[] · ariaLabel*: string · lineLabel: string · barLabel: string · lineColor: string · barColor: string · showLine: boolean · showBars: boolean · height: number · formatValue: (value: number) => string · formatAxis: (value: number) => string · className: string
 
 #### `ITMaskedInput` — molecules
 
@@ -969,7 +1083,7 @@ Props: name*: string · options*: OptionType[] · valueField: string · labelFie
 
 A metric card displaying a value with an optional trend indicator and icon. Automatically detects trend direction from the trend string prefix.
 
-Props: label*: string · value*: string | number · trend: string · trendDirection: "up" | "down" | "neutral" · icon: React.ReactNode · color: string · className: string · style: React.CSSProperties · onClick: () => void
+Props: label*: string · value*: string | number · trend: string · hint: string · progress: number · progressColor: "gray" | "purple" | "info" | "success" | "warnin · trendDirection: "up" | "down" | "neutral" · icon: React.ReactNode · color: string · className: string · style: React.CSSProperties · onClick: () => void
 
 #### `ITStepper` — molecules
 
@@ -985,7 +1099,7 @@ Props: columns*: Column<T>[] · containerClassName: string · data*: T[] · vari
 
 #### `ITTabs` — molecules
 
-Tabbed navigation component with "line" and "pill" visual variants. Manages its own active state internally via a defaultActiveId.
+Tabbed navigation component with "line" and "pill" visual variants. Manages its own active state internally via a defaultActiveId. With `appearance="bento"` the "pill" variant becomes a rounded track with an ink active pill.
 
 Props: items*: ITTabItem[] · defaultActiveId: string · onChange: (id: string) => void · variant: "line" | "pill" · className: string · containerClassName: string
 
@@ -1017,7 +1131,7 @@ Props: columns*: Column<T>[] · fetchData*: (params: ITDataTableFetchParams) => 
 
 Modal dialog rendered via React portal with overlay backdrop. Supports Escape-key dismissal, click-outside-to-close, optional title bar (plain or ITFormHeader), and a full-screen variant. Content is portaled to `document.body` so it sits above all other page layers.
 
-Props: isOpen*: boolean · onClose*: () => void · children*: React.ReactNode · className: string · title: string · useFormHeader: boolean · fullScreen: boolean
+Props: isOpen*: boolean · onClose*: () => void · children*: React.ReactNode · className: string · title: string · useFormHeader: boolean · padded: boolean · fullScreen: boolean
 
 #### `ITDrawer` — organisms
 
@@ -1029,7 +1143,7 @@ Props: isOpen*: boolean · onClose*: () => void · position: DrawerPosition · s
 
 Drag-and-drop file uploader with preview, status tracking, and confirmation flow. Supports configurable accepted file types (PDF, Excel, CSV, images), visual drag-active feedback, image previews, and a three-step workflow: select → confirm → upload. Upload status is tracked internally or controlled externally via the `uploadStatus` prop. Re-exports `FileTypeEnum` and `UploadStatus` enums for consuming code.
 
-Props: onFileSelect*: (file: File | null) => void · onCancel: () => void · onSubmit: (file: File) => void · acceptedFileTypes: FileTypeEnum[] · contentClassName: string · containerClassName: string · showStatusBadge: boolean · uploadStatus: UploadStatus · onStatusChange: (status: UploadStatus) => void · initialPreviewUrl: string · view: "button" | "drop" · buttonLabel: string · modalTitle: string
+Props: onFileSelect*: (file: File | null) => void · onCancel: () => void · onSubmit: (file: File) => void | Promise<void> · autoUpload: boolean · acceptedFileTypes: FileTypeEnum[] · contentClassName: string · containerClassName: string · showStatusBadge: boolean · uploadStatus: UploadStatus · onStatusChange: (status: UploadStatus) => void · initialPreviewUrl: string · view: "button" | "drop" · buttonLabel: string · modalTitle: string
 
 #### `ITFormBuilder` — organisms
 
@@ -1089,6 +1203,12 @@ Props: title: string · description: string · breadcrumbs: ITBreadcrumbItem[] �
 Provee locale y mensajes al árbol de componentes. Sin provider, los componentes usan el catálogo base en español. Con provider, cualquier prop de texto explícita de un componente sigue teniendo prioridad sobre el catálogo.
 
 Props: locale: string · fallbackLocale: string · messages: ITMessagesByLocale · children*: React.ReactNode
+
+#### `ITSchemaRenderer` — others
+
+Pinta una pantalla completa a partir de un esquema. Nunca lanza por culpa del esquema: los problemas se convierten en avisos que se entregan por `onIssue` (y se acumulan en `issuesRef` si quieres leerlos).
+
+Props: schema*: ScreenSchema · catalog: Catalog · limits: Partial<EngineLimits> · params: Record<string, SchemaValue> · dataHandlers: Record<string, DataHandler> · slots: SlotRegistry · effects: EffectRegistry · capabilities: readonly string[] · resolveValue: (value: unknown, path: SchemaPath) => unknown · resolveAction: (node: NodeSchema, prop: string, action: unknown · pendingFallback: React.ReactNode · onIssue: (issue: JsonEngineIssue) => void · className: string
 
 #### `ITThemeProvider` — others
 

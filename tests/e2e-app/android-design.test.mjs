@@ -42,8 +42,9 @@ async function checkHome(mode) {
   assertColor(shot.at(4, greeting.centerY), orange, 1, "hero");
   assertColor(closestInside(shot, bounds(xml, "StockFlow"), white), white, 3, "brand name");
 
-  // Sheet: the workspace canvas of the mode, with the orange pill button and the card.
-  assertColor(shot.at(Math.round(shot.width / 2), Math.round(shot.height * 0.85)), expected.canvas, 1, "sheet");
+  // Sheet: the workspace canvas of the mode, with the orange pill button and the card. The left margin is read, so the
+  // check does not depend on how tall the home's content is (it starts with the tasks of the receipt).
+  assertColor(shot.at(6, Math.round(shot.height * 0.85)), expected.canvas, 1, "sheet");
   const button = bounds(xml, "Buscar material");
   assertColor(shot.at(Math.round(shot.width / 2), button.top - 4), orange, 1, "lookup button");
   assertColor(closestInside(shot, button, white), white, 3, "lookup button text");

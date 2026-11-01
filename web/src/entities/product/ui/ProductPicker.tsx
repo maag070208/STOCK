@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { productApi } from "../api/productApi";
 import type { Product } from "../model/types";
 
-// Picks an active material by its code or name, searching the API as the person types.
+// A scanner and a manual search share the API lookup: barcode, then code, then name.
 export function ProductPicker(props: { name: string; label: string; value: string; onChange: (product: Product | null) => void; error?: string; required?: boolean }) {
 	const { t } = useTranslation(["invoices", "common"]);
 	const [options, setOptions] = useState<Product[]>([]);
@@ -15,13 +15,11 @@ export function ProductPicker(props: { name: string; label: string; value: strin
 		const request = ++latest.current;
 		setLoading(true);
 		try {
-			const filters = { active: "true", ...(query.trim() ? { name: query.trim() } : {}) };
-			const [byName, byCode] = await Promise.all([
-				productApi.query({ page: 1, limit: 20, filters }),
-				query.trim() ? productApi.query({ page: 1, limit: 20, filters: { active: "true", code: query.trim() } }) : Promise.resolve({ data: [], total: 0 }),
-			]);
-			// Only the answer to the last search is shown.
-			if (request === latest.current) setOptions([...byCode.data, ...byName.data.filter((p) => !byCode.data.some((c) => c.id === p.id))]);
+			const clean = query.trim();
+			const found = clean
+				? await productApi.lookup(clean).catch(() => ({ match: "NAME" as const, products: [] }))
+				: await productApi.query({ page: 1, limit: 20, filters: { active: "true" } }).then((page) => ({ match: "NAME" as const, products: page.data }));
+			if (request === latest.current) setOptions(found.products);
 		} finally {
 			if (request === latest.current) setLoading(false);
 		}

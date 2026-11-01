@@ -12,6 +12,8 @@ class IdempotencyService(private val store: IdempotencyStore) {
 	@Transactional
 	fun execute(key: String, requestHash: String, action: () -> StoredResponse): StoredResponse {
 		if (!IdempotencyKey.isValid(key)) throw ApiException(ErrorCode.FORMAT_INVALID)
+		// Before reading: a retry that arrives while the first is still running waits here, never runs the action twice.
+		store.lock(key)
 		val previous = store.find(key)
 		if (previous != null) {
 			if (previous.requestHash == requestHash) return previous.response

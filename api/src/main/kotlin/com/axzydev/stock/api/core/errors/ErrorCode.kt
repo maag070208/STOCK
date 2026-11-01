@@ -58,6 +58,7 @@ enum class ErrorCode(val httpStatus: Int) {
     CONTACT_CHANNEL_REQUIRED(400),
     ASSIGNMENT_TOTAL_MISMATCH(400),
     ASSIGNMENT_LOCKED(409),
+    ASSIGNMENT_NOT_SETTLED(409),
     INVOICE_STATUS_INVALID(409),
     INVOICE_LOCKED(409),
     // An invoice with nothing in it has nothing to close by hand (F8-03).

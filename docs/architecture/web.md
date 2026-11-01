@@ -262,7 +262,7 @@ showViewToggle={false}
    `Escape` closes, and the focus returns to the button that opened it.
 3. **Short labels.** A label is the noun, without a sentence: "Número", "Proveedor", "Fecha", "Almacén". The long
    explanation goes in the field's help text or in the tooltip, never in the label of a form that is filled every day.
-4. **One primary action.** A dialog has one submit with the verb of what it does ("Guardar", "Cerrar factura", "Imprimir").
+4. **One primary action.** A dialog has one submit with the verb of what it does ("Guardar", "Cancelar factura", "Imprimir").
    A second button is `Cancelar` and nothing else.
 5. **A save that continues the flow leads to the next step.** Creating an invoice does not return to the list: it opens
    the invoice, with the focus on capturing its materials. The list of a flow that has a next step never asks the person

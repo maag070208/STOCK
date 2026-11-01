@@ -111,7 +111,7 @@ class SalesReportTest : ApiTest() {
 		val invoice = f.create(f.body(f.line(nails, 100, operator to 100))).json
 		val assignment = invoice.get("lines").get(0).get("assignments").get(0).get("id").asString()
 		// The operator counts 90 of 100: a difference the office settles.
-		val counted = api.call("POST", "/receipts/assignments/$assignment/count", operator.token, mapOf("countedQuantity" to 90), channel = "app")
+		val counted = api.call("POST", "/receipts/assignments/$assignment/count", operator.token, mapOf("countedQuantity" to 90), channel = "app", headers = mapOf("Idempotency-Key" to UUID.randomUUID().toString()))
 		assertEquals(200, counted.status, counted.body)
 		assertEquals("DISCREPANCY", counted.text("outcome"))
 		assertEquals(200, api.post("/receipts/assignments/$assignment/adjustment", f.admin, mapOf("note" to "Llegaron 90")).status)
@@ -120,12 +120,12 @@ class SalesReportTest : ApiTest() {
 		assertEquals(1, found.get("total").asInt(), found.toString())
 		val row = found.get("data").get(0)
 		assertEquals(invoice.get("number").asString(), row.get("invoice").get("code").asString())
-		// The count settled the difference, so the invoice moved on to its placement.
+		// The count is accepted, and the line keeps what the supplier billed: the difference stays in the report.
 		assertEquals("IN_ASSIGNMENT", row.get("status").asString())
-		assertEquals(0, BigDecimal(90).compareTo(row.get("expected").decimalValue()))
+		assertEquals(0, BigDecimal(100).compareTo(row.get("expected").decimalValue()))
 		assertEquals(0, BigDecimal(90).compareTo(row.get("counted").decimalValue()))
-		assertEquals(0, BigDecimal.ZERO.compareTo(row.get("difference").decimalValue()))
-		assertEquals(0, BigDecimal(90).compareTo(found.get("expected").decimalValue()))
+		assertEquals(0, BigDecimal(-10).compareTo(row.get("difference").decimalValue()))
+		assertEquals(0, BigDecimal(100).compareTo(found.get("expected").decimalValue()))
 		assertEquals(0, BigDecimal(90).compareTo(found.get("counted").decimalValue()))
 
 		// The period is the invoice's date, and the status filter takes the catalog's codes.

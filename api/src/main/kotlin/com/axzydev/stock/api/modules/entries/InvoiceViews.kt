@@ -24,18 +24,29 @@ data class AssignmentView(
 	val operator: Ref,
 	val expectedQuantity: BigDecimal,
 	val countedQuantity: BigDecimal?,
+	val acceptedQuantity: BigDecimal?,
 	// counted − expected, once counted.
 	val difference: BigDecimal?,
-	// MATCH or DISCREPANCY, once counted.
+	// MATCH or DISCREPANCY, once counted; an adjustment does not erase the outcome.
 	val outcome: String?,
 	val countNotes: String?,
 	val countedAt: Instant?,
 	val placedQuantity: BigDecimal,
+	val remainingQuantity: BigDecimal?,
+	val settled: Boolean,
+	val readyToPlace: Boolean,
 	val placed: Boolean,
 	val placements: List<PlacementView>,
 )
 
-data class LineView(val id: UUID, val product: Ref, val unit: UnitRef?, val quantity: BigDecimal, val assignments: List<AssignmentView>)
+data class LineView(
+	val id: UUID,
+	val product: Ref,
+	val unit: UnitRef?,
+	val quantity: BigDecimal,
+	val invoicedQuantity: BigDecimal,
+	val assignments: List<AssignmentView>,
+)
 
 // `lines` comes with a single invoice, not with a list.
 data class InvoiceView(
@@ -99,6 +110,7 @@ class InvoiceViews(
 				product = Ref(line.productId, product?.code, product?.name),
 				unit = unit?.let { UnitRef(it.code, it.label, (it.attributes["decimal_places"] as? Number)?.toInt()) },
 				quantity = line.quantity,
+				invoicedQuantity = line.quantity,
 				assignments = shares[line.id!!].orEmpty(),
 			)
 		}
@@ -118,11 +130,15 @@ class InvoiceViews(
 				operator = operators[assignment.operatorId].let { Ref(assignment.operatorId, it?.username, it?.name) },
 				expectedQuantity = assignment.expectedQuantity,
 				countedQuantity = counted,
+				acceptedQuantity = assignment.acceptedQuantity,
 				difference = difference,
 				outcome = difference?.let { if (it.signum() == 0) "MATCH" else "DISCREPANCY" },
 				countNotes = assignment.countNotes,
 				countedAt = assignment.countedAt,
 				placedQuantity = assignment.placedQuantity,
+				remainingQuantity = assignment.acceptedQuantity?.subtract(assignment.placedQuantity),
+				settled = assignment.settled,
+				readyToPlace = assignment.settled && !assignment.placed,
 				placed = assignment.placed,
 				placements = placed[assignment.id].orEmpty().sortedBy { it.placedAt }.map { PlacementView(it.id!!, it.locationId, locationCodes[it.locationId], it.quantity, it.placedAt) },
 			)

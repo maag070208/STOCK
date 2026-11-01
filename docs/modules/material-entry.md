@@ -100,7 +100,9 @@ All under `/api/v1`, with the headers and checks of [identity.md](identity.md) s
 | `PATCH /invoices/{id}/lines/{lineId}` | `invoices.create` | `quantity`. Not once a share of the line is counted (`ASSIGNMENT_LOCKED`); with shares, they must still add up |
 | `DELETE /invoices/{id}/lines/{lineId}` | `invoices.create` | Removes a line added by mistake, while nothing of it is counted. The audit log keeps it |
 | `PUT /invoices/{id}/lines/{lineId}/assignments` | `receipts.assign` | `assignments: [{ operatorId, quantity }]`. Replaces the shares of the line, while none is counted |
-| `POST /invoices/{id}/closure` | `invoices.create` | Closes an invoice by hand (F8-03): it needs lines (`INVOICE_WITHOUT_LINES`) and nothing counted (`INVOICE_STATUS_INVALID`). Audited as `INVOICE_CLOSED`. From the first count on, the placement closes it |
+| `PUT /invoices/{id}/assignments` | `receipts.assign` | `operatorId`, and `lineIds` (optional; every line when absent). One operator takes whole lines in one action: the shares of each line are replaced by one, while none of them is counted (`ASSIGNMENT_LOCKED`) |
+| `POST /invoices/{id}/cancellation` | `invoices.create` | `note` (required, 500 characters at most). Cancels the invoice while it is `OPEN` or `PENDING` and nothing has been counted (`INVOICE_STATUS_INVALID`). Audited as `INVOICE_CANCELLED` |
+| `POST /invoices/{id}/closure` | `invoices.create` | No longer a way to finish an invoice: `CLOSED` is reached only by receiving and placing everything. It answers `INVOICE_LOCKED` when the invoice is already `CLOSED` or `CANCELLED`, and `INVOICE_STATUS_INVALID` otherwise |
 | `GET /warehouses/{id}/staff` | `receipts.assign` or `staff_templates.manage` | The operators of the warehouse's template |
 | `PUT /warehouses/{id}/staff` | `staff_templates.manage` | `userIds`. Each one an active person who can count receipts and works in the warehouse |
 
@@ -108,22 +110,22 @@ All under `/api/v1`, with the headers and checks of [identity.md](identity.md) s
 - The number is uppercased and unique per supplier (`DUPLICATE_VALUE` on `number`). The supplier and the warehouse must be active (`CATALOG_VALUE_INVALID`). The date is required, it is a date, and **it may be in the future** (decided 2026-10-15, F8-01: the office records what the supplier's paper says). There is no contact: it left the contract in F8-04, and what is already stored is untouched.
 - A line names an active material once (`DUPLICATE_VALUE` on `lines.<i>.productId`). Its unit comes from the material and is not sent. Its quantity is positive with the unit's decimals (`QUANTITY_INVALID`).
 - The shares of a line name operators of the warehouse's staff template, once each, and add up to the line quantity (`ASSIGNMENT_TOTAL_MISMATCH` on the line's `assignments`).
-- The first share moves the invoice from `OPEN` to `PENDING`. A `CLOSED` invoice cannot change (`INVOICE_LOCKED`); other actions out of their status answer `INVOICE_STATUS_INVALID`.
+- The first share moves the invoice from `OPEN` to `PENDING`. A `CLOSED` or `CANCELLED` invoice cannot change (`INVOICE_LOCKED`); other actions out of their status answer `INVOICE_STATUS_INVALID`.
 
 ### Receiving
 
 | Method and path | Permission | Notes |
 |---|---|---|
-| `GET /receipts/mine` | `receipts.view` | The signed-in operator's assignments of `PENDING` and `IN_ASSIGNMENT` invoices, grouped by invoice |
-| `POST /receipts/assignments/{id}/count` | `receipts.receive` | `countedQuantity` (zero or more), `notes` (optional). While the invoice is `PENDING`: a later count corrects the earlier one |
+| `GET /receipts/mine` | `receipts.view` | The signed-in operator's current work, grouped by invoice: the assignments of `PENDING` and `IN_ASSIGNMENT` invoices. `productId` (optional) narrows it to one material, so a scan asks for what it is about |
+| `POST /receipts/assignments/{id}/count` | `receipts.receive` | Header `Idempotency-Key` (required). `countedQuantity` (zero or more), `notes` (optional). While the invoice is `PENDING`: a later count corrects the earlier one, until the assignment has a placement (`ASSIGNMENT_LOCKED`) |
 | `POST /receipts/discrepancies/query` | `discrepancies.resolve` | The open discrepancies the reader can resolve. Filter: `warehouseId` |
-| `POST /receipts/assignments/{id}/adjustment` | `discrepancies.resolve` | `note` (required). The expected quantity becomes the counted one, and the line moves by the difference |
-| `POST /receipts/assignments/{id}/placements` | `receipts.place` | `placements: [{ locationId, quantity }]`. While the invoice is `IN_ASSIGNMENT`. Several calls may place one assignment in parts |
+| `POST /receipts/assignments/{id}/adjustment` | `discrepancies.resolve` | `note` (required). Accepts the counted quantity without changing the expected quantity or the invoiced line |
+| `POST /receipts/assignments/{id}/placements` | `receipts.place` | Header `Idempotency-Key` (required). `placements: [{ locationId, quantity }]`. While the invoice is `PENDING` or `IN_ASSIGNMENT`, for an assignment that is settled (`ASSIGNMENT_NOT_SETTLED` otherwise). Several calls may place one assignment in parts |
 
-An assignment is `{ id, lineId, operator, expectedQuantity, countedQuantity, difference, outcome, countNotes, countedAt, placedQuantity, placed, placements }`. `outcome` is `MATCH` or `DISCREPANCY` once counted.
+An assignment is `{ id, lineId, operator, expectedQuantity, countedQuantity, acceptedQuantity, difference, outcome, countNotes, countedAt, placedQuantity, remainingQuantity, settled, readyToPlace, placed, placements }`. `outcome` is `MATCH` or `DISCREPANCY` once counted. A line carries its `invoicedQuantity`, which never changes.
 
-- **Status.** The invoice moves to `IN_ASSIGNMENT` when every line with a quantity is assigned and every share is counted and settled (a match, or an adjusted discrepancy). It moves to `CLOSED` when every share is placed. A share adjusted to zero has nothing to place.
-- **Placement.** Into active locations of the invoice's warehouse (`LOCATION_NOT_IN_WAREHOUSE` otherwise), never into `TEMPORARY`, never more than was counted (`PLACEMENT_EXCEEDS_COUNT`). Each placement is a `RECEIPT` movement whose source is the assignment ([stock.md](stock.md)).
-- **One at a time.** A count, an adjustment or a placement locks its invoice first, so operators working on the same invoice at the same moment never lose an update, and two placements into the same location both count.
-- **Audit actions:** `INVOICE_CREATED`, `INVOICE_LINE_ADDED`, `INVOICE_LINE_UPDATED`, `INVOICE_LINE_REMOVED`, `INVOICE_STATUS_CHANGED`, `RECEIPT_ASSIGNMENTS_CHANGED`, `RECEIPT_COUNTED`, `DISCREPANCY_ADJUSTED` (with the expected quantity before and after, the difference and the note), `RECEIPT_PLACED`, `STAFF_TEMPLATE_CHANGED`.
+- **Status.** The invoice moves to `IN_ASSIGNMENT` when every line with a quantity is assigned and every share is settled (a match, or a difference that was accepted). It moves to `CLOSED` when every share is placed, and only then. An open difference blocks its own line, not the others.
+- **Placement.** Into active locations of the invoice's warehouse (`LOCATION_NOT_IN_WAREHOUSE` otherwise), never into `TEMPORARY`, never more than what is left to place (`PLACEMENT_EXCEEDS_COUNT`). Each placement is a `RECEIPT` movement whose source is the assignment ([stock.md](stock.md)).
+- **One at a time.** A count, an acceptance or a placement locks its invoice first, so operators working on the same invoice at the same moment never lose an update, and two placements into the same location both count. A retry of a count or a placement with the same `Idempotency-Key` returns the first answer instead of writing twice.
+- **Audit actions:** `INVOICE_CREATED`, `INVOICE_LINE_ADDED`, `INVOICE_LINE_UPDATED`, `INVOICE_LINE_REMOVED`, `INVOICE_STATUS_CHANGED`, `INVOICE_CANCELLED`, `RECEIPT_ASSIGNMENTS_CHANGED`, `RECEIPT_COUNTED`, `DISCREPANCY_ADJUSTED` (with the expected, counted and accepted quantities, the difference and the note), `RECEIPT_PLACED`, `STAFF_TEMPLATE_CHANGED`.
 - **Not built:** editing the header of a saved invoice (`invoices.manage`); the open question 3 of this document covers lines and assignments only.

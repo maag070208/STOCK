@@ -6,8 +6,10 @@
     "search": "Buscar por número o proveedor",
     "statusFilter": "Estado",
     "chipAll": "Todas",
-    "chipOpen": "Abiertas",
-    "chipClosed": "Cerradas",
+    "chipOpen": "En recepción",
+    "chipPlacement": "Por ubicar",
+    "chipClosed": "Completadas",
+    "chipCancelled": "Canceladas",
     "empty": "No hay facturas con ese filtro.",
     "clearFilters": "Limpiar filtros"
   },
@@ -29,9 +31,15 @@
     "summaryPieces_other": "{{count}} piezas"
   },
   "closing": {
-    "button": "Cerrar factura",
-    "done": "Factura cerrada",
-    "readOnly": "La factura está cerrada: solo se consulta."
+    "readOnly": "La factura está completada o cancelada: solo se consulta."
+  },
+  "cancellation": {
+    "button": "Cancelar factura",
+    "title": "Cancelar factura",
+    "note": "Motivo",
+    "noteHint": "Explica por qué no se recibirá esta factura.",
+    "confirm": "Confirmar cancelación",
+    "done": "Factura cancelada"
   },
   "columns": {
     "number": "Número",
@@ -51,7 +59,7 @@
     "lines": "Materiales",
     "addLine": "Agregar material",
     "product": "Material",
-    "productSearch": "Busca por código o nombre",
+    "productSearch": "Escanea o busca por código, barras o nombre",
     "quantity": "Cantidad",
     "unit": "Unidad",
     "remove": "Quitar",
@@ -78,11 +86,19 @@
     "lines": "Líneas",
     "assign": "Asignar",
     "reassign": "Cambiar asignación",
+    "assignAll": "Asignar toda la factura",
+    "invoiced": "Facturado",
     "expected": "Esperado",
     "counted": "Contado",
-    "placed": "Colocado",
+    "accepted": "Aceptado",
+    "placed": "Ubicado",
+    "remaining": "Pendiente",
+    "locations": "Ubicaciones",
+    "noLocations": "Sin ubicaciones",
+    "progress": "{{counted}} contadas · {{placed}} ubicadas de {{lines}}",
     "notCounted": "Sin contar",
     "match": "Coincide",
+    "readyToPlace": "Lista para ubicar",
     "discrepancy": "Diferencia",
     "date": "Fecha",
     "warehouse": "Almacén",
@@ -96,9 +112,17 @@
     "title": "Asignar {{product}}",
     "line": "Cantidad de la línea: {{quantity}}"
   },
+  "bulkDialog": {
+    "title": "Asignar toda la factura",
+    "operator": "Operador",
+    "lines_one": "Se asignará {{count}} línea completa.",
+    "lines_other": "Se asignarán {{count}} líneas completas.",
+    "save": "Asignar",
+    "done": "Factura asignada"
+  },
   "discrepancies": {
     "title": "Diferencias",
-    "description": "Conteos que no coinciden con lo esperado. Ajusta cada uno a lo contado; la línea de la factura cambia en la misma cantidad.",
+    "description": "Conteos que no coinciden con lo esperado. Acepta el conteo real sin cambiar la cantidad original de la factura.",
     "columns": {
       "invoice": "Factura",
       "warehouse": "Almacén",
@@ -113,10 +137,10 @@
   },
   "adjustDialog": {
     "title": "Ajustar diferencia",
-    "body": "Lo esperado pasará de {{expected}} a {{counted}} ({{difference}}).",
+    "body": "Se aceptarán {{counted}}; lo esperado era {{expected}} ({{difference}}). La factura original no cambia.",
     "note": "Nota",
     "noteHint": "Explica el ajuste. Queda en la bitácora.",
-    "confirm": "Ajustar",
+    "confirm": "Aceptar conteo",
     "done": "Diferencia ajustada."
   },
   "staff": {

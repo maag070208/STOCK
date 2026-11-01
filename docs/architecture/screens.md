@@ -23,7 +23,7 @@ El nombre, o la frase que dice qué es
 | **Migas** | `trail(home, navigate, …)`: Inicio › sección › registro. La última es texto; las anteriores navegan con el router. Nunca falta. |
 | **Título** | El código o el número (`FF-187699C31A`), o el nombre del listado (`Facturas`). |
 | **Descripción** | El nombre del registro, o la frase del listado. Nunca "código · nombre" en el título. |
-| **Acciones** | El **estado** y la **acción que lo cambia**, juntos, arriba a la derecha (Cerrar factura, Validar orden). Los demás botones de la pantalla van dentro de su tarjeta, cerca de lo que hacen. |
+| **Acciones** | El **estado** y la **acción que lo cambia**, juntos, arriba a la derecha (Cancelar factura, Validar orden). Los demás botones de la pantalla van dentro de su tarjeta, cerca de lo que hacen. |
 | **Tira de datos** | `FactStrip`: etiqueta en mayúsculas pequeñas y valor en negrita, cuatro por fila (dos si una es larga). Sustituye a las tarjetas altas de indicadores y al "resumen" repetido sobre la tabla. |
 | **Tarjetas** | `ITCard` por sección, con su título. Una sección que cabe en la tira no lleva tarjeta. |
 | **Aire al final** | Lo pone el layout (`.sf:pb-12` en el contenido). Ninguna pantalla lo repite ni lo quita. |

@@ -43,65 +43,78 @@ The result is one of two outcomes:
 
 Only exact matches pass. There is no tolerance (see section 9).
 
-## 5. Adjustment
+## 5. Difference
 
-**No discrepancy is ever left open.** A discrepancy is closed by adjusting the expected quantity to the counted quantity:
+A count that does not match the expected quantity is a **difference**. No quantity is rewritten and nothing is written off silently. Each assignment holds four values:
 
-- If the supplier sent **less**, the expected quantity goes **down** to the counted quantity. Nails: 100 becomes 80.
-- If the supplier sent **more**, the expected quantity goes **up** to the counted quantity. Wire: 120 becomes 180.
+| Field | Rule |
+|---|---|
+| `invoicedQuantity` | The line's quantity as the supplier billed it. Never changes |
+| `expectedQuantity` | This operator's share of the line. Never changes |
+| `countedQuantity` | What the operator physically counted |
+| `acceptedQuantity` | What the warehouse accepts into stock. `null` while a difference is open |
 
-The adjustment is made by a user with `discrepancies.resolve` in the scope of the warehouse: `OFFICE`, `WAREHOUSE_MANAGER` in its warehouses, or `ADMIN`.
+- **Match.** `countedQuantity` equals `expectedQuantity`. The count is accepted as soon as it is entered.
+- **Difference.** They differ. `difference = countedQuantity − expectedQuantity`, and it stays visible after it is accepted, so the invoice keeps what the supplier billed.
+- **Acceptance.** A user with `discrepancies.resolve` in the scope of the warehouse (`OFFICE`, `WAREHOUSE_MANAGER` in its warehouses, `ADMIN`) accepts the physical count: `acceptedQuantity` becomes `countedQuantity`.
+- A count of zero is accepted like any other: the assignment stays on record with zero and has nothing to place.
 
-Each adjustment writes an audit entry with:
+The supplier's invoice is never edited. The line keeps its invoiced quantity and the assignment keeps its expected quantity; acceptance is recorded next to them, and the screen shows invoiced, expected, counted and accepted together.
 
-- The original expected quantity and the adjusted one.
+Each acceptance writes an audit entry with:
+
+- The expected, counted and accepted quantities.
 - The difference.
 - The user who made it, and the date.
-- A required note explaining the adjustment.
+- A required note explaining the acceptance.
 
-### Invariant: the line always balances
+### Balance
 
-For every invoice line, the sum of its assignments' expected quantities equals the line quantity. An adjustment changes the assignment and the line by the same difference, so the invoice never shows a mismatch. Example: a line of 100 split into 60 and 40. The first assignment is counted at 50, so it is adjusted to 50. The line becomes 90, and the invoice line is updated to 90.
-
-An adjustment to zero is allowed, for example if nothing arrived. The assignment stays on record with zero.
+- For every invoice line, the sum of its assignments' expected quantities equals the line quantity. Accepting a count never changes either.
+- An assignment is **settled** when its accepted quantity equals its counted quantity: a match settles on entry, a difference settles when it is accepted.
+- An assignment is **placed** when it is settled and its placed quantity equals its accepted quantity.
 
 ## 6. Invoice status
 
-The invoice moves to `IN_ASSIGNMENT` only when:
+A line moves on by itself: an open difference blocks **only its own line**, never the rest of the invoice. The line that matched can be placed while another one is still being counted or accepted.
 
-1. Every assignment on it has been counted, and
-2. Every discrepancy has been adjusted.
-
-No invoice can move on with an open difference.
+- The invoice moves to `IN_ASSIGNMENT` when every line is assigned and every assignment is settled.
+- It moves to `CLOSED` when every assignment is placed, whether or not it ever passed through `IN_ASSIGNMENT`.
+- An invoice that will not be received is **cancelled**, never closed: see section 8.
 
 ## 7. Placement
 
-After the count and any adjustment, the operator places each assignment into locations of the invoice's warehouse. The counted quantity and the expected quantity are then equal, so the operator places the full amount.
+Placement starts as soon as the assignment is settled (a match, or a difference that was accepted), even while other lines are still being counted or accepted.
 
-- The placed quantity can be split across several locations. The sum must equal the counted quantity (see section 9).
+- The operator places into locations of the invoice's warehouse.
+- The quantity can be split across several locations, and it can be placed in parts across several calls. What is added never goes above the accepted quantity.
+- When part of the accepted quantity is placed, the operator continues with the rest from the same screen.
 - Each placement records the location and the quantity.
 - A placement increases the stock of that location. Stock is derived from movements, so the placement creates the receipt movement. See [vision-and-scope.md](../architecture/vision-and-scope.md).
 - When every assignment on an invoice is placed, the invoice moves to `CLOSED`.
 
-Example: 500 screws counted. The operator places 300 in `K05A` and 200 in `K05B`. Each location can also hold other products, with their own quantities.
+Example: 500 screws counted and accepted. The operator places 300 in `K05A` and 200 in `K05B`. Each location can also hold other products, with their own quantities.
 
 ## 8. Invoice status lifecycle
 
-Proposed. The owner's original set (OPEN, PENDING, CLOSED) plus the status "en asignación" that the owner named:
+The owner's original set (OPEN, PENDING, CLOSED) plus the status "en asignación" that the owner named, and the cancellation of an invoice that will not be received:
 
 | Status | Key | Meaning | Set when |
 |---|---|---|---|
 | Abierta | `OPEN` | Invoice is being captured | Invoice is created |
-| Pendiente | `PENDING` | Assignments exist; counting is in progress | Saved with at least one assignment |
-| En asignación | `IN_ASSIGNMENT` | Every assignment is counted and adjusted; placement is in progress | Last count and last adjustment are done |
-| Cerrada | `CLOSED` | Every assignment is placed | Last assignment is placed |
+| Pendiente | `PENDING` | Assignments exist; counting and placement are in progress | Saved with at least one assignment |
+| Por ubicar | `IN_ASSIGNMENT` | Every assignment is counted and settled; placement is in progress | Last count or acceptance is done |
+| Completada | `CLOSED` | Every assignment is placed | Last assignment is placed |
+| Cancelada | `CANCELLED` | The invoice will not be received | Cancelled with a note while nothing has been counted |
+
+`CLOSED` is reached only by receiving: an invoice completes when its goods are in the shelves, so no screen closes an invoice by hand. `CANCELLED` is the explicit way out for the invoice that never arrives. It needs a note, it is refused once something has been counted, and it is audited as `INVOICE_CANCELLED`.
 
 These values are rows in the `INVOICE_STATUS` catalog. The labels exist in `es` and `en`. See [catalogs.md](../rules/catalogs.md).
 
 ## 9. Open questions
 
-1. **Correcting a count.** Can the operator correct a count after entering it? *Proposed:* yes, until the invoice reaches `IN_ASSIGNMENT`.
-2. **Splitting placement.** Can one counted quantity go into several locations? *Proposed:* yes.
+1. **Correcting a count.** Can the operator correct a count after entering it? *Proposed:* yes, until the assignment has a placement or its invoice is `IN_ASSIGNMENT`.
+2. **Splitting placement.** Can one counted quantity go into several locations? *Proposed:* yes, and in several parts across several calls.
 3. **Tolerance.** Should small differences be accepted automatically, for example by weight? *Proposed:* no. Exact match only.
 4. **Who places.** Only the operator who counted an assignment can place it? *Proposed:* yes.
-5. **Supplier notice.** Does an adjustment need to tell the supplier? The system records the adjustment; any notice happens outside it.
+5. **Supplier notice.** Does an acceptance need to tell the supplier? The system records it; any notice happens outside it.

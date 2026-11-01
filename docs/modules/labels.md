@@ -30,7 +30,7 @@ The catalog is open: more label types can be added later, such as orders or invo
 
 ## 3. Placeholders
 
-A template contains placeholders, written `{{name}}`. The system fills them when printing. Each key allows only its own placeholders, plus `{{copies}}`, which every template has. Saving a template with any other placeholder is rejected.
+A template contains placeholders, written `{{name}}`. The system fills them when printing. Each key suggests its own placeholders, plus `{{copies}}`, which every template has; a placeholder the key does not suggest is a variable the person wrote, and it prints empty until something fills it. What is rejected is a placeholder that does not read like a name: a letter first, then letters, digits or `_`, 40 characters at most (`{{precio}}` passes; `{{precio oferta}}` and `{{9precio}}` are refused).
 
 | Key | Placeholders |
 |---|---|
@@ -154,7 +154,7 @@ A template that breaks section 4 is refused with `400` on `zpl`, and no version 
 |---|---|---|
 | `ZPL_BLOCK_INVALID` | Not exactly one `^XA` … `^XZ` block | — |
 | `ZPL_COMMAND_NOT_ALLOWED` | A command outside the list, or any `~` command | The command, such as `~JR` |
-| `ZPL_PLACEHOLDER_UNKNOWN` | A placeholder its key does not have | The placeholder's name |
+| `ZPL_PLACEHOLDER_UNKNOWN` | A placeholder that does not read like a name | The placeholder's text |
 
 A new key has only `{{copies}}` until its data is defined, so it prints fixed text.
 

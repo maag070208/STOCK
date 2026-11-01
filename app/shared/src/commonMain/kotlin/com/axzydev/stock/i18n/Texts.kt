@@ -138,6 +138,9 @@ enum class Text {
 	COUNT_DISCREPANCY,
 	COUNT_CHOOSE_ASSIGNMENT,
 	COUNT_ANOTHER,
+	COUNT_PLACE_NOW,
+	NEXT_MATERIAL,
+	PLACEMENT_CONTINUE,
 	PLACEMENT_SCAN,
 	PLACEMENT_ADD,
 	PLACEMENT_REMAINING,
@@ -286,11 +289,14 @@ fun textFor(key: Text, language: Language): String =
 			Text.COUNT_DISCREPANCY -> "Hay una diferencia: la oficina debe ajustarla."
 			Text.COUNT_CHOOSE_ASSIGNMENT -> "Este material está en varias asignaciones. Elige una."
 			Text.COUNT_ANOTHER -> "Contar otro material"
+			Text.COUNT_PLACE_NOW -> "Ubicar ahora"
+			Text.NEXT_MATERIAL -> "Siguiente material"
+			Text.PLACEMENT_CONTINUE -> "Ubicar el resto"
 			Text.PLACEMENT_SCAN -> "Escanea o escribe la ubicación"
 			Text.PLACEMENT_ADD -> "Agregar ubicación"
 			Text.PLACEMENT_REMAINING -> "Falta por ubicar: {quantity}"
 			Text.PLACEMENT_SAVE -> "Guardar ubicaciones"
-			Text.PLACEMENT_TOTAL_MISMATCH -> "Ubica todo lo contado."
+			Text.PLACEMENT_TOTAL_MISMATCH -> "La cantidad supera lo pendiente por ubicar."
 			Text.PLACEMENT_REMOVE -> "Quitar"
 			Text.PLACEMENT_ANOTHER -> "Ubicar otro"
 			Text.QUANTITY_INVALID -> "La cantidad no es válida."
@@ -430,11 +436,14 @@ fun textFor(key: Text, language: Language): String =
 			Text.COUNT_DISCREPANCY -> "There is a difference: the office must adjust it."
 			Text.COUNT_CHOOSE_ASSIGNMENT -> "This material is in several assignments. Pick one."
 			Text.COUNT_ANOTHER -> "Count another material"
+			Text.COUNT_PLACE_NOW -> "Place now"
+			Text.NEXT_MATERIAL -> "Next material"
+			Text.PLACEMENT_CONTINUE -> "Place the rest"
 			Text.PLACEMENT_SCAN -> "Scan or type the location"
 			Text.PLACEMENT_ADD -> "Add location"
 			Text.PLACEMENT_REMAINING -> "{quantity} left to place"
 			Text.PLACEMENT_SAVE -> "Save placements"
-			Text.PLACEMENT_TOTAL_MISMATCH -> "Place everything you counted."
+			Text.PLACEMENT_TOTAL_MISMATCH -> "The quantity is above what remains to place."
 			Text.PLACEMENT_REMOVE -> "Remove"
 			Text.PLACEMENT_ANOTHER -> "Place another"
 			Text.QUANTITY_INVALID -> "The quantity is not valid."

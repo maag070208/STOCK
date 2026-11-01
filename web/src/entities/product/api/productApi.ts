@@ -11,6 +11,7 @@ const form = (file: File, fields: Record<string, string> = {}) => {
 
 export const productApi = {
 	query: (params: TableParams) => tableRequest<Product>("/products/query", params),
+	lookup: (value: string) => get<{ match: "BARCODE" | "CODE" | "NAME"; products: Product[] }>(`/products/lookup?value=${encodeURIComponent(value)}`),
 	get: (id: string) => get<Product>(`/products/${id}`),
 	create: (input: ProductInput & { code: string }) => post<Product>("/products", input),
 	update: (id: string, changes: ProductInput) => patch<Product>(`/products/${id}`, changes),

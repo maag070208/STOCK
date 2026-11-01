@@ -23,6 +23,7 @@ import com.axzydev.stock.data.receipts.AssignmentView
 import com.axzydev.stock.feature.receipts.CountState
 import com.axzydev.stock.feature.receipts.CountTarget
 import com.axzydev.stock.feature.receipts.CountViewModel
+import com.axzydev.stock.feature.receipts.PlacementTarget
 import com.axzydev.stock.i18n.Text
 import com.axzydev.stock.i18n.text
 import com.axzydev.stock.ui.components.AppIcon
@@ -41,7 +42,7 @@ import com.axzydev.stock.ui.theme.StockFlowType
 // scans the material; the app finds their open assignment of it and takes the counted quantity. A material with no
 // open assignment says so, and nothing is counted.
 @Composable
-fun CountScreen(count: CountViewModel, onBack: () -> Unit) {
+fun CountScreen(count: CountViewModel, onBack: () -> Unit, onPlace: (PlacementTarget) -> Unit) {
 	val state by count.state.collectAsState()
 	val focus = LocalFocusManager.current
 	val keyboard = LocalSoftwareKeyboardController.current
@@ -58,7 +59,7 @@ fun CountScreen(count: CountViewModel, onBack: () -> Unit) {
 		backTag = "count-back",
 	) {
 		when {
-			state.saved != null -> CountResult(state.saved!!, count::clear)
+			state.saved != null -> CountResult(state.target!!, state.saved!!, count::clear, onPlace)
 
 			state.target != null -> CountForm(state, state.target!!, count)
 
@@ -138,15 +139,22 @@ private fun CountForm(state: CountState, target: CountTarget, count: CountViewMo
 	PrimaryButton(text(Text.COUNT_SAVE), count::save, tag = "count-save", busy = state.saving)
 }
 
-// What the API answered about the count: a match, or a difference the office has to adjust.
+// A settled count goes straight to placement; an open difference still lets the operator continue with other lines.
 @Composable
-private fun CountResult(saved: AssignmentView, onAnother: () -> Unit) {
+private fun CountResult(target: CountTarget, saved: AssignmentView, onAnother: () -> Unit, onPlace: (PlacementTarget) -> Unit) {
 	val matched = saved.outcome == MATCH
 	Card(Modifier.testTag("count-saved")) {
 		AppText(
 			text(if (matched) Text.COUNT_MATCH else Text.COUNT_DISCREPANCY),
 			StockFlowType.bodyLg,
 			if (matched) StockFlow.colors.success else StockFlow.colors.warning,
+		)
+	}
+	if (saved.readyToPlace) {
+		PrimaryButton(
+			text = text(Text.COUNT_PLACE_NOW),
+			onClick = { onPlace(PlacementTarget(saved, target.invoice, target.warehouseId, target.product, target.unit)) },
+			tag = "count-place-now",
 		)
 	}
 	PrimaryButton(text(Text.COUNT_ANOTHER), onAnother, tag = "count-another")

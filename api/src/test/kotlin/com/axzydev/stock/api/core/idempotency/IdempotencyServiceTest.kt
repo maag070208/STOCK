@@ -5,6 +5,7 @@ import com.axzydev.stock.api.core.errors.ErrorCode
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
@@ -14,6 +15,12 @@ class IdempotencyServiceTest {
 
 	private val store = mockk<IdempotencyStore>()
 	private val service = IdempotencyService(store)
+
+	// The key is locked before it is read, so that two retries arriving together do not both run the action.
+	@BeforeEach
+	fun setUp() {
+		every { store.lock(any()) } returns Unit
+	}
 
 	@Test
 	fun `a new key runs the action and stores its response`() {
@@ -31,6 +38,7 @@ class IdempotencyServiceTest {
 		val result = service.execute("key-0002", "hash-a") { ran = true; StoredResponse(201, "{}") }
 		assertEquals("{\"id\":2}", result.body)
 		assertEquals(false, ran)
+		verify(exactly = 1) { store.lock("key-0002") }
 	}
 
 	@Test

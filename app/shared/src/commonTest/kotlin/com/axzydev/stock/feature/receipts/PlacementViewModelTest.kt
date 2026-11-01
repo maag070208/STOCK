@@ -56,12 +56,12 @@ class PlacementViewModelTest {
 	private val mine = """
 		[{"invoice":{"id":"inv-1","number":"F-100","supplier":{"id":"s1","code":"PROV1","name":"Aceros SA"},"contact":null,
 		"invoiceDate":"2026-01-10","warehouse":{"id":"w1","code":"CENTRAL","name":"Central"},
-		"status":{"code":"IN_ASSIGNMENT","label":"En asignación"},"createdAt":"2026-01-10T10:00:00Z","lines":null},
+		"status":{"code":"PENDING","label":"Pendiente"},"createdAt":"2026-01-10T10:00:00Z","lines":null},
 		"lines":[{"id":"l1","product":{"id":"p1","code":"M1","name":"Codo galvanizado"},
 		"unit":{"code":"PIECE","label":"Pieza","decimalPlaces":0},"quantity":"80.000000",
 		"assignments":[{"id":"a1","lineId":"l1","operator":{"id":"u1","code":"aamaro","name":"A. Amaro"},
-		"expectedQuantity":"80.000000","countedQuantity":"80.000000","difference":"0.000000","outcome":"MATCH",
-		"countNotes":null,"countedAt":"2026-01-10T11:00:00Z","placedQuantity":"0.000000","placed":false,"placements":[]}]}]}]
+		"expectedQuantity":"80.000000","countedQuantity":"80.000000","acceptedQuantity":"80.000000","difference":"0.000000","outcome":"MATCH",
+		"countNotes":null,"countedAt":"2026-01-10T11:00:00Z","placedQuantity":"0.000000","remainingQuantity":"80.000000","settled":true,"readyToPlace":true,"placed":false,"placements":[]}]}]}]
 	""".trimIndent()
 
 	// Two locations of the invoice's warehouse, for any code asked.
@@ -73,8 +73,8 @@ class PlacementViewModelTest {
 
 	private val placed = """
 		{"id":"a1","lineId":"l1","operator":{"id":"u1","code":"aamaro","name":"A. Amaro"},
-		"expectedQuantity":"80.000000","countedQuantity":"80.000000","difference":"0.000000","outcome":"MATCH",
-		"countNotes":null,"countedAt":"2026-01-10T11:00:00Z","placedQuantity":"80.000000","placed":true,
+		"expectedQuantity":"80.000000","countedQuantity":"80.000000","acceptedQuantity":"80.000000","difference":"0.000000","outcome":"MATCH",
+		"countNotes":null,"countedAt":"2026-01-10T11:00:00Z","placedQuantity":"80.000000","remainingQuantity":"0.000000","settled":true,"readyToPlace":false,"placed":true,
 		"placements":[{"id":"pl1","locationId":"loc-1","locationCode":"K05A","quantity":"50.000000","placedAt":"2026-01-10T12:00:00Z"},
 		{"id":"pl2","locationId":"loc-2","locationCode":"K05B","quantity":"30.000000","placedAt":"2026-01-10T12:00:00Z"}]}
 	""".trimIndent()
@@ -132,14 +132,47 @@ class PlacementViewModelTest {
 	}
 
 	@Test
-	fun aTotalThatIsNotTheCountedQuantityIsRefused() = runTest {
-		val view = viewModel { route(it) }
+	fun aPartialPlacementIsAllowedAndCanContinueWithTheRest() = runTest {
+		val partial = """
+			{"id":"a1","lineId":"l1","operator":{"id":"u1","code":"aamaro","name":"A. Amaro"},
+			"expectedQuantity":"80.000000","countedQuantity":"80.000000","acceptedQuantity":"80.000000",
+			"placedQuantity":"50.000000","remainingQuantity":"30.000000","settled":true,"readyToPlace":true,"placed":false,"placements":[]}
+		""".trimIndent()
+		val view = viewModel { request ->
+			when {
+				request.url.encodedPath == "/api/v1/receipts/mine" -> reply(mine)
+				request.url.encodedPath == "/api/v1/locations/query" -> reply(locations)
+				request.url.encodedPath.endsWith("/placements") -> reply(partial)
+				else -> reply("""{"code":"NOT_FOUND","message":"no route","details":[]}""", HttpStatusCode.NotFound)
+			}
+		}
 		view.load()
 		advanceUntilIdle()
 		view.open(view.state.value.targets.single())
 		view.scanned("K05A")
 		advanceUntilIdle()
 		view.editQuantity(0, "50")
+		view.save()
+		advanceUntilIdle()
+		assertEquals(false, view.state.value.saved?.placed)
+		assertEquals("30.000000", view.state.value.remaining)
+		assertTrue(requests.first { it.url.encodedPath.endsWith("/placements") }.headers["Idempotency-Key"]?.isNotBlank() == true)
+		view.continuePlacement()
+		assertEquals("30.000000", view.state.value.remaining)
+		assertEquals("50.000000", view.state.value.target?.assignment?.placedQuantity)
+		assertTrue(view.state.value.lines.isEmpty())
+		assertTrue(view.state.value.saved == null)
+	}
+
+	@Test
+	fun aTotalAboveTheRemainingQuantityIsRefused() = runTest {
+		val view = viewModel { route(it) }
+		view.load()
+		advanceUntilIdle()
+		view.open(view.state.value.targets.single())
+		view.scanned("K05A")
+		advanceUntilIdle()
+		view.editQuantity(0, "100")
 		view.save()
 		advanceUntilIdle()
 		assertEquals("ubica todo lo contado", view.state.value.lineError)

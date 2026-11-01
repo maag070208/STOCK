@@ -21,11 +21,15 @@ export interface Assignment {
 	operator: Ref;
 	expectedQuantity: number;
 	countedQuantity: number | null;
+	acceptedQuantity: number | null;
 	difference: number | null;
 	outcome: "MATCH" | "DISCREPANCY" | null;
 	countNotes: string | null;
 	countedAt: string | null;
 	placedQuantity: number;
+	remainingQuantity: number | null;
+	settled: boolean;
+	readyToPlace: boolean;
 	placed: boolean;
 	placements: Placement[];
 }
@@ -35,11 +39,12 @@ export interface InvoiceLine {
 	product: Ref;
 	unit: UnitRef | null;
 	quantity: number;
+	invoicedQuantity: number;
 	assignments: Assignment[];
 	[key: string]: unknown;
 }
 
-export type InvoiceStatus = "OPEN" | "PENDING" | "IN_ASSIGNMENT" | "CLOSED";
+export type InvoiceStatus = "OPEN" | "PENDING" | "IN_ASSIGNMENT" | "CLOSED" | "CANCELLED";
 
 export interface Invoice {
 	id: string;
