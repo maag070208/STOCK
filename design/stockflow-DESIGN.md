@@ -23,7 +23,7 @@ colors:
   success: "#12b76a"
   warning: "#f59e0b"
   danger: "#e5484d"
-  info: "#6d4aff"
+  info: "#3a86a8"
   status-mock-bg: "#fef3c7"
   status-mock-fg: "#92400e"
   status-planned-bg: "#f1f5f9"
@@ -38,6 +38,26 @@ colors:
   dark-surface: "#1a1d24"
   dark-on-surface: "#f1f5f9"
   dark-on-surface-muted: "#94a3b8"
+  tone-ink-bg: "#14171c"
+  tone-ink-fg: "#ffffff"
+  dark-tone-ink-bg: "#262a33"
+  dark-tone-ink-fg: "#f1f5f9"
+  tone-orange-bg: "#fff0e3"
+  tone-orange-fg: "#7c2d00"
+  dark-tone-orange-bg: "#3a2212"
+  dark-tone-orange-fg: "#ffd9bd"
+  tone-amber-bg: "#ffeccf"
+  tone-amber-fg: "#6b4200"
+  dark-tone-amber-bg: "#3a2c14"
+  dark-tone-amber-fg: "#ffe0b0"
+  tone-sand-bg: "#efece7"
+  tone-sand-fg: "#3f3a33"
+  dark-tone-sand-bg: "#2a2823"
+  dark-tone-sand-fg: "#e9e4da"
+  tone-rose-bg: "#fce4e6"
+  tone-rose-fg: "#9b2335"
+  dark-tone-rose-bg: "#41191f"
+  dark-tone-rose-fg: "#f5b5bd"
 typography:
   display-hero:
     fontFamily: ui-sans-serif, system-ui, sans-serif
@@ -254,9 +274,9 @@ The app must feel fast and calm: air on dashboards, density in tables, and never
 ## Color
 
 - **Canvas** is `#F4F4F6`; content lives on **white cards** with no visible border, a diffuse shadow and a 24px radius.
-- **Ink** is `#14171C`: active pills, primary text and the dark control. Orange is an **accent**, not a surface: primary buttons, the active state, links, focus rings, chart strokes.
-- **Pastel lives in the tiles**, never in saturated fills. The kit's bento tones (`plain`, `sea`, `lavender`, `mint`, `sun`) and `ITCard tone` are the only way to paint a colored card. One tone per meaning, always the same meaning: reception = mint, ready to place = sea, discrepancies = sun, orders = lavender, cancelled = rose.
-- Text on pastel is the tone's dark ink, never white. Text on the orange accent is white.
+- **Ink** is `#14171C`: active pills, primary text, the dark control and the hero tile. Orange is the **accent**: primary buttons, the active state, links, focus rings, chart strokes.
+- **The tiles use StockFlow's own family:** `ink` (the hero), `orange` and `amber` (warm tints of the brand), `sand` (a warm neutral) and `plain` (white). The kit's own bento tones (navy, lavender, mint) are never shown: `index.css` repaints them with these tokens, and `BENTO_TONE` names them by what they are. Turquoise (`#3A86A8`, the brand's secondary) is the `info` color. Green, amber and red are for states, nothing else.
+- Text on a tint is the tone's dark ink, never white. Text on the orange accent and on ink is white.
 - Status colors come from the tokens `status-*-bg` / `status-*-fg`; never hardcode a red or green.
 
 ## Typography
@@ -280,15 +300,24 @@ The app must feel fast and calm: air on dashboards, density in tables, and never
 
 ## Components
 
-- **KPI tile:** label, icon, one big tabular value, a caption, one optional visual (`ITBentoGauge`, `ITBentoSpark`, `ITBentoWaves`, `ITBentoSegments`). Only with real data.
+- **KPI tile:** label, icon, one big tabular value that climbs when it arrives, a caption, one optional visual (`ITBentoGauge`, `ITBentoSpark`, `ITBentoWaves`, `ITBentoSegments`). The visual always stands for a real share of a real total; an empty queue is low water, never an invented level.
 - **Panel card:** white card with an icon + title + description header, actions on the right, and an "open" round ink button when it leads somewhere.
 - **Stat strip:** `ITBentoStatStrip` for a row of clickable counts that filter the list below.
 - **Table:** the kit's `ITDataTable` stays dense (compact). No bento tiles inside a table.
 - **States:** every data screen has loading (skeleton), empty (illustration + action) and error (message + retry). They are part of the screen, not an afterthought.
 
+## Motion
+
+The workspace is alive but calm, on both platforms: a screen fades in when it opens (a fade, not a movement: nothing shifts under the pointer), the tiles of a dashboard rise one after the other, their numbers climb to the value, a gauge draws itself and the water of a wave tile keeps moving. Everything stands still when the person asked for less motion.
+
+## Navigation
+
+- **Web:** the menu is grouped in sections (Operation, Inventory, Business partners, Printing, Administration). Home and Reports are links of their own, and a section with one screen for this person is that screen.
+- **App:** the home shows the modules in the same sections, and a floating white pill at the bottom reaches the home and every module with the thumb. A page of work takes the whole screen, without the bar.
+
 ## Do not
 
 - No dark glass shell, no gradients, no colored page backgrounds.
-- No pastel card for a value that is zero or meaningless; use `plain`.
+- No alarm painted at zero: a tile that warns (discrepancies) is `plain` until there is something to warn about.
 - No `!important` to fight the kit: the appearance decides cards, inputs and nav.
 - No new color chosen in a screen: everything comes from these tokens.

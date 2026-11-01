@@ -11,6 +11,7 @@ import { ProductDialog } from "@features/product/ProductDialog";
 import type { TableParams } from "@shared/api/table";
 import { ApiError } from "@shared/api/client";
 import { toast } from "@app/store";
+import { cardBreakpoint, tableHeight } from "@shared/ui/tableLayout";
 
 type Confirm = { kind: "deactivate" | "reactivate"; product: Product };
 
@@ -99,9 +100,10 @@ export function ProductsPage() {
 				layout="fixed"
 				density="compact"
 				virtualized
-				virtualizedMaxHeight={400}
+				virtualizedMaxHeight={tableHeight()}
 				rowHeight={50}
 				showViewToggle={false}
+				autoCardBreakpoint={cardBreakpoint()}
  columns={columns}
  fetchData={(params) => productApi.query(params as TableParams)}
  reloadTrigger={reload}

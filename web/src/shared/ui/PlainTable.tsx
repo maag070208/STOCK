@@ -1,4 +1,5 @@
 import { type Column, ITTable } from "@axzydev/axzy_ui_system";
+import { cardBreakpoint, tableHeight } from "./tableLayout";
 
 // A table of the rows a screen already has, built with the kit and configured like every other table (web.md section 8):
 // 25 rows a page, the page sizes of the app, the compact density and virtualization. It exists so every table of the app
@@ -23,13 +24,13 @@ export function PlainTable<T extends Record<string, unknown>>(props: {
 			onRowClick={props.onRowClick ? (row: T) => props.onRowClick?.(row) : undefined}
 			// Every table of the app is configured the same way (web.md section 8).
 			showViewToggle={false}
-			defaultView="table"
+			autoCardBreakpoint={cardBreakpoint()}
 			defaultItemsPerPage={25}
 			itemsPerPageOptions={[25, 50, 100]}
 			layout="fixed"
 			density="compact"
 			virtualized={props.virtualized ?? true}
-			virtualizedMaxHeight={props.virtualized === false ? undefined : 400}
+			virtualizedMaxHeight={props.virtualized === false ? undefined : tableHeight()}
 			rowHeight={50}
 			containerClassName="sf:overflow-x-auto"
 		/>

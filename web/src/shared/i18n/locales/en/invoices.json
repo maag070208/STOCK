@@ -106,7 +106,9 @@
     "adjust": "Adjust",
     "noLines": "The invoice has no materials yet.",
     "notAssigned": "Not assigned",
-    "materials": "Materials"
+    "materials": "Materials",
+    "count": "Count",
+    "ofExpected": "{{counted}} of {{expected}}"
   },
   "assignDialog": {
     "title": "Assign {{product}}",
@@ -150,5 +152,19 @@
     "none": "No operators in the template yet.",
     "candidates": "Operators of the warehouse",
     "noCandidates": "No operators have this warehouse assigned."
+  },
+  "flow": {
+    "capture": "Capture",
+    "assign": "Assign",
+    "count": "Count",
+    "place": "Place",
+    "done": "Complete",
+    "nextCapture": "Add the materials of the invoice.",
+    "nextAssign": "Assign who receives the material.",
+    "nextCount": "The operator counts from the app: {{counted}} of {{lines}} lines.",
+    "nextResolve": "There are count differences to resolve.",
+    "nextPlace": "The operator places from the app: {{placed}} of {{lines}} lines.",
+    "nextDone": "Invoice received and placed.",
+    "resolve": "Resolve differences"
   }
 }

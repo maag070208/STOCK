@@ -2,6 +2,7 @@
 // the adjustment asks for a note before it can be sent.
 import { test, expect } from "@playwright/test";
 import { canAdjust, sharesError, sharesTotal } from "../../src/entities/invoice/model/shares";
+import { invoiceStage } from "../../src/entities/invoice/model/status";
 
 const share = (operatorId: string, quantity: string) => ({ operatorId, quantity });
 
@@ -25,4 +26,17 @@ test("an adjustment needs a note", () => {
 	expect(canAdjust("")).toBe(false);
 	expect(canAdjust("   ")).toBe(false);
 	expect(canAdjust("El proveedor envió menos")).toBe(true);
+});
+
+const job = (over: Partial<{ countedQuantity: number | null; outcome: "MATCH" | "DISCREPANCY" | null; settled: boolean; placed: boolean }> = {}) => ({ countedQuantity: null, outcome: null, settled: false, placed: false, ...over });
+const stageOf = (code: "OPEN" | "PENDING" | "IN_ASSIGNMENT" | "CLOSED" | "CANCELLED", lines: ReturnType<typeof job>[][]) => invoiceStage({ status: { code }, lines: lines.map((assignments) => ({ assignments })) });
+
+test("the stage of an invoice says what comes next", () => {
+	expect(stageOf("OPEN", [])).toBe("capture");
+	expect(stageOf("OPEN", [[]])).toBe("assign");
+	expect(stageOf("OPEN", [[job()]])).toBe("count");
+	expect(stageOf("PENDING", [[job({ countedQuantity: 5, outcome: "DISCREPANCY" })]])).toBe("resolve");
+	expect(stageOf("IN_ASSIGNMENT", [[job({ countedQuantity: 5, outcome: "DISCREPANCY", settled: true })]])).toBe("place");
+	expect(stageOf("CLOSED", [[job({ placed: true })]])).toBe("done");
+	expect(stageOf("CANCELLED", [])).toBeNull();
 });

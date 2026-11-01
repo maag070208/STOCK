@@ -10,6 +10,8 @@ import com.axzydev.stock.i18n.text
 import com.axzydev.stock.ui.components.DataRow
 import com.axzydev.stock.ui.components.PageScaffold
 import com.axzydev.stock.ui.components.RemoteList
+import com.axzydev.stock.ui.components.ScanSearch
+import com.axzydev.stock.ui.components.matches
 import com.axzydev.stock.ui.components.StatusTone
 import com.axzydev.stock.ui.format.formatQuantity
 
@@ -17,6 +19,7 @@ import com.axzydev.stock.ui.format.formatQuantity
 @Composable
 fun StockScreen(stock: StockViewModel, onBack: () -> Unit) {
 	val state by stock.state.collectAsState()
+	val query by stock.query.collectAsState()
 	LaunchedEffect(stock) { stock.load() }
 	PageScaffold(
 		title = text(Text.PAGE_STOCK),
@@ -25,7 +28,17 @@ fun StockScreen(stock: StockViewModel, onBack: () -> Unit) {
 		backLabel = text(Text.BACK_MODULES),
 		backTag = "stock-back",
 	) {
-		RemoteList(state, stock::load, text(Text.EMPTY), "stock") { row ->
+		ScanSearch(
+			instruction = text(Text.SCAN_MATERIAL),
+			searchLabel = text(Text.SEARCH_MATERIAL),
+			query = query,
+			onQueryChange = stock::edit,
+			onScanned = stock::scanned,
+			onSubmit = {},
+			tag = "stock-search",
+		)
+		val shown = state.copy(rows = state.rows.filter { query.matches(it.productCode, it.productName, it.warehouseCode) })
+		RemoteList(shown, stock::load, text(if (state.rows.isEmpty()) Text.EMPTY else Text.NO_RESULTS), "stock") { row ->
 			DataRow(
 				title = listOfNotNull(row.productCode, row.productName).joinToString(" · "),
 				tag = "stock-${row.warehouseId}-${row.productId}",

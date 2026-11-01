@@ -8,6 +8,7 @@ import { useCan } from "@entities/user";
 import { warehouseApi } from "@entities/warehouse";
 import type { TableParams } from "@shared/api/table";
 import { formatQuantity } from "@shared/lib/format";
+import { cardBreakpoint, tableHeight } from "@shared/ui/tableLayout";
 
 // Stock, read-only (F4-19): by location (each balance, with the groups by aisle and rack as filters) and by material
 // in each warehouse. The API keeps it inside the reader's warehouses.
@@ -81,9 +82,10 @@ export function StockPage() {
 									layout="fixed"
 									density="compact"
 									virtualized
-									virtualizedMaxHeight={400}
+									virtualizedMaxHeight={tableHeight()}
 									rowHeight={50}
-									showViewToggle={false} columns={byLocation} fetchData={(params) => stockApi.balances(params as TableParams)}
+									showViewToggle={false}
+									autoCardBreakpoint={cardBreakpoint()} columns={byLocation} fetchData={(params) => stockApi.balances(params as TableParams)}
 								/>
 							</ITText>
 						),
@@ -99,7 +101,7 @@ export function StockPage() {
 									layout="fixed"
 									density="compact"
 									virtualized
-									virtualizedMaxHeight={400}
+									virtualizedMaxHeight={tableHeight()}
 									rowHeight={50}
 									columns={byProduct} fetchData={(params) => stockApi.products(params as TableParams)}
 								/>

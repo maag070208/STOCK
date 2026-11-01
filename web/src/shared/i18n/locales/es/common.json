@@ -22,7 +22,11 @@
     "discrepancies": "Diferencias",
     "labels": "Etiquetas",
     "printers": "Impresoras",
-    "reports": "Reportes"
+    "reports": "Reportes",
+    "operation": "Operación",
+    "inventory": "Inventario",
+    "partners": "Socios comerciales",
+    "printing": "Impresión"
   },
   "language": {
     "label": "Idioma",
@@ -178,18 +182,26 @@
       "cancelled": "Canceladas"
     },
     "tiles": {
-      "placement": "Por ubicar",
-      "placementCaption": "facturas listas para colocar",
       "discrepancies": "Diferencias abiertas",
       "discrepanciesCaption": "conteos por resolver",
       "orders": "Órdenes abiertas",
       "ordersCaption": "por surtir",
       "materials": "Materiales activos",
-      "materialsCaption": "en el catálogo"
+      "materialsCaption": "en el catálogo",
+      "inProcess": "Facturas en proceso",
+      "inProcessCaption": "por cerrar",
+      "receivingPill": "{{count}} en recepción",
+      "placementPill": "{{count}} por ubicar",
+      "ordersOf": "de {{total}} órdenes",
+      "noDiscrepancies": "Todo cuadra",
+      "week": "Facturas de la semana",
+      "status": "Estado de las facturas",
+      "statusTotal": "facturas",
+      "noInvoices": "Sin facturas todavía"
     },
     "sections": {
-      "latest": "Últimas facturas",
-      "quick": "Accesos rápidos"
+      "quick": "Accesos rápidos",
+      "queue": "Por atender"
     },
     "actions": {
       "newInvoice": "Nueva factura",
@@ -198,9 +210,9 @@
       "reports": "Ver reportes",
       "retry": "Reintentar"
     },
-    "emptyLatest": "Todavía no hay facturas capturadas.",
     "loadError": "No se pudo leer el resumen.",
-    "allInvoices": "Todas"
+    "allInvoices": "Todas",
+    "queueEmpty": "Nada pendiente. Todo al día."
   },
   "saved": "Cambios guardados.",
   "entry": {
@@ -210,5 +222,15 @@
     "count": "Cuenta y resuelve diferencias en el momento",
     "place": "Ubica en segundos, con existencias al día",
     "footer": "Sistema de inventario"
+  },
+  "palette": {
+    "open": "Buscar o ir a…",
+    "placeholder": "Busca una pantalla, factura, orden o material",
+    "empty": "Sin resultados.",
+    "go": "Ir a",
+    "create": "Crear",
+    "invoices": "Facturas",
+    "orders": "Órdenes",
+    "materials": "Materiales"
   }
 }

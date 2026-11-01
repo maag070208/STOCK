@@ -8,7 +8,8 @@
 		"warehouse": "Almacén",
 		"dueDate": "Entrega",
 		"status": "Estado",
-		"operator": "Operador"
+		"operator": "Operador",
+		"actions": "Acciones"
 	},
 	"status": {
 		"CREATED": "Creada",
@@ -38,7 +39,7 @@
 		"saving": "Guardando…",
 		"noLines": "Agrega al menos un material.",
 		"chooseWarehouse": "Elige primero el almacén que surte: la disponibilidad aparecerá aquí.",
-		"line": "Línea {{index}}"
+		"moreHint": "Enter agrega otro material."
 	},
 	"lineErrors": {
 		"FIELD_REQUIRED": "Escribe la cantidad.",
@@ -128,5 +129,29 @@
 		"note": "Nota",
 		"noteHint": "Por qué regresa a piso.",
 		"confirm": "Devolver"
+	},
+	"flow": {
+		"created": "Creada",
+		"fulfilling": "Surtiendo",
+		"fulfilled": "Surtida",
+		"validated": "Validada",
+		"nextAssign": "Asigna el operador que la surte.",
+		"nextWaiting": "Esperando que el operador empiece a surtir.",
+		"nextFulfilling": "{{picked}} de {{lines}} materiales surtidos.",
+		"nextValidate": "Revisa y valida la orden.",
+		"nextDone": "Orden validada. El comprobante ya está disponible."
+	},
+	"reassign": {
+		"reasons": {
+			"urgent": "Entrega urgente",
+			"priority": "Prioridad del cliente",
+			"shortage": "Faltante en esa orden"
+		},
+		"needs": "Necesita {{quantity}}",
+		"noneNeed": "Ninguna otra orden abierta de este almacén necesita este material.",
+		"target": "Orden que lo recibe",
+		"reason": "Motivo",
+		"max": "Máximo {{quantity}}",
+		"current": "Operador actual: {{name}}"
 	}
 }

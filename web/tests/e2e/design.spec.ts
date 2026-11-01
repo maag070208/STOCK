@@ -48,6 +48,8 @@ test.describe("workspace", () => {
     await signInAs(page, office);
     await page.goto("/#/products");
     await expect(page.getByRole("heading", { name: "Materiales" })).toBeVisible();
+    // The rows arrive after the title, and they are what makes the screen long.
+    await page.waitForLoadState("networkidle");
     await page.mouse.move(500, 200);
     for (let wheel = 0; wheel < 12; wheel++) await page.mouse.wheel(0, 400);
     const room = await page.evaluate(() => {
@@ -92,11 +94,20 @@ test.describe("shell", () => {
     expect(px(await card.evaluate((el) => getComputedStyle(el).borderTopLeftRadius))).toBeGreaterThan(16);
   });
 
-  test("the sidebar is a rail that unfolds to its expanded width while the pointer is on it", async ({ page }) => {
-    const rail = page.locator("aside").first();
-    await expect.poll(async () => (await rail.boundingBox())!.width).toBe(px(designTokens.layout["shell-sidebar-collapsed"]));
-    await rail.hover();
-    await expect.poll(async () => (await rail.boundingBox())!.width).toBe(px(designTokens.layout["shell-sidebar-expanded"]));
+  test("the menu stays open with its names, and the top bar folds it into a rail that is remembered", async ({ page }) => {
+    const menu = page.locator("aside").first();
+    await expect.poll(async () => (await menu.boundingBox())!.width).toBe(px(designTokens.layout["shell-sidebar-expanded"]));
+    await page.locator("header").getByRole("button").first().click();
+    await expect.poll(async () => (await menu.boundingBox())!.width).toBe(px(designTokens.layout["shell-sidebar-collapsed"]));
+    await page.reload();
+    await expect.poll(async () => (await menu.boundingBox())!.width).toBe(px(designTokens.layout["shell-sidebar-collapsed"]));
+  });
+
+  test("Cmd+K goes anywhere: a few letters and Enter open the screen", async ({ page }) => {
+    await page.keyboard.press("ControlOrMeta+k");
+    await page.getByLabel("Busca una pantalla, factura, orden o material").fill("factur");
+    await page.keyboard.press("Enter");
+    await expect(page).toHaveURL(/#\/invoices$/);
   });
 
   test("the top bar is a white bento card of the design's height", async ({ page }) => {
@@ -111,8 +122,18 @@ test.describe("shell", () => {
     expect(bg).not.toBe("rgba(0, 0, 0, 0)");
     expect(await current.evaluate((el) => getComputedStyle(el).color)).toBe(rgb(colors["on-background"]));
     // Every other item is transparent: only the current one carries a surface.
-    const other = page.locator('aside [aria-label="Facturas"]').first();
+    const other = page.locator('aside [role="button"][aria-label="Reportes"]').first();
     expect(await other.evaluate((el) => getComputedStyle(el).backgroundColor)).toBe("rgba(0, 0, 0, 0)");
+  });
+
+  test("the menu is grouped in sections, and the section of the current screen stays open", async ({ page }) => {
+    const rail = page.locator("aside").first();
+    const operation = rail.getByRole("button", { name: "Operación" });
+    await expect(operation).toHaveAttribute("aria-expanded", "false");
+    await operation.click();
+    await rail.getByRole("button", { name: "Facturas" }).click();
+    await expect(page).toHaveURL(/#\/invoices$/);
+    await expect(operation).toHaveAttribute("aria-expanded", "true");
   });
 
   test("the top bar switches the system between light and dark", async ({ page }) => {
@@ -124,8 +145,7 @@ test.describe("shell", () => {
 
   test("the rail shows the brand mark and the icon of each item", async ({ page }) => {
     const rail = page.locator("aside").first();
-    await rail.hover();
-    await expect(rail.locator('img[src="/brand/stockflow-glyph-dark.svg"]').first()).toBeVisible();
+    await expect(rail.locator('img[src="/brand/stockflow-glyph-light.svg"]').first()).toBeVisible();
     await expect(rail.getByRole("button", { name: "Inicio" })).toBeVisible();
   });
 });

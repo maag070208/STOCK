@@ -2,6 +2,7 @@ import { ITAlert, ITSearchSelect, ITButton, ITCard, ITDatePicker, ITFlex, ITGrid
 import { trail } from "@shared/lib/breadcrumbs";
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
+import { FaTrash } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { availableOf, lineError, orderApi, type AvailabilityItem, type OrderInput, type Ref } from "@entities/order";
 import { PartnerPicker, partnerApi, type Partner } from "@entities/partner";
@@ -10,6 +11,7 @@ import { ProductPicker, type Product } from "@entities/product";
 import { dyn } from "@shared/i18n";
 import { businessToday, formatQuantity, isoDate } from "@shared/lib/format";
 import { newId } from "@shared/lib/newId";
+import { IconButton } from "@shared/ui/IconButton";
 import { useSubmit } from "@shared/ui/useSubmit";
 
 interface LineState {
@@ -30,13 +32,14 @@ export function OrderFormPage() {
 	// One key for this form: a repeated submission of the same order creates it once.
 	const key = useRef(newId());
 	const [warehouses, setWarehouses] = useState<Ref[]>([]);
-	const [number, setNumber] = useState("");
+	// A number ready to use, from the moment of the order; the office can write its own.
+	const [number, setNumber] = useState(() => `ORD-${isoDate(new Date()).replaceAll("-", "").slice(2)}-${newId().slice(0, 4).toUpperCase()}`);
 	const [warehouseId, setWarehouseId] = useState("");
 	const [customerId, setCustomerId] = useState("");
 	const [contactId, setContactId] = useState("");
 	// The day the business is in, not the browser's: the API refuses a due date before its own today.
 	const [dueDate, setDueDate] = useState(businessToday());
-	const [lines, setLines] = useState<LineState[]>([]);
+	const [lines, setLines] = useState<LineState[]>(() => [newLine()]);
 	const [customer, setCustomer] = useState<Partner | null>(null);
 	const [availability, setAvailability] = useState<AvailabilityItem[]>([]);
 	const [tried, setTried] = useState(false);
@@ -44,7 +47,14 @@ export function OrderFormPage() {
 
 	useEffect(() => {
 		// The warehouses this screen may use, from the module's own options endpoint.
-		void orderApi.warehouseOptions().then(setWarehouses).catch(() => setWarehouses([]));
+		void orderApi
+			.warehouseOptions()
+			.then((options) => {
+				setWarehouses(options);
+				// With one warehouse there is nothing to choose.
+				if (options.length === 1) setWarehouseId(options[0].id);
+			})
+			.catch(() => setWarehouses([]));
 	}, []);
 
 	useEffect(() => {
@@ -73,9 +83,17 @@ export function OrderFormPage() {
 	}, [warehouseId, wanted]);
 
 	const setLine = (lineKey: string, change: Partial<LineState>) => setLines((current) => current.map((line) => (line.key === lineKey ? { ...line, ...change } : line)));
+	// Enter on a quantity moves to the next material, opening a line when it was the last.
+	const form = useRef<HTMLFormElement>(null);
+	const nextLine = (index: number) => {
+		if (index === lines.length - 1) setLines((current) => [...current, newLine()]);
+		window.setTimeout(() => form.current?.querySelector<HTMLInputElement>(`[name="product-${index + 1}"]`)?.focus());
+	};
 	const available = (line: LineState) => availableOf(availability, line.product?.id);
 	const errorOf = (line: LineState) => (line.product ? lineError(line.quantity, available(line)) : "FIELD_REQUIRED");
-	const blocked = lines.length === 0 || lines.some((line) => errorOf(line) !== null);
+	// The line that was never touched is the next one waiting, not a mistake.
+	const filled = lines.filter((line) => line.product || line.quantity);
+	const blocked = filled.length === 0 || filled.some((line) => errorOf(line) !== null);
 	const required = t("common:validation.required");
 
 	// The availability of a line as it is written: the number, or a dash while the API has not answered.
@@ -95,7 +113,7 @@ export function OrderFormPage() {
 			customerId,
 			contactId: contactId || null,
 			dueDate: isoDate(dueDate),
-			lines: lines.map((line) => ({ productId: line.product!.id, quantity: Number(line.quantity) })),
+			lines: filled.map((line) => ({ productId: line.product!.id, quantity: Number(line.quantity) })),
 		};
 		const saved = await submit.run(() => orderApi.create(input, key.current));
 		if (saved) navigate(`/orders/${saved.id}`, { replace: true });
@@ -103,13 +121,22 @@ export function OrderFormPage() {
 
 	return (
 		<ITPage title={t("new")} breadcrumbs={trail(t("common:nav.home"), navigate, { label: t("title"), onClick: () => navigate("/orders") }, { label: t("new") })} noPadding>
-			<form onSubmit={(e) => void save(e)} noValidate aria-label={t("new")} className="sf:flex sf:max-w-4xl sf:flex-col sf:gap-6">
-				<ITStack spacing={3}>
-					<ITText as="h2" className="sf:text-title-md">
-						{t("form.header")}
-					</ITText>
+			<form
+				ref={form}
+				onSubmit={(e) => void save(e)}
+				onKeyDown={(event) => {
+					const name = (event.target as HTMLElement).getAttribute("name") ?? "";
+					if (event.key !== "Enter" || !name.startsWith("quantity-")) return;
+					event.preventDefault();
+					nextLine(Number(name.slice("quantity-".length)));
+				}}
+				noValidate
+				aria-label={t("new")}
+				className="sf:flex sf:flex-col sf:gap-6"
+			>
+				<ITCard title={t("form.header")}>
 					<ITGrid container spacing={3}>
-						<ITGrid item xs={12} md={6}>
+						<ITGrid item xs={12} md={4}>
 							<ITInput
 								name="number"
 							label={t("form.number")}
@@ -120,7 +147,7 @@ export function OrderFormPage() {
 								required
 							/>
 						</ITGrid>
-						<ITGrid item xs={12} md={6}>
+						<ITGrid item xs={12} md={4}>
 							<ITDatePicker
 								name="dueDate"
 							label={t("form.dueDate")}
@@ -129,6 +156,17 @@ export function OrderFormPage() {
 							onChange={(e) => e.target.value instanceof Date && setDueDate(e.target.value)}
 								error={submit.fieldErrors.dueDate}
 								touched={!!submit.fieldErrors.dueDate}
+								required
+							/>
+						</ITGrid>
+						<ITGrid item xs={12} md={4}>
+							<WarehousePicker
+								options={warehouses}
+								name="warehouseId"
+								label={t("form.warehouse")}
+								value={warehouseId}
+								onChange={(chosen) => setWarehouseId(chosen)}
+								error={submit.fieldErrors.warehouseId ?? (tried && !warehouseId ? required : undefined)}
 								required
 							/>
 						</ITGrid>
@@ -157,64 +195,58 @@ export function OrderFormPage() {
 								touched={!!submit.fieldErrors.contactId}
 							/>
 						</ITGrid>
-						<ITGrid item xs={12} md={6}>
-							<WarehousePicker
-								options={warehouses}
-								name="warehouseId"
-								label={t("form.warehouse")}
-								value={warehouseId}
-								onChange={(chosen) => setWarehouseId(chosen)}
-								error={submit.fieldErrors.warehouseId ?? (tried && !warehouseId ? required : undefined)}
-								required
-							/>
-						</ITGrid>
 					</ITGrid>
-				</ITStack>
+				</ITCard>
 
-				<ITStack spacing={3}>
-					<ITFlex align="center" justify="between">
-						<ITText as="h2" className="sf:text-title-md">
-							{t("form.lines")}
-						</ITText>
-						<ITButton size="sm" variant="outlined" label={t("form.addLine")} onClick={() => setLines((current) => [...current, newLine()])} />
-					</ITFlex>
-					{lines.length === 0 && <ITText muted>{t("form.noLines")}</ITText>}
-					{lines.map((line, index) => {
-						const error = errorOf(line);
-						return (
-							<ITCard key={line.key} title={t("form.line", { index: index + 1 })}>
-								<ITGrid container spacing={3} className="sf:items-end">
+				{/* One row per material: material, quantity and what the warehouse has. Enter opens the next one. */}
+				<ITCard
+					title={t("form.lines")}
+					headerActions={<ITButton size="sm" variant="outlined" label={t("form.addLine")} onClick={() => setLines((current) => [...current, newLine()])} />}
+				>
+					<ITStack spacing={3}>
+						{lines.length === 0 && <ITText muted>{t("form.noLines")}</ITText>}
+						{lines.map((line, index) => {
+							const error = errorOf(line);
+							const touched = tried && (line.product || line.quantity || filled.length === 0);
+							return (
+								<ITGrid key={line.key} container spacing={3} className="sf:items-start">
 									<ITGrid item xs={12} md={6}>
 										<ProductPicker
 											name={`product-${index}`}
 											label={t("form.product")}
 											value={line.product?.id ?? ""}
-											onChange={(product) => setLine(line.key, { product })}
-											error={submit.fieldErrors[`lines.${index}.productId`] ?? (tried && !line.product ? required : undefined)}
+											onChange={(product) => {
+												setLine(line.key, { product });
+												if (product) window.setTimeout(() => form.current?.querySelector<HTMLInputElement>(`[name="quantity-${index}"]`)?.focus());
+											}}
+											error={submit.fieldErrors[`lines.${index}.productId`] ?? (touched && !line.product ? required : undefined)}
 											required
 										/>
 									</ITGrid>
-									<ITGrid item xs={12} md={3}>
+									<ITGrid item xs={8} md={2}>
 										<ITInput
 											name={`quantity-${index}`}
 											type="number"
 											label={line.product ? `${t("form.quantity")} (${line.product.unit.label ?? line.product.unit.code})` : t("form.quantity")}
 											value={line.quantity}
 											onChange={(e) => setLine(line.key, { quantity: e.target.value })}
-											error={submit.fieldErrors[`lines.${index}.quantity`] ?? (tried && error ? t(dyn(`lineErrors.${error}`)) : undefined)}
-											touched={tried || !!submit.fieldErrors[`lines.${index}.quantity`]}
+											error={submit.fieldErrors[`lines.${index}.quantity`] ?? (touched && error ? t(dyn(`lineErrors.${error}`)) : undefined)}
+											touched={!!touched || !!submit.fieldErrors[`lines.${index}.quantity`]}
 											required
 										/>
 									</ITGrid>
-									<ITGrid item xs={12} md={3} className="sf:self-end">
-										<ITButton variant="text" label={t("form.remove")} onClick={() => setLines((current) => current.filter((candidate) => candidate.key !== line.key))} />
+									<ITGrid item xs={12} md={3} className="sf:self-center">
+										{line.product && <ITText muted>{availabilityText(line)}</ITText>}
+									</ITGrid>
+									<ITGrid item xs={4} md={1} className="sf:self-center">
+										<IconButton icon={<FaTrash aria-hidden />} label={t("form.remove")} color="danger" onClick={() => setLines((current) => current.filter((candidate) => candidate.key !== line.key))} />
 									</ITGrid>
 								</ITGrid>
-								<ITText muted>{availabilityText(line)}</ITText>
-							</ITCard>
-						);
-					})}
-				</ITStack>
+							);
+						})}
+						<ITText muted className="sf:text-label-sm">{t("form.moreHint")}</ITText>
+					</ITStack>
+				</ITCard>
 
 				{submit.error && <ITAlert variant="error">{submit.error}</ITAlert>}
 				<ITFlex justify="end" gap={2}>

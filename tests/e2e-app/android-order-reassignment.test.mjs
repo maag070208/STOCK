@@ -4,7 +4,7 @@
 // over adb, and the API is reached through its port forward, as a person would use the app.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { enter, fill, launch, signIn, sleep, tap, type, waitForText, waitUntil } from "./lib/android.mjs";
+import { scrollTo, enter, fill, launch, signIn, sleep, tap, waitForText, waitUntil } from "./lib/android.mjs";
 import { adminToken, alerts, balances, call, dueIn, grant, newCustomer, newOrder, newProduct, newRack, newUser, newWarehouse, order, pick, staff, stockIn } from "./lib/api.mjs";
 
 // An administrator on the app channel: the roles of the warehouse have no app access, or no reassignment, and the
@@ -21,7 +21,8 @@ async function reassigner() {
 async function openReassignment(user) {
   await launch({ fresh: true });
   await signIn(user.username, user.password);
-  const home = await waitUntil((xml) => xml.includes('resource-id="module-orders"'), 30000);
+  assert.ok(await waitUntil((xml) => xml.includes('text="Conectado a la API"'), 30000), "signed in");
+  const home = await scrollTo("module-orders");
   assert.ok(home, "the home offers the orders");
   tap(home, "module-orders");
   const menu = await waitUntil((xml) => xml.includes('resource-id="page-orders-reassignment"'), 15000);
@@ -49,24 +50,25 @@ test("e2e: the alert of an order due tomorrow opens, and its picked material mov
   await openReassignment(user);
   // The alert of an order due tomorrow is shown in the language of the person.
   const list = await waitForText(source.number, 30000);
-  assert.match(list, /text="Vence mañana · Entrega /);
+  assert.match(list, /text="Vence mañana"/);
   assert.match(list, /resource-id="alert-ORD-/);
   tap(list, `alert-${source.number}`);
   await waitForText("Escanea el material surtido");
 
-  // The material that was picked opens its line, with the order that needs it.
-  await fill("reassign-scan", product.code);
-  enter();
+  // The picked material is listed: one touch opens its line, with the order that needs it.
+  const material = await waitUntil((xml) => xml.includes(`resource-id="reassign-pick-${product.code}"`), 15000);
+  tap(material, `reassign-pick-${product.code}`);
   const holding = await waitForText("Surtido: 20");
   assert.match(holding, new RegExp(`resource-id="reassign-target-${target.number}"`), "the order that needs the material is offered");
 
-  // The note and the quantity: the keyboard's Next moves to the quantity, and its Done sends the move.
+  // The quantity is ready, the reason is one touch, and the button sends the move.
   tap(holding, `reassign-target-${target.number}`);
-  await fill("reassign-note", "Traspaso-prueba");
-  enter();
-  await sleep(400);
-  type("20");
-  enter();
+  const form = await waitUntil((xml) => xml.includes('resource-id="reassign-reason-0"'), 15000);
+  assert.match(form, /text="20"/, "the quantity starts at the most that can move");
+  tap(form, "reassign-reason-0");
+  await sleep(300);
+  const ready = await scrollTo("reassign-save");
+  tap(ready, "reassign-save");
   await waitForText("Traspaso registrado.");
 
   // The API moved the picked quantities: the source has nothing picked, the target has it all, and no balance changed.

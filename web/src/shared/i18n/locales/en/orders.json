@@ -8,7 +8,8 @@
 		"warehouse": "Warehouse",
 		"dueDate": "Due",
 		"status": "Status",
-		"operator": "Operator"
+		"operator": "Operator",
+		"actions": "Actions"
 	},
 	"status": {
 		"CREATED": "Created",
@@ -38,7 +39,7 @@
 		"saving": "Saving…",
 		"noLines": "Add at least one material.",
 		"chooseWarehouse": "Choose the warehouse first: its availability will show here.",
-		"line": "Line {{index}}"
+		"moreHint": "Enter adds another material."
 	},
 	"lineErrors": {
 		"FIELD_REQUIRED": "Write the quantity.",
@@ -128,5 +129,29 @@
 		"note": "Note",
 		"noteHint": "Why it goes back to the floor.",
 		"confirm": "Return"
+	},
+	"flow": {
+		"created": "Created",
+		"fulfilling": "Picking",
+		"fulfilled": "Picked",
+		"validated": "Validated",
+		"nextAssign": "Assign the operator who picks it.",
+		"nextWaiting": "Waiting for the operator to start picking.",
+		"nextFulfilling": "{{picked}} of {{lines}} materials picked.",
+		"nextValidate": "Review and validate the order.",
+		"nextDone": "Order validated. The receipt is available."
+	},
+	"reassign": {
+		"reasons": {
+			"urgent": "Urgent delivery",
+			"priority": "Customer priority",
+			"shortage": "Shortage on that order"
+		},
+		"needs": "Needs {{quantity}}",
+		"noneNeed": "No other open order of this warehouse needs this material.",
+		"target": "Order that receives it",
+		"reason": "Reason",
+		"max": "At most {{quantity}}",
+		"current": "Current operator: {{name}}"
 	}
 }

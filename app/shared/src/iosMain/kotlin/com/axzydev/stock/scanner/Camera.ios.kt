@@ -58,7 +58,7 @@ actual fun rememberCameraPermission(): CameraPermission {
 
 @OptIn(ExperimentalForeignApi::class)
 @Composable
-actual fun CameraPreview(onScanned: (String) -> Unit, modifier: Modifier) {
+actual fun CameraPreview(onScanned: (String) -> Unit, modifier: Modifier, torch: Boolean) {
 	val latest by rememberUpdatedState(onScanned)
 	val camera = remember { CameraSession { value -> latest(value) } }
 	DisposableEffect(camera) {

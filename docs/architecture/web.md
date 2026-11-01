@@ -231,7 +231,8 @@ itemsPerPageOptions={[25, 50, 100]}
 layout="fixed"
 density="compact"
 virtualized
-virtualizedMaxHeight={400}
+virtualizedMaxHeight={tableHeight()}
+autoCardBreakpoint={cardBreakpoint()}
 rowHeight={50}
 showViewToggle={false}
 ```

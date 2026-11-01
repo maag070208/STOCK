@@ -13,15 +13,16 @@ fun <T> RemoteList(
 	onRetry: () -> Unit,
 	emptyText: String,
 	tag: String,
+	emptyHint: String? = null,
 	row: @Composable (T) -> Unit,
 ) {
 	when {
-		state.loading -> ListMessage(text(Text.LOADING), "$tag-loading")
+		state.loading -> BentoSkeleton(tag = "$tag-loading")
 		state.error != null -> {
 			ListMessage(state.error, "$tag-error", error = true)
 			PrimaryButton(text(Text.RETRY), onRetry, tag = "$tag-retry")
 		}
-		state.empty -> ListMessage(emptyText, "$tag-empty")
+		state.empty -> BentoState(emptyText, "$tag-empty", emptyHint)
 		else -> state.rows.forEach { row(it) }
 	}
 }

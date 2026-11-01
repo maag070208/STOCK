@@ -11,6 +11,7 @@ import androidx.camera.view.LifecycleCameraController
 import androidx.camera.view.PreviewView
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -48,7 +49,7 @@ actual fun rememberCameraPermission(): CameraPermission {
 private val FORMATS = intArrayOf(Barcode.FORMAT_EAN_13, Barcode.FORMAT_EAN_8, Barcode.FORMAT_UPC_A, Barcode.FORMAT_UPC_E, Barcode.FORMAT_QR_CODE)
 
 @Composable
-actual fun CameraPreview(onScanned: (String) -> Unit, modifier: Modifier) {
+actual fun CameraPreview(onScanned: (String) -> Unit, modifier: Modifier, torch: Boolean) {
 	val context = LocalContext.current
 	val lifecycleOwner = LocalLifecycleOwner.current
 	val latest by rememberUpdatedState(onScanned)
@@ -70,6 +71,7 @@ actual fun CameraPreview(onScanned: (String) -> Unit, modifier: Modifier) {
 			scanner.close()
 		}
 	}
+	LaunchedEffect(controller, torch) { controller.initializationFuture.addListener({ controller.enableTorch(torch) }, ContextCompat.getMainExecutor(context)) }
 	AndroidView(
 		factory = { viewContext ->
 			PreviewView(viewContext).apply {

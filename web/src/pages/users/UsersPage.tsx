@@ -14,6 +14,7 @@ import { formatDateTime } from "@shared/lib/format";
 import { SecretValue } from "@shared/ui/SecretValue";
 import { toast } from "@app/store";
 import { ApiError } from "@shared/api/client";
+import { cardBreakpoint, tableHeight } from "@shared/ui/tableLayout";
 
 type Confirm = { kind: "resetPassword" | "deactivate" | "reactivate"; user: User };
 
@@ -117,9 +118,10 @@ export function UsersPage() {
 				layout="fixed"
 				density="compact"
 				virtualized
-				virtualizedMaxHeight={400}
+				virtualizedMaxHeight={tableHeight()}
 				rowHeight={50}
-				showViewToggle={false} columns={columns} fetchData={(params) => userApi.query(params as TableParams)} reloadTrigger={reload}
+				showViewToggle={false}
+				autoCardBreakpoint={cardBreakpoint()} columns={columns} fetchData={(params) => userApi.query(params as TableParams)} reloadTrigger={reload}
 			/>
 
 			<CreateUserDialog

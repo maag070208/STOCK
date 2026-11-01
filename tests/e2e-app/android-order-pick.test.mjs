@@ -4,7 +4,7 @@
 // forward, as a person would use the app.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { enter, fill, launch, signIn, tap, waitForText, waitUntil } from "./lib/android.mjs";
+import { replace, scrollTo, enter, fill, launch, signIn, tap, waitForText, waitUntil } from "./lib/android.mjs";
 import { balances, grant, newCustomer, newOrder, newProduct, newRack, newUser, newWarehouse, order, staff, stockIn, adminToken, call } from "./lib/api.mjs";
 
 test("e2e: the operator picks the material of an order assigned to them", async () => {
@@ -24,7 +24,8 @@ test("e2e: the operator picks the material of an order assigned to them", async 
 
   await launch({ fresh: true });
   await signIn(operator.username, operator.password);
-  const home = await waitUntil((xml) => xml.includes('resource-id="module-orders"'), 30000);
+  assert.ok(await waitUntil((xml) => xml.includes('text="Conectado a la API"'), 30000), "signed in");
+  const home = await scrollTo("module-orders");
   assert.ok(home, "the home offers the orders to whoever fulfills them");
   tap(home, "module-orders");
   const menu = await waitUntil((xml) => xml.includes('resource-id="page-orders-my-orders"'), 15000);
@@ -39,13 +40,13 @@ test("e2e: the operator picks the material of an order assigned to them", async 
   // The material is on the order: its line opens with the location that holds it.
   await fill("pick-scan", product.code);
   enter();
-  const holding = await waitForText("Ubicaciones con existencia");
+  const holding = await waitForText("UBICACIONES CON EXISTENCIA");
   assert.match(holding, new RegExp(`resource-id="pick-location-${location.code}"`), "the location that holds the material is offered");
 
-  // The location is confirmed by its code, and the quantity is entered.
+  // The location is confirmed by its code; the quantity starts at the most that can be taken, and here it is less.
   await fill("pick-location-scan", location.code);
   enter();
-  await fill("pick-quantity", "50");
+  await replace("pick-quantity", 2, "50");
   // The keyboard's Done sends the pick, as the other forms of the app do.
   enter();
   await waitForText("Surtido registrado.");
@@ -74,7 +75,8 @@ test("e2e: a material that is not on the order is refused by the app", async () 
 
   await launch({ fresh: true });
   await signIn(operator.username, operator.password);
-  const home = await waitUntil((xml) => xml.includes('resource-id="module-orders"'), 30000);
+  assert.ok(await waitUntil((xml) => xml.includes('text="Conectado a la API"'), 30000), "signed in");
+  const home = await scrollTo("module-orders");
   tap(home, "module-orders");
   const menu = await waitUntil((xml) => xml.includes('resource-id="page-orders-my-orders"'), 15000);
   tap(menu, "page-orders-my-orders");

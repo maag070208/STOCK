@@ -30,8 +30,7 @@ test("office creates an order with two lines, assigns it and sees it in the list
 	await pickRemoteOption(page, "customerId", f.customer.code, f.customer.code);
 	await pickRemoteOption(page, "warehouseId", f.warehouse.code, f.warehouse.code);
 
-	// The first line shows what the warehouse has, and a quantity above it never reaches the API.
-	await page.getByRole("button", { name: "Agregar material" }).click();
+	// The first line is waiting, shows what the warehouse has, and a quantity above it never reaches the API.
 	await pickProduct(page, 0, screws);
 	await expect(page.getByText("Disponible: 100")).toBeVisible();
 	await page.locator('input[name="quantity-0"]').fill("150");
@@ -40,8 +39,8 @@ test("office creates an order with two lines, assigns it and sees it in the list
 	await expect(page.getByRole("heading", { name: "Nueva orden" })).toBeVisible();
 	await page.locator('input[name="quantity-0"]').fill("60");
 
-	// The second line, with its own availability.
-	await page.getByRole("button", { name: "Agregar material" }).click();
+	// Enter opens the second line, with its own availability.
+	await page.locator('input[name="quantity-0"]').press("Enter");
 	await pickProduct(page, 1, nails);
 	await expect(page.getByText("Disponible: 50")).toBeVisible();
 	await page.locator('input[name="quantity-1"]').fill("20");
@@ -49,7 +48,7 @@ test("office creates an order with two lines, assigns it and sees it in the list
 
 	// The order was created with its two lines, and is assigned from its detail: the state is its badge, and the lines
 	// are the rows of the table.
-	await expect(page.getByText("Creada", { exact: true })).toBeVisible();
+	await expect(page.getByText("Creada", { exact: true }).first()).toBeVisible();
 	await expect(page.getByRole("row").filter({ hasText: screws.code })).toContainText("60");
 	await expect(page.getByRole("row").filter({ hasText: nails.code })).toContainText("20");
 	await page.getByRole("button", { name: "Asignar" }).click();
@@ -97,7 +96,7 @@ test("a validated order keeps only its receipt, and picked material moves or the
 
 	// Validating: the order is checked, its receipt is stored, and every other action disappears.
 	await page.goto(`/#/orders/${closed.id}`);
-	await expect(page.getByText("Surtida", { exact: true })).toBeVisible();
+	await expect(page.getByText("Surtida", { exact: true }).first()).toBeVisible();
 	await page.getByRole("button", { name: "Validar" }).click();
 	await page.getByRole("dialog").getByRole("button", { name: "Validar" }).click();
 	await expect(page.getByText("Validada", { exact: true })).toBeVisible();
@@ -120,11 +119,11 @@ test("a validated order keeps only its receipt, and picked material moves or the
 	await page.goto(`/#/orders/${source.id}`);
 	await page.getByRole("button", { name: "Pasar a otra orden" }).click();
 	const transfer = page.getByRole("dialog");
-	await pickSearchOption(page, "lineId", sourceLine.product.code, sourceLine.product.code);
-	await pickSearchOption(page, "targetOrderId", target.number, target.number);
-	await transfer.locator('input[name="quantity"]').fill("20");
-	await transfer.locator('textarea[name="note"]').fill("El cliente cambió de orden");
-	await transfer.getByRole("button", { name: "Pasar" }).click();
+	// Only the orders that need the material are offered, with how much; choosing one fills in the quantity.
+	await transfer.getByRole("button", { name: new RegExp(target.number) }).click();
+	await expect(transfer.locator('input[name="quantity"]')).toHaveValue("20");
+	await transfer.getByText("Entrega urgente").click();
+	await transfer.getByRole("button", { name: "Pasar", exact: true }).click();
 	// The detail reloads with the picked material gone from the source line, and then the API tells where it went.
 	// The picked quantity is the third column of the line.
 	await expect(page.getByRole("row").filter({ hasText: screws.code }).getByRole("cell").nth(2)).toHaveText("0");

@@ -7,6 +7,7 @@ import { reportApi, warehouseOptionsOf, type ReportRef, type StockReportPage as 
 import { formatQuantity } from "@shared/lib/format";
 import { BelowMinimumFilter, ExportButtons, ReportError, ReportTotals, WarehouseFilter, totalEntries } from "./ReportParts";
 import { ReportTabs } from "./ReportTabs";
+import { cardBreakpoint, tableHeight } from "@shared/ui/tableLayout";
 
 // The current stock (reports.md section 3): every balance of the warehouses the reader reaches, with the totals by
 // warehouse, by aisle and rack, and the grand total, which is always the sum of the rows listed.
@@ -69,9 +70,10 @@ export function StockReportPage() {
 					layout="fixed"
 					density="compact"
 					virtualized
-					virtualizedMaxHeight={400}
+					virtualizedMaxHeight={tableHeight()}
 					rowHeight={50}
 					showViewToggle={false}
+					autoCardBreakpoint={cardBreakpoint()}
  columns={columns}
  // The filters this screen manages travel as external filters: the table merges them with its own
  // before asking, and the export takes exactly the filters of the last answer.

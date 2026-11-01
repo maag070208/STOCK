@@ -1,23 +1,17 @@
 package com.axzydev.stock.ui.receipts
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import com.axzydev.stock.data.receipts.AssignmentView
 import com.axzydev.stock.feature.receipts.CountState
@@ -28,33 +22,37 @@ import com.axzydev.stock.i18n.Text
 import com.axzydev.stock.i18n.text
 import com.axzydev.stock.ui.components.AppIcon
 import com.axzydev.stock.ui.components.AppText
-import com.axzydev.stock.ui.components.Card
+import com.axzydev.stock.ui.components.BentoChip
+import com.axzydev.stock.ui.components.BentoChoiceRow
+import com.axzydev.stock.ui.components.BentoHero
+import com.axzydev.stock.ui.components.BentoLabel
+import com.axzydev.stock.ui.components.BentoQuantity
+import com.axzydev.stock.ui.components.BentoResult
+import com.axzydev.stock.ui.components.BentoSkeleton
+import com.axzydev.stock.ui.components.BentoState
 import com.axzydev.stock.ui.components.PageScaffold
 import com.axzydev.stock.ui.components.PrimaryButton
-import com.axzydev.stock.ui.components.ScannerPanel
+import com.axzydev.stock.ui.components.ScanSearch
+import com.axzydev.stock.ui.components.SecondaryButton
 import com.axzydev.stock.ui.components.TextInput
+import com.axzydev.stock.ui.components.matches
+import com.axzydev.stock.ui.components.riseIn
 import com.axzydev.stock.ui.format.formatQuantity
 import com.axzydev.stock.ui.theme.DesignTokens
 import com.axzydev.stock.ui.theme.StockFlow
 import com.axzydev.stock.ui.theme.StockFlowType
 
-// Counting what arrived (docs/modules/material-receiving.md section 4, barcode-scanning.md section 3). The operator
-// scans the material; the app finds their open assignment of it and takes the counted quantity. A material with no
-// open assignment says so, and nothing is counted.
+// Counting what arrived (docs/modules/material-receiving.md section 4, barcode-scanning.md section 3). The operator scans
+// the material, or writes in the search box over their own list of what is left to count; the app opens the assignment
+// and takes the counted quantity, which starts at what was expected. A material with no open assignment says so.
 @Composable
 fun CountScreen(count: CountViewModel, onBack: () -> Unit, onPlace: (PlacementTarget) -> Unit) {
 	val state by count.state.collectAsState()
-	val focus = LocalFocusManager.current
-	val keyboard = LocalSoftwareKeyboardController.current
-	val search = {
-		focus.clearFocus()
-		keyboard?.hide()
-		count.submit()
-	}
+	LaunchedEffect(state.target) { if (state.target == null) count.load() }
 	PageScaffold(
 		title = text(Text.PAGE_COUNT),
-		subtitle = text(Text.PAGE_COUNT_HINT),
-		onBack = onBack,
+		subtitle = if (state.target == null) text(Text.PAGE_COUNT_HINT) else null,
+		onBack = if (state.target != null && state.saved == null) count::clear else onBack,
 		backLabel = text(Text.BACK_MODULES),
 		backTag = "count-back",
 	) {
@@ -63,127 +61,98 @@ fun CountScreen(count: CountViewModel, onBack: () -> Unit, onPlace: (PlacementTa
 
 			state.target != null -> CountForm(state, state.target!!, count)
 
-			else -> {
-				ScannerPanel(onScanned = count::scanned)
-				TextInput(
-					label = text(Text.LOOKUP_FIELD),
-					value = state.query,
-					onValueChange = count::edit,
-					tag = "count-value",
-					icon = AppIcon.SEARCH,
-					error = state.fieldError,
-					imeAction = ImeAction.Search,
-					onDone = search,
-				)
-				PrimaryButton(
-					text = text(if (state.looking) Text.LOOKUP_SEARCHING else Text.LOOKUP_SEARCH),
-					onClick = search,
-					tag = "count-search",
-					busy = state.looking,
-				)
+			else -> ScanSearch(
+				instruction = text(Text.SCAN_MATERIAL),
+				searchLabel = text(Text.SEARCH_MATERIAL),
+				query = state.query,
+				onQueryChange = count::edit,
+				onScanned = count::scanned,
+				onSubmit = count::submit,
+				tag = "count-value",
+				error = state.fieldError,
+				searching = state.looking,
+			) {
 				state.error?.let { AppText(it, StockFlowType.bodyLg, StockFlow.colors.danger, Modifier.testTag("count-error")) }
 				// Several materials matched the name written: the operator picks one before its assignments show.
 				if (state.products.isNotEmpty()) {
-					AppText(text(Text.LOOKUP_CHOOSE).replace("{count}", state.products.size.toString()), StockFlowType.bodyLg, StockFlow.colors.onSurface)
+					BentoLabel(text(Text.LOOKUP_CHOOSE).replace("{count}", state.products.size.toString()))
 					state.products.forEach { product ->
-						Pick(
-							title = product.name,
-							subtitle = product.code,
-							tag = "count-material-${product.code}",
-							onClick = { count.choose(product) },
-						)
+						BentoChoiceRow(product.name, "count-material-${product.code}", { count.choose(product) }, subtitle = product.code, icon = AppIcon.BOXES)
 					}
 				}
 				// The material is in several open assignments: the operator picks the one they are counting.
 				if (state.targets.isNotEmpty()) {
-					AppText(text(Text.COUNT_CHOOSE_ASSIGNMENT), StockFlowType.bodyLg, StockFlow.colors.onSurface)
-					state.targets.forEach { target ->
-						Pick(
-							title = lineTitle(target),
-							subtitle = target.invoice,
-							tag = "count-assignment-${target.assignment.id}",
-							onClick = { count.choose(target) },
-						)
-					}
+					BentoLabel(text(Text.COUNT_CHOOSE_ASSIGNMENT))
+					state.targets.forEach { target -> TargetRow(target, count) }
 				}
+				if (state.products.isEmpty() && state.targets.isEmpty()) Queue(state, count)
 			}
 		}
 	}
 }
 
-// The count itself: what was expected, the quantity the operator counted, and an optional note.
+// What is left to count, narrowed by what is written, so a person without a scanner never needs the exact code.
+@Composable
+private fun Queue(state: CountState, count: CountViewModel) {
+	val shown = state.queue.filter { state.query.matches(it.product.code, it.product.name, it.invoice) }
+	when {
+		state.loadingQueue && state.queue.isEmpty() -> BentoSkeleton(tag = "count-loading")
+		state.queue.isEmpty() -> BentoState(text(Text.EMPTY_COUNT), "count-empty", text(Text.EMPTY_HINT))
+		shown.isEmpty() -> BentoState(text(Text.NO_RESULTS), "count-no-results", text(Text.NO_RESULTS_HINT), AppIcon.SEARCH)
+		else -> {
+			BentoLabel("${text(Text.QUEUE_COUNT)} · ${shown.size}")
+			shown.forEachIndexed { index, target ->
+				Column(Modifier.riseIn(index)) { TargetRow(target, count) }
+			}
+		}
+	}
+}
+
+@Composable
+private fun TargetRow(target: CountTarget, count: CountViewModel) {
+	BentoChoiceRow(
+		title = lineTitle(target),
+		subtitle = target.invoice,
+		detail = expectedText(target),
+		tag = "count-assignment-${target.assignment.id}",
+		onClick = { count.choose(target) },
+	)
+}
+
+// The count itself: what was expected, in big, and the quantity, which starts there: most counts only confirm it.
 @Composable
 private fun CountForm(state: CountState, target: CountTarget, count: CountViewModel) {
-	Card(Modifier.testTag("count-target")) {
-		AppText(lineTitle(target), StockFlowType.titleMd, StockFlow.colors.onSurface, maxLines = 2)
-		AppText(target.invoice, StockFlowType.bodyMd, StockFlow.colors.onSurfaceMuted)
-		Field(text(Text.EXPECTED), expectedText(target))
+	var writingNote by rememberSaveable { mutableStateOf(state.notes.isNotEmpty()) }
+	BentoHero(lineTitle(target), expectedText(target), text(Text.EXPECTED), "count-target", subtitle = target.invoice)
+	BentoQuantity(text(Text.COUNT_QUANTITY), state.quantity, count::editQuantity, "count-quantity", state.quantityError, onDone = count::save)
+	if (writingNote) {
+		TextInput(label = text(Text.COUNT_NOTES), value = state.notes, onValueChange = count::editNotes, tag = "count-notes")
+	} else {
+		BentoChip(text(Text.ADD_NOTE), selected = false, tag = "count-add-note") { writingNote = true }
 	}
-	TextInput(
-		label = text(Text.COUNT_QUANTITY),
-		value = state.quantity,
-		onValueChange = count::editQuantity,
-		tag = "count-quantity",
-		numeric = true,
-		error = state.quantityError,
-		imeAction = ImeAction.Done,
-		onDone = count::save,
-	)
-	TextInput(
-		label = text(Text.COUNT_NOTES),
-		value = state.notes,
-		onValueChange = count::editNotes,
-		tag = "count-notes",
-	)
 	state.error?.let { AppText(it, StockFlowType.bodyLg, StockFlow.colors.danger, Modifier.testTag("count-error")) }
-	PrimaryButton(text(Text.COUNT_SAVE), count::save, tag = "count-save", busy = state.saving)
+	PrimaryButton(text(Text.COUNT_SAVE), count::save, tag = "count-save", busy = state.saving, icon = AppIcon.CHECK)
 }
 
 // A settled count goes straight to placement; an open difference still lets the operator continue with other lines.
 @Composable
 private fun CountResult(target: CountTarget, saved: AssignmentView, onAnother: () -> Unit, onPlace: (PlacementTarget) -> Unit) {
 	val matched = saved.outcome == MATCH
-	Card(Modifier.testTag("count-saved")) {
-		AppText(
-			text(if (matched) Text.COUNT_MATCH else Text.COUNT_DISCREPANCY),
-			StockFlowType.bodyLg,
-			if (matched) StockFlow.colors.success else StockFlow.colors.warning,
-		)
+	BentoResult(text(if (matched) Text.COUNT_MATCH else Text.COUNT_DISCREPANCY), "count-saved", success = matched) {
+		AppText(lineTitle(target), StockFlowType.bodyMd, StockFlow.colors.onSurfaceMuted, maxLines = 2)
 	}
-	if (saved.readyToPlace) {
-		PrimaryButton(
-			text = text(Text.COUNT_PLACE_NOW),
-			onClick = { onPlace(PlacementTarget(saved, target.invoice, target.warehouseId, target.product, target.unit)) },
-			tag = "count-place-now",
-		)
-	}
-	PrimaryButton(text(Text.COUNT_ANOTHER), onAnother, tag = "count-another")
-}
-
-// One choice of a list: a title, a line under it, and a tap that picks it.
-@Composable
-private fun Pick(title: String, subtitle: String, tag: String, onClick: () -> Unit) {
-	val shape = RoundedCornerShape(DesignTokens.Components.cardPanel.rounded.dp)
-	Column(
-		Modifier
-			.fillMaxWidth()
-			.background(Color(DesignTokens.Components.cardPanel.backgroundColor), shape)
-			.border(1.dp, StockFlow.colors.outline, shape)
-			.clickable(role = Role.Button, onClick = onClick)
-			.padding(horizontal = DesignTokens.Spacing.lg.dp, vertical = DesignTokens.Spacing.md.dp)
-			.testTag(tag),
-		verticalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.xs.dp),
-	) {
-		AppText(title, StockFlowType.bodyLg, StockFlow.colors.onSurface, maxLines = 2)
-		AppText(subtitle, StockFlowType.bodyMd, StockFlow.colors.onSurfaceMuted, maxLines = 1)
-	}
-}
-
-@Composable
-private fun Field(label: String, value: String) {
-	Column(verticalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.xs.dp)) {
-		AppText(label.uppercase(), StockFlowType.labelSm, StockFlow.colors.onSurfaceMuted)
-		AppText(value, StockFlowType.bodyLg, StockFlow.colors.onSurface)
+	Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.sm.dp)) {
+		if (saved.readyToPlace) {
+			PrimaryButton(
+				text = text(Text.COUNT_PLACE_NOW),
+				onClick = { onPlace(PlacementTarget(saved, target.invoice, target.warehouseId, target.product, target.unit)) },
+				tag = "count-place-now",
+				icon = AppIcon.WAREHOUSE,
+			)
+			SecondaryButton(text(Text.COUNT_ANOTHER), onAnother, tag = "count-another", icon = AppIcon.SCAN)
+		} else {
+			PrimaryButton(text(Text.COUNT_ANOTHER), onAnother, tag = "count-another", icon = AppIcon.SCAN)
+		}
 	}
 }
 

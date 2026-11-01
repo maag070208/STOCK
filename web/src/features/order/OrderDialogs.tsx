@@ -1,4 +1,4 @@
-import { ITInput, ITSearchSelect, ITStack, ITText, ITTextarea } from "@axzydev/axzy_ui_system";
+import { ITBadget, ITButton, ITChip, ITFlex, ITInput, ITSearchSelect, ITStack, ITText, ITTextarea } from "@axzydev/axzy_ui_system";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { orderApi, type Order, type OrderLine, type OrderOperator } from "@entities/order";
@@ -92,14 +92,14 @@ export function ReassignOperatorDialog(props: { order: Order | null; isOpen: boo
 
 	return (
 		<FormDialog isOpen={props.isOpen} title={t("reassignDialog.title")} onClose={props.onClose} onSubmit={() => void save()} submitting={submit.submitting} error={submit.error}>
-			<ITText>{t("reassignDialog.body")}</ITText>
+			<ITText>{props.order?.operator ? t("reassign.current", { name: props.order.operator.name }) : t("reassignDialog.body")}</ITText>
 			<ITStack spacing={3} className="sf:min-w-[26rem]">
 				<ITSearchSelect
 					name="operatorId"
 					label={t("reassignDialog.operator")}
 					value={operatorId}
 					onChange={(value) => setOperatorId(String(value))}
-					options={operators.map((operator) => ({ value: operator.id, label: operator.name }))}
+					options={operators.filter((operator) => operator.id !== props.order?.operator?.id).map((operator) => ({ value: operator.id, label: operator.name }))}
 					valueField="value"
 					labelField="label"
 					error={submit.fieldErrors.operatorId ?? (tried && !operatorId ? t("common:validation.required") : undefined)}
@@ -217,14 +217,49 @@ export function CancelOrderDialog(props: { order: Order | null; isOpen: boolean;
 	);
 }
 
-// Moving what was picked to another open order of the same warehouse (section 8, action 2). No balance changes: the
-// goods already left the shelves and now serve the target order.
-export function TransferPicksDialog(props: { order: Order | null; isOpen: boolean; onClose: () => void; onSaved: () => void }) {
+// The material a reassignment moves: already known when the line opened the dialog, or chosen among what was picked.
+function PickedLine(props: { lines: OrderLine[]; line: OrderLine | null; label: string; tried: boolean; onChoose: (lineId: string) => void }) {
 	const { t, i18n } = useTranslation(["orders", "common"]);
-	const [orders, setOrders] = useState<Order[]>([]);
+	const picked = (line: OrderLine) => formatQuantity(line.pickedQuantity, line.unit?.decimalPlaces, i18n.language);
+	if (props.lines.length === 1 && props.line) {
+		return (
+			<ITFlex align="center" justify="between" gap={3} className="sf:rounded-xl sf:bg-surface-soft sf:p-3">
+				<ITText className="sf:min-w-0 sf:text-title-sm">{`${props.line.product.code} · ${props.line.product.name}`}</ITText>
+				<ITBadget color="warning" label={`${t("detail.picked")} ${picked(props.line)}`} />
+			</ITFlex>
+		);
+	}
+	return (
+		<ITSearchSelect
+			name="lineId"
+			label={props.label}
+			value={props.line?.id ?? ""}
+			onChange={(value) => props.onChoose(String(value))}
+			options={props.lines.map((candidate) => ({ value: candidate.id, label: `${candidate.product.code} · ${candidate.product.name} (${t("detail.picked")} ${picked(candidate)})` }))}
+			valueField="value"
+			labelField="label"
+			error={props.tried && !props.line ? t("common:validation.required") : undefined}
+			touched={props.tried}
+			required
+		/>
+	);
+}
+
+interface Target {
+	order: Order;
+	needs: number;
+}
+
+// Moving what was picked to another open order of the same warehouse (section 8, action 2). No balance changes: the
+// goods already left the shelves and now serve the target order. The dialog offers only the orders that need this
+// material, with how much; choosing one fills in the most that can move, and a common reason is one click.
+export function TransferPicksDialog(props: { order: Order | null; line: OrderLine | null; isOpen: boolean; onClose: () => void; onSaved: () => void }) {
+	const { t, i18n } = useTranslation(["orders", "common"]);
+	const [candidates, setCandidates] = useState<Order[]>([]);
+	const [targets, setTargets] = useState<Target[]>([]);
+	const [loaded, setLoaded] = useState(false);
 	const [lineId, setLineId] = useState("");
 	const [targetId, setTargetId] = useState("");
-	const [remaining, setRemaining] = useState<number | null>(null);
 	const [quantity, setQuantity] = useState("");
 	const [note, setNote] = useState("");
 	const [tried, setTried] = useState(false);
@@ -232,111 +267,126 @@ export function TransferPicksDialog(props: { order: Order | null; isOpen: boolea
 
 	const lines = (props.order?.lines ?? []).filter((line) => Number(line.pickedQuantity) > 0);
 	const line = lines.find((candidate) => candidate.id === lineId) ?? null;
+	const target = targets.find((candidate) => candidate.order.id === targetId) ?? null;
+	const reasons = [t("reassign.reasons.urgent"), t("reassign.reasons.priority"), t("reassign.reasons.shortage")];
+	const shown = (value: number) => formatQuantity(value, line?.unit?.decimalPlaces, i18n.language);
 
 	useEffect(() => {
 		if (props.isOpen && props.order) {
-			setOrders([]);
-			setLineId("");
+			setCandidates([]);
+			setLineId(props.line?.id ?? (lines.length === 1 ? lines[0].id : ""));
 			setTargetId("");
-			setRemaining(null);
 			setQuantity("");
 			setNote("");
 			setTried(false);
 			submit.reset();
-			void orderApi.openOf(props.order.warehouse.id).then((page) => setOrders(page.data.filter((order) => order.id !== props.order!.id))).catch(() => setOrders([]));
+			void orderApi.openOf(props.order.warehouse.id).then((page) => setCandidates(page.data.filter((order) => order.id !== props.order!.id))).catch(() => setCandidates([]));
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [props.isOpen, props.order]);
+	}, [props.isOpen, props.order, props.line]);
 
-	// Once a target is chosen, its own line of the same material says how much it still needs.
+	// The list carries the headers only: each candidate is read with its lines, to know what it still needs of the material.
 	useEffect(() => {
-		setRemaining(null);
-		if (!targetId || !line) return;
+		setTargets([]);
+		setTargetId("");
+		setLoaded(false);
+		if (!line) return;
 		let live = true;
-		void orderApi
-			.get(targetId)
-			.then((found) => {
-				const target = (found.lines ?? []).find((candidate) => candidate.product.id === line.product.id);
-				if (live) setRemaining(target ? Number(target.quantity) - Number(target.pickedQuantity) : 0);
-			})
-			.catch(() => undefined);
+		void Promise.all(candidates.map((candidate) => orderApi.get(candidate.id).catch(() => null))).then((found) => {
+			if (!live) return;
+			setTargets(
+				found.flatMap((order): Target[] => {
+					const own = order?.lines?.find((candidate) => candidate.product.id === line.product.id);
+					const needs = own ? Number(own.quantity) - Number(own.pickedQuantity) : 0;
+					return order && needs > 0 ? [{ order, needs }] : [];
+				}),
+			);
+			setLoaded(true);
+		});
 		return () => {
 			live = false;
 		};
-	}, [targetId, line]);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [candidates, line?.id]);
+
+	const choose = (next: Target) => {
+		setTargetId(next.order.id);
+		setQuantity(String(Math.min(next.needs, Number(line?.pickedQuantity ?? 0))));
+	};
 
 	const quantityNumber = Number(quantity);
 	const overPicked = line ? quantityNumber > Number(line.pickedQuantity) : false;
-	const overTarget = remaining !== null && quantityNumber > remaining;
-	const blocked = !line || quantityNumber <= 0 || overPicked || overTarget;
-	const quantityError =
-		tried && line ? (overTarget ? t("transferDialog.aboveTarget") : overPicked || quantityNumber <= 0 ? t("transferDialog.abovePicked") : undefined) : undefined;
+	const overTarget = target !== null && quantityNumber > target.needs;
+	const blocked = !line || !target || quantityNumber <= 0 || overPicked || overTarget;
+	const quantityError = tried && line ? (overTarget ? t("transferDialog.aboveTarget") : overPicked || quantityNumber <= 0 ? t("transferDialog.abovePicked") : undefined) : undefined;
 
 	async function save() {
 		setTried(true);
-		if (!props.order || !line || !targetId || blocked || !note.trim()) return;
-		const saved = await submit.run(() => orderApi.transfer(props.order!.id, { lineId: line.id, targetOrderId: targetId, quantity: quantityNumber, note: note.trim() }));
+		if (!props.order || !line || !target || blocked || !note.trim()) return;
+		const saved = await submit.run(() => orderApi.transfer(props.order!.id, { lineId: line.id, targetOrderId: target.order.id, quantity: quantityNumber, note: note.trim() }));
 		if (saved) props.onSaved();
 	}
 
 	return (
 		<FormDialog isOpen={props.isOpen} title={t("transferDialog.title")} onClose={props.onClose} onSubmit={() => void save()} submitting={submit.submitting} error={submit.error} submitLabel={t("transferDialog.confirm")}>
-			<ITText>{t("transferDialog.body")}</ITText>
 			<ITStack spacing={3} className="sf:min-w-[32rem]">
-				<ITSearchSelect
-					name="lineId"
-					label={t("transferDialog.line")}
-					value={lineId}
-					onChange={(value) => setLineId(String(value))}
-					options={lines.map((candidate) => ({ value: candidate.id, label: `${candidate.product.code} · ${candidate.product.name} (${t("detail.picked")} ${formatQuantity(candidate.pickedQuantity, candidate.unit?.decimalPlaces, i18n.language)})` }))}
-					valueField="value"
-					labelField="label"
-					error={tried && !lineId ? t("common:validation.required") : undefined}
-					touched={tried}
-					required
-				/>
-				<ITSearchSelect
-					name="targetOrderId"
-					label={t("transferDialog.target")}
-					value={targetId}
-					onChange={(value) => setTargetId(String(value))}
-					options={orders.map((target) => ({ value: target.id, label: `${target.number} · ${target.customer.name ?? ""}` }))}
-					valueField="value"
-					labelField="label"
-					error={tried && !targetId ? t("common:validation.required") : undefined}
-					touched={tried}
-					required
-				/>
-				{orders.length === 0 && <ITText muted>{t("transferDialog.noTargets")}</ITText>}
-				<ITInput
-					name="quantity"
-					type="number"
-					label={line ? `${t("transferDialog.quantity")} / ${formatQuantity(line.pickedQuantity, line.unit?.decimalPlaces, i18n.language)}` : t("transferDialog.quantity")}
-					value={quantity}
-					onChange={(e) => setQuantity(e.target.value)}
-					error={submit.fieldErrors.quantity ?? quantityError ?? (tried && !quantity.trim() ? t("common:validation.required") : undefined)}
-					touched={tried || !!submit.fieldErrors.quantity}
-					required
-				/>
-				<ITTextarea
-					name="note"
-					label={t("transferDialog.note")}
-					value={note}
-					onChange={setNote}
-					placeholder={t("transferDialog.noteHint")}
-					rows={3}
-					maxLength={500}
-					error={submit.fieldErrors.note ?? (tried && !note.trim() ? t("common:validation.required") : undefined)}
-				/>
+				<PickedLine lines={lines} line={line} label={t("transferDialog.line")} tried={tried} onChoose={setLineId} />
+				{line && (
+					<ITStack spacing={2}>
+						<ITText className="sf:text-label-md">{t("reassign.target")}</ITText>
+						{loaded && targets.length === 0 && <ITText muted>{t("reassign.noneNeed")}</ITText>}
+						{tried && !target && targets.length > 0 && <ITText className="sf:text-label-sm sf:text-danger">{t("common:validation.required")}</ITText>}
+						{targets.map((candidate) => (
+							<ITButton key={candidate.order.id} variant={candidate.order.id === targetId ? "filled" : "outlined"} className="sf:w-full sf:justify-start sf:font-normal" onClick={() => choose(candidate)}>
+								<ITFlex align="center" justify="between" gap={3} className="sf:w-full">
+									<ITText as="span" className="sf:min-w-0 sf:truncate">{`${candidate.order.number} · ${candidate.order.customer.name ?? ""}`}</ITText>
+									<ITText as="span" className="sf:shrink-0 sf:text-label-sm">{t("reassign.needs", { quantity: shown(candidate.needs) })}</ITText>
+								</ITFlex>
+							</ITButton>
+						))}
+					</ITStack>
+				)}
+				{target && (
+					<>
+						<ITInput
+							name="quantity"
+							type="number"
+							label={t("transferDialog.quantity")}
+							value={quantity}
+							onChange={(e) => setQuantity(e.target.value)}
+							error={submit.fieldErrors.quantity ?? quantityError ?? t("reassign.max", { quantity: shown(Math.min(target.needs, Number(line?.pickedQuantity ?? 0))) })}
+							touched={!!quantityError || !!submit.fieldErrors.quantity}
+							required
+						/>
+						<ITStack spacing={2}>
+							<ITText className="sf:text-label-md">{t("reassign.reason")}</ITText>
+							<ITFlex wrap="wrap" gap={2}>
+								{reasons.map((reason) => (
+									<ITChip key={reason} label={reason} selected={note === reason} onClick={() => setNote(reason)} />
+								))}
+							</ITFlex>
+						</ITStack>
+						<ITTextarea
+							name="note"
+							label={t("transferDialog.note")}
+							value={note}
+							onChange={setNote}
+							placeholder={t("transferDialog.noteHint")}
+							rows={2}
+							maxLength={500}
+							error={submit.fieldErrors.note ?? (tried && !note.trim() ? t("common:validation.required") : undefined)}
+						/>
+					</>
+				)}
 			</ITStack>
 		</FormDialog>
 	);
 }
 
 // Returning what was picked to a location of the warehouse (section 8, action 3): the only reassignment that changes a
-// balance, with a movement in.
-export function ReturnPicksDialog(props: { order: Order | null; isOpen: boolean; onClose: () => void; onSaved: () => void }) {
-	const { t, i18n } = useTranslation(["orders", "common"]);
+// balance, with a movement in. It starts with everything that was picked of the line.
+export function ReturnPicksDialog(props: { order: Order | null; line: OrderLine | null; isOpen: boolean; onClose: () => void; onSaved: () => void }) {
+	const { t } = useTranslation(["orders", "common"]);
 	const [locations, setLocations] = useState<Location[]>([]);
 	const [lineId, setLineId] = useState("");
 	const [locationId, setLocationId] = useState("");
@@ -350,10 +400,11 @@ export function ReturnPicksDialog(props: { order: Order | null; isOpen: boolean;
 
 	useEffect(() => {
 		if (props.isOpen && props.order) {
+			const first = props.line ?? (lines.length === 1 ? lines[0] : null);
 			setLocations([]);
-			setLineId("");
+			setLineId(first?.id ?? "");
 			setLocationId("");
-			setQuantity("");
+			setQuantity(first ? String(Number(first.pickedQuantity)) : "");
 			setNote("");
 			setTried(false);
 			submit.reset();
@@ -363,7 +414,7 @@ export function ReturnPicksDialog(props: { order: Order | null; isOpen: boolean;
 				.catch(() => setLocations([]));
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [props.isOpen, props.order]);
+	}, [props.isOpen, props.order, props.line]);
 
 	const quantityNumber = Number(quantity);
 	const blocked = !line || quantityNumber <= 0 || quantityNumber > Number(line.pickedQuantity);
@@ -377,19 +428,16 @@ export function ReturnPicksDialog(props: { order: Order | null; isOpen: boolean;
 
 	return (
 		<FormDialog isOpen={props.isOpen} title={t("returnDialog.title")} onClose={props.onClose} onSubmit={() => void save()} submitting={submit.submitting} error={submit.error} submitLabel={t("returnDialog.confirm")}>
-			<ITText>{t("returnDialog.body")}</ITText>
 			<ITStack spacing={3} className="sf:min-w-[32rem]">
-				<ITSearchSelect
-					name="lineId"
+				<PickedLine
+					lines={lines}
+					line={line}
 					label={t("returnDialog.line")}
-					value={lineId}
-					onChange={(value) => setLineId(String(value))}
-					options={lines.map((candidate) => ({ value: candidate.id, label: `${candidate.product.code} · ${candidate.product.name} (${t("detail.picked")} ${formatQuantity(candidate.pickedQuantity, candidate.unit?.decimalPlaces, i18n.language)})` }))}
-					valueField="value"
-					labelField="label"
-					error={tried && !lineId ? t("common:validation.required") : undefined}
-					touched={tried}
-					required
+					tried={tried}
+					onChoose={(id) => {
+						setLineId(id);
+						setQuantity(String(Number(lines.find((candidate) => candidate.id === id)?.pickedQuantity ?? "")));
+					}}
 				/>
 				<ITSearchSelect
 					name="locationId"
@@ -419,7 +467,7 @@ export function ReturnPicksDialog(props: { order: Order | null; isOpen: boolean;
 					value={note}
 					onChange={setNote}
 					placeholder={t("returnDialog.noteHint")}
-					rows={3}
+					rows={2}
 					maxLength={500}
 					error={submit.fieldErrors.note ?? (tried && !note.trim() ? t("common:validation.required") : undefined)}
 				/>

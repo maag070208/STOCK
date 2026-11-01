@@ -132,12 +132,13 @@ export async function stockIn({ warehouseId, locationId, operator, product, quan
   if (assigned.status !== 200) throw new Error(`assignment failed: ${JSON.stringify(assigned.json)}`);
   const assignmentId = assigned.json.assignments[0].id;
   const body = { countedQuantity: String(quantity) };
-  const counted = await call("POST", `/receipts/assignments/${assignmentId}/count`, { token: operator.token, body, channel: "app" });
+  const counted = await call("POST", `/receipts/assignments/${assignmentId}/count`, { token: operator.token, body, channel: "app", headers: { "Idempotency-Key": randomUUID() } });
   if (counted.status !== 200) throw new Error(`count failed: ${JSON.stringify(counted.json)}`);
   const placed = await call("POST", `/receipts/assignments/${assignmentId}/placements`, {
     token: operator.token,
     body: { placements: [{ locationId, quantity: String(quantity) }] },
     channel: "app",
+    headers: { "Idempotency-Key": randomUUID() },
   });
   if (placed.status !== 200) throw new Error(`placement failed: ${JSON.stringify(placed.json)}`);
 }

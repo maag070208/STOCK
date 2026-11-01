@@ -5,7 +5,9 @@ import androidx.lifecycle.viewModelScope
 import com.axzydev.stock.data.Decimals
 import com.axzydev.stock.data.api.ApiError
 import com.axzydev.stock.data.api.Authorized
+import com.axzydev.stock.data.locations.Location
 import com.axzydev.stock.data.locations.LocationsApi
+import com.axzydev.stock.data.products.ProductApi
 import com.axzydev.stock.data.receipts.AssignmentView
 import com.axzydev.stock.data.receipts.PlacementBody
 import com.axzydev.stock.data.receipts.ReceivingApi
@@ -35,10 +37,15 @@ data class PlacementTarget(
 data class PlacementState(
 	val loading: Boolean = false,
 	val targets: List<PlacementTarget> = emptyList(),
+	// What is written over the work queue, and what a scan of it found out.
+	val queueQuery: String = "",
+	val queueError: String? = null,
 	val target: PlacementTarget? = null,
 	// What is still to place for the target: counted minus what is already placed.
 	val remaining: String = "",
 	val scan: String = "",
+	// The locations of the warehouse that answer what was written, to touch one.
+	val suggestions: List<Location> = emptyList(),
 	val lines: List<PlacementLine> = emptyList(),
 	val error: String? = null,
 	val scanError: String? = null,
@@ -59,6 +66,7 @@ data class PlacementState(
 class PlacementViewModel(
 	private val receiving: ReceivingApi,
 	private val locations: LocationsApi,
+	private val products: ProductApi,
 	private val session: Authorized,
 	private val required: () -> String,
 	private val quantityInvalid: () -> String,
@@ -105,6 +113,71 @@ class PlacementViewModel(
 		load()
 	}
 
+	fun editQueueQuery(value: String) {
+		mutableState.value = mutableState.value.copy(queueQuery = value, queueError = null)
+	}
+
+	// The camera read a material over the work queue: its target opens, or the list narrows to its targets.
+	fun scannedMaterial(value: String) {
+		val clean = value.trim()
+		if (clean.isEmpty() || clean == lastScan) return
+		lastScan = clean
+		findTarget(clean)
+	}
+
+	fun submitQueueQuery() = findTarget(mutableState.value.queueQuery.trim())
+
+	private fun findTarget(value: String) {
+		if (value.isEmpty()) return
+		val targets = mutableState.value.targets
+		running?.cancel()
+		running = viewModelScope.launch {
+			try {
+				val found = session.withToken { token -> products.lookup(token, value).products }
+				val matching = targets.filter { target -> found.any { it.id == target.product.id } }
+				when (matching.size) {
+					0 -> mutableState.value = mutableState.value.copy(queueQuery = value, queueError = notInWarehouse())
+					1 -> open(matching.single())
+					else -> mutableState.value = mutableState.value.copy(queueQuery = found.first().code, queueError = null)
+				}
+			} catch (e: CancellationException) {
+				throw e
+			} catch (e: ApiError) {
+				mutableState.value = mutableState.value.copy(queueError = e.message)
+			} catch (e: Exception) {
+				mutableState.value = mutableState.value.copy(queueError = unreachable())
+			}
+		}
+	}
+
+	// What was written so far: the locations of this warehouse with that in their code, to touch one.
+	fun suggest() {
+		val current = mutableState.value
+		val target = current.target ?: return
+		val value = current.scan.trim()
+		if (value.isEmpty()) return
+		running?.cancel()
+		running = viewModelScope.launch {
+			try {
+				val found = session.withToken { token -> locations.inWarehouse(token, target.warehouseId, value) }
+				mutableState.value = mutableState.value.copy(suggestions = found.take(SUGGESTIONS))
+			} catch (e: CancellationException) {
+				throw e
+			} catch (e: Exception) {
+				mutableState.value = mutableState.value.copy(suggestions = emptyList())
+			}
+		}
+	}
+
+	fun chooseLocation(location: Location) {
+		val current = mutableState.value
+		mutableState.value = if (current.lines.any { it.locationId == location.id }) {
+			current.copy(scan = "", suggestions = emptyList())
+		} else {
+			current.copy(scan = "", suggestions = emptyList(), scanError = null, lines = current.lines + PlacementLine(location.id, location.code, Decimals.plain(current.unassigned ?: "")))
+		}
+	}
+
 	fun clear() {
 		running?.cancel()
 		lastScan = null
@@ -113,7 +186,7 @@ class PlacementViewModel(
 	}
 
 	fun editScan(value: String) {
-		mutableState.value = mutableState.value.copy(scan = value, scanError = null)
+		mutableState.value = mutableState.value.copy(scan = value, scanError = null, suggestions = if (value.isBlank()) emptyList() else mutableState.value.suggestions)
 	}
 
 	// The camera read a location code: it is put in the list at once.
@@ -229,7 +302,8 @@ class PlacementViewModel(
 					current.lines.any { it.locationId == location.id } -> current.copy(scan = "")
 					else -> current.copy(
 						scan = "",
-						lines = current.lines + PlacementLine(location.id, location.code, current.unassigned ?: ""),
+						suggestions = emptyList(),
+						lines = current.lines + PlacementLine(location.id, location.code, Decimals.plain(current.unassigned ?: "")),
 					)
 				}
 			} catch (e: CancellationException) {
@@ -244,5 +318,6 @@ class PlacementViewModel(
 
 	private companion object {
 		val ACTIVE = setOf("PENDING", "IN_ASSIGNMENT")
+		const val SUGGESTIONS = 8
 	}
 }

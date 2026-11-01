@@ -10,6 +10,7 @@ import { WarehouseDialog } from "@features/warehouse/WarehouseDialog";
 import type { TableParams } from "@shared/api/table";
 import { ApiError } from "@shared/api/client";
 import { toast } from "@app/store";
+import { cardBreakpoint, tableHeight } from "@shared/ui/tableLayout";
 
 type Confirm = { kind: "deactivate" | "reactivate"; warehouse: Warehouse };
 
@@ -71,9 +72,10 @@ export function WarehousesPage() {
 				layout="fixed"
 				density="compact"
 				virtualized
-				virtualizedMaxHeight={400}
+				virtualizedMaxHeight={tableHeight()}
 				rowHeight={50}
 				showViewToggle={false}
+				autoCardBreakpoint={cardBreakpoint()}
  columns={columns}
  fetchData={(params) => warehouseApi.query(params as TableParams)}
  reloadTrigger={reload}

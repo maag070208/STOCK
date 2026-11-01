@@ -106,7 +106,9 @@
     "adjust": "Ajustar",
     "noLines": "La factura aún no tiene materiales.",
     "notAssigned": "Sin asignar",
-    "materials": "Materiales"
+    "materials": "Materiales",
+    "count": "Conteo",
+    "ofExpected": "{{counted}} de {{expected}}"
   },
   "assignDialog": {
     "title": "Asignar {{product}}",
@@ -150,5 +152,19 @@
     "none": "Aún no hay operadores en la plantilla.",
     "candidates": "Operadores del almacén",
     "noCandidates": "No hay operadores con este almacén asignado."
+  },
+  "flow": {
+    "capture": "Capturar",
+    "assign": "Asignar",
+    "count": "Contar",
+    "place": "Ubicar",
+    "done": "Completa",
+    "nextCapture": "Agrega los materiales de la factura.",
+    "nextAssign": "Asigna quién recibe el material.",
+    "nextCount": "El operador cuenta desde la app: {{counted}} de {{lines}} líneas.",
+    "nextResolve": "Hay diferencias de conteo por resolver.",
+    "nextPlace": "El operador ubica desde la app: {{placed}} de {{lines}} líneas.",
+    "nextDone": "Factura recibida y ubicada.",
+    "resolve": "Resolver diferencias"
   }
 }

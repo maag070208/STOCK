@@ -9,6 +9,7 @@ import { invoiceApi, invoiceFilters, STATUS_COLOR, statusChip, type Invoice, typ
 import { useCan } from "@entities/user";
 import { NewInvoiceDialog } from "@features/invoice/NewInvoiceDialog";
 import { formatDate } from "@shared/lib/format";
+import { cardBreakpoint, tableHeight } from "@shared/ui/tableLayout";
 
 // The invoices the person can see: every one with ALL, those of their warehouses with AREA (the API decides). One search
 // box and three status chips drive the query (F8-05), and a new invoice is captured in a modal over the list (F8-06).
@@ -22,7 +23,8 @@ export function InvoicesPage() {
 	const [chip, setChip] = useState<StatusChip>(statusChip(params.get("status")));
 	const [statuses, setStatuses] = useState<CatalogItem[]>([]);
 	const [total, setTotal] = useState<number | null>(null);
-	const [creating, setCreating] = useState(false);
+	// `?new=1` opens the modal on arrival: the way in from the search of the top bar.
+	const [creating, setCreating] = useState(params.get("new") === "1");
 	const [warehouses, setWarehouses] = useState<Ref[]>([]);
 
 	useEffect(() => {
@@ -133,9 +135,10 @@ export function InvoicesPage() {
 						layout="fixed"
 						density="compact"
 						virtualized
-						virtualizedMaxHeight={400}
+						virtualizedMaxHeight={tableHeight()}
 						rowHeight={50}
 						showViewToggle={false}
+						autoCardBreakpoint={cardBreakpoint()}
  columns={columns}
  fetchData={fetchData}
  reloadTrigger={`${applied}|${chip}`}

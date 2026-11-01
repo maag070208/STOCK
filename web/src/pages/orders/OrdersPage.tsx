@@ -9,6 +9,7 @@ import { useCan } from "@entities/user";
 import type { TableParams } from "@shared/api/table";
 import { dyn } from "@shared/i18n";
 import { formatDate } from "@shared/lib/format";
+import { cardBreakpoint, tableHeight } from "@shared/ui/tableLayout";
 
 // The color of each status of an order (order-fulfillment.md section 6): created is waiting, validated is final.
 export const STATUS_COLOR: Record<OrderStatus, "gray" | "warning" | "info" | "success" | "danger"> = {
@@ -76,9 +77,10 @@ export function OrdersPage() {
 				layout="fixed"
 				density="compact"
 				virtualized
-				virtualizedMaxHeight={400}
+				virtualizedMaxHeight={tableHeight()}
 				rowHeight={50}
-				showViewToggle={false} columns={columns} fetchData={(params) => orderApi.query(params as TableParams)} onRowClick={(order) => navigate(`/orders/${order.id}`)}
+				showViewToggle={false}
+				autoCardBreakpoint={cardBreakpoint()} columns={columns} fetchData={(params) => orderApi.query(params as TableParams)} onRowClick={(order) => navigate(`/orders/${order.id}`)}
 			/>
 		</ITPage>
 	);

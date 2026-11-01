@@ -10,6 +10,7 @@ import { AdjustDialog } from "@features/invoice/InvoiceDialogs";
 import type { TableParams } from "@shared/api/table";
 import { formatQuantity } from "@shared/lib/format";
 import { toast } from "@app/store";
+import { cardBreakpoint, tableHeight } from "@shared/ui/tableLayout";
 
 // The open discrepancies the person can resolve (F4-21): OFFICE and ADMIN in any warehouse, a manager in theirs.
 // Each one is adjusted to what was counted, with a note.
@@ -46,9 +47,10 @@ export function DiscrepanciesPage() {
 				layout="fixed"
 				density="compact"
 				virtualized
-				virtualizedMaxHeight={400}
+				virtualizedMaxHeight={tableHeight()}
 				rowHeight={50}
 				showViewToggle={false}
+				autoCardBreakpoint={cardBreakpoint()}
  columns={columns}
  fetchData={(params) => receivingApi.discrepancies(params as TableParams)}
  reloadTrigger={reload}

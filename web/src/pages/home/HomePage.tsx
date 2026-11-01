@@ -1,9 +1,15 @@
 import {
 	ITAlert,
 	ITBadget,
+	ITBentoDonut,
+	ITBentoGauge,
 	ITBentoGrid,
+	ITBentoPill,
+	ITBentoPillRow,
 	ITBentoStatStrip,
 	ITBentoTile,
+	ITBentoWaves,
+	ITBentoWeekBars,
 	ITButton,
 	ITCard,
 	ITEmptyState,
@@ -14,13 +20,15 @@ import {
 } from "@axzydev/axzy_ui_system";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { FaBalanceScale, FaBoxOpen, FaBoxes, FaClipboardList, FaFileInvoice } from "react-icons/fa";
+import { FaBalanceScale, FaBoxes, FaChartPie, FaClipboardList, FaFileInvoice, FaRegCalendarAlt, FaTruckLoading } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { invoiceApi, receivingApi, STATUS_COLOR, type Invoice, type InvoiceStatus, type Ref } from "@entities/invoice";
 import { orderApi } from "@entities/order";
 import { productApi } from "@entities/product";
 import { useCan, useSessionUser } from "@entities/user";
 import { NewInvoiceDialog } from "@features/invoice/NewInvoiceDialog";
+import { CountUp } from "@shared/ui/CountUp";
+import { BENTO_TONE } from "@shared/ui/theme";
 
 // The statuses each number of the home reads. They are the API's codes, not the labels, so the counts say the same
 // thing in both locales (material-receiving.md section 8).
@@ -36,10 +44,33 @@ interface Counts {
 	cancelled: number | null;
 	discrepancies: number | null;
 	orders: number | null;
+	allOrders: number | null;
 	materials: number | null;
 }
 
-const EMPTY: Counts = { receiving: null, placement: null, completed: null, cancelled: null, discrepancies: null, orders: null, materials: null };
+const EMPTY: Counts = { receiving: null, placement: null, completed: null, cancelled: null, discrepancies: null, orders: null, allOrders: null, materials: null };
+
+// The invoices the home reads for the week's bars, the API's largest page, and how many open ones it lists.
+const WEEK_PAGE = 200;
+const QUEUE = 5;
+const DAY = 86_400_000;
+
+// A share of a whole, for a gauge or a wave. An empty whole is an empty share.
+const share = (part: number | null, whole: number | null) => (part && whole ? part / whole : 0);
+
+// How many invoices were captured on each of the last seven days, today last.
+function weekOf(invoices: Invoice[], locale: string, now = new Date()) {
+	const midnight = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+	const weekday = new Intl.DateTimeFormat(locale, { weekday: "short" });
+	return Array.from({ length: 7 }, (_, index) => {
+		const start = midnight - (6 - index) * DAY;
+		const value = invoices.filter(({ createdAt }) => {
+			const at = new Date(createdAt).getTime();
+			return at >= start && at < start + DAY;
+		}).length;
+		return { label: weekday.format(start), value, tone: index === 6 ? ("today" as const) : ("past" as const) };
+	});
+}
 
 // The home is the dashboard of the operation, not a menu of modules: the greeting, the numbers of the day, the work
 // queues and the last invoices captured. It only reads what the person's permissions open, and each number links to the
@@ -52,12 +83,12 @@ export function HomePage() {
 	const canResolve = useCan("discrepancies.resolve");
 	const canOrders = useCan("orders.view");
 	const canProducts = useCan("products.view");
-	const canReports = useCan("reports.view");
 	const canCreateInvoice = useCan("invoices.create");
 	const canCreateOrder = useCan("orders.create");
 
 	const [counts, setCounts] = useState<Counts>(EMPTY);
-	const [recent, setRecent] = useState<Invoice[]>([]);
+	const [queue, setQueue] = useState<Invoice[]>([]);
+	const [week, setWeek] = useState<ReturnType<typeof weekOf>>([]);
 	const [warehouses, setWarehouses] = useState<Ref[]>([]);
 	const [creating, setCreating] = useState(false);
 	const [failed, setFailed] = useState(false);
@@ -78,22 +109,26 @@ export function HomePage() {
 				return [];
 			});
 
-		const [receiving, placement, completed, cancelled, discrepancies, orders, materials, latestInvoices] = await Promise.all([
+		const [receiving, placement, completed, cancelled, discrepancies, orders, allOrders, materials, weekInvoices, pendingInvoices] = await Promise.all([
 			canInvoices ? count(invoiceApi.list({ page: 1, limit: 1, filters: { status: RECEIVING } })) : Promise.resolve(null),
 			canInvoices ? count(invoiceApi.list({ page: 1, limit: 1, filters: { status: READY_TO_PLACE } })) : Promise.resolve(null),
 			canInvoices ? count(invoiceApi.list({ page: 1, limit: 1, filters: { status: COMPLETED } })) : Promise.resolve(null),
 			canInvoices ? count(invoiceApi.list({ page: 1, limit: 1, filters: { status: CANCELLED } })) : Promise.resolve(null),
 			canResolve ? count(receivingApi.discrepancies({ page: 1, limit: 1, filters: {} })) : Promise.resolve(null),
 			canOrders ? count(orderApi.open()) : Promise.resolve(null),
+			canOrders ? count(orderApi.query({ page: 1, limit: 1, filters: {} })) : Promise.resolve(null),
 			canProducts ? count(productApi.query({ page: 1, limit: 1, filters: { active: "true" } })) : Promise.resolve(null),
-			canInvoices ? latest(invoiceApi.list({ page: 1, limit: 5, filters: {}, sort: { key: "createdAt", direction: "desc" } })) : Promise.resolve([]),
+			canInvoices ? latest(invoiceApi.list({ page: 1, limit: WEEK_PAGE, filters: {}, sort: { key: "createdAt", direction: "desc" } })) : Promise.resolve([]),
+			// What waits longest comes first.
+			canInvoices ? latest(invoiceApi.list({ page: 1, limit: QUEUE, filters: { status: [...RECEIVING, ...READY_TO_PLACE] }, sort: { key: "createdAt", direction: "asc" } })) : Promise.resolve([]),
 		]);
 
-		setCounts({ receiving, placement, completed, cancelled, discrepancies, orders, materials });
-		setRecent(latestInvoices);
+		setCounts({ receiving, placement, completed, cancelled, discrepancies, orders, allOrders, materials });
+		setQueue(pendingInvoices);
+		setWeek(weekOf(weekInvoices, i18n.language));
 		setFailed(broken);
 		setLoading(false);
-	}, [canInvoices, canResolve, canOrders, canProducts]);
+	}, [canInvoices, canResolve, canOrders, canProducts, i18n.language]);
 
 	useEffect(() => {
 		void load();
@@ -118,6 +153,18 @@ export function HomePage() {
 	];
 	const chipOf = (id: string) => (id === "receiving" ? "open" : id);
 
+	const inProcess = counts.receiving === null || counts.placement === null ? null : counts.receiving + counts.placement;
+	const hasDiscrepancies = (counts.discrepancies ?? 0) > 0;
+	const statusSegments = [
+		{ label: t("home.strip.receiving"), value: counts.receiving ?? 0, color: "var(--sf-color-warning)" },
+		{ label: t("home.strip.placement"), value: counts.placement ?? 0, color: "var(--sf-color-info)" },
+		{ label: t("home.strip.completed"), value: counts.completed ?? 0, color: "var(--sf-color-success)" },
+		{ label: t("home.strip.cancelled"), value: counts.cancelled ?? 0, color: "var(--sf-color-danger)" },
+	];
+	const invoiceTotal = statusSegments.reduce((sum, segment) => sum + segment.value, 0);
+	// The order the tiles of the mosaic rise in, one after the other.
+	const rise = (place: number) => ({ className: "sf-rise", style: { animationDelay: `${place * 70}ms` } });
+
 	return (
 		<ITStack spacing={6} className="sf:pt-2">
 			{/* The greeting: the date of the day and the one action that creates work. */}
@@ -131,7 +178,7 @@ export function HomePage() {
 					</ITText>
 				</ITStack>
 				<ITFlex align="center" gap={2} wrap="wrap">
-					{canInvoices && <ITButton variant="outlined" label={t("home.actions.invoices")} onClick={() => navigate("/invoices")} />}
+					{canCreateOrder && <ITButton variant="outlined" label={t("home.actions.newOrder")} onClick={() => navigate("/orders/new")} />}
 					{canCreateInvoice && <ITButton label={t("home.actions.newInvoice")} icon={<FaFileInvoice aria-hidden />} onClick={() => setCreating(true)} />}
 				</ITFlex>
 			</ITFlex>
@@ -148,57 +195,75 @@ export function HomePage() {
 			{/* The work of the invoices, in one strip that is also the filter of the list. */}
 			{canInvoices && <ITBentoStatStrip items={strip} onSelect={(id) => navigate(`/invoices?status=${chipOf(id)}`)} />}
 
-			{/* The rest of the operation, as pastel tiles: one tone per meaning, never a saturated card. */}
+			{/* The operation as a mosaic: one tone per meaning, and a visual only where it says something about the number. */}
 			{(canInvoices || canResolve || canOrders || canProducts) && (
 				<ITBentoGrid>
 					{canInvoices && (
 						<ITBentoTile
-							label={t("home.tiles.placement")}
-							icon={<FaBoxOpen aria-hidden />}
-							cols={3}
+							{...rise(0)}
+							label={t("home.tiles.inProcess")}
+							icon={<FaTruckLoading aria-hidden />}
+							cols={4}
+							rows={4}
+							wide
+							tone={BENTO_TONE.ink}
+							value={<CountUp value={inProcess} />}
+							caption={t("home.tiles.inProcessCaption")}
+							onClick={() => navigate("/invoices?status=open")}
+						>
+							<ITStack spacing={2} className="sf:my-1 sf:min-h-0 sf:flex-1 sf:justify-center">
+								<ITBentoGauge value={share(counts.completed, (counts.completed ?? 0) + (inProcess ?? 0))} color="var(--sf-color-primary)" />
+								<ITBentoPillRow>
+									<ITBentoPill dot="var(--sf-color-warning)">{t("home.tiles.receivingPill", { count: counts.receiving ?? 0 })}</ITBentoPill>
+									<ITBentoPill dot="var(--sf-color-primary)">{t("home.tiles.placementPill", { count: counts.placement ?? 0 })}</ITBentoPill>
+								</ITBentoPillRow>
+							</ITStack>
+						</ITBentoTile>
+					)}
+					{canOrders && (
+						<ITBentoTile
+							{...rise(1)}
+							label={t("home.tiles.orders")}
+							icon={<FaClipboardList aria-hidden />}
+							cols={5}
 							rows={2}
 							wide
-							tone="mint"
-							value={show(counts.placement)}
-							caption={t("home.tiles.placementCaption")}
-							onClick={() => navigate("/invoices?status=placement")}
-						/>
+							tone={BENTO_TONE.orange}
+							value={<CountUp value={counts.orders} />}
+							caption={t("home.tiles.ordersOf", { total: counts.allOrders ?? 0 })}
+							onClick={() => navigate("/orders")}
+						>
+							<ITBentoWaves level={share(counts.orders, counts.allOrders)} color="var(--sf-color-primary-warm)" />
+						</ITBentoTile>
 					)}
 					{canResolve && (
 						<ITBentoTile
+							{...rise(2)}
 							label={t("home.tiles.discrepancies")}
 							icon={<FaBalanceScale aria-hidden />}
 							cols={3}
 							rows={2}
-							wide
-							tone="sun"
-							value={show(counts.discrepancies)}
-							caption={t("home.tiles.discrepanciesCaption")}
+							tone={hasDiscrepancies ? BENTO_TONE.amber : "plain"}
+							value={<CountUp value={counts.discrepancies} />}
+							caption={hasDiscrepancies ? t("home.tiles.discrepanciesCaption") : t("home.tiles.noDiscrepancies")}
 							onClick={() => navigate("/discrepancies")}
-						/>
+						>
+							{hasDiscrepancies && <ITBentoWaves level={share(counts.discrepancies, inProcess)} color="var(--sf-color-primary-warm)" />}
+						</ITBentoTile>
 					)}
-					{canOrders && (
-						<ITBentoTile
-							label={t("home.tiles.orders")}
-							icon={<FaClipboardList aria-hidden />}
-							cols={3}
-							rows={2}
-							wide
-							tone="lavender"
-							value={show(counts.orders)}
-							caption={t("home.tiles.ordersCaption")}
-							onClick={() => navigate("/orders")}
-						/>
+					{canInvoices && (
+						<ITBentoTile {...rise(3)} label={t("home.tiles.week")} icon={<FaRegCalendarAlt aria-hidden />} cols={5} rows={2} wide>
+							<ITBentoWeekBars items={week} color="var(--sf-color-primary-warm)" todayColor="var(--sf-color-primary)" />
+						</ITBentoTile>
 					)}
 					{canProducts && (
 						<ITBentoTile
+							{...rise(4)}
 							label={t("home.tiles.materials")}
 							icon={<FaBoxes aria-hidden />}
 							cols={3}
 							rows={2}
-							wide
-							tone="plain"
-							value={show(counts.materials)}
+							value={<CountUp value={counts.materials} />}
 							caption={t("home.tiles.materialsCaption")}
 							onClick={() => navigate("/products")}
 						/>
@@ -206,18 +271,19 @@ export function HomePage() {
 				</ITBentoGrid>
 			)}
 
-			<ITGrid container columns={12} spacing={6}>
+			<ITGrid container columns={12} spacing={6} className="sf-rise" style={{ animationDelay: "350ms" }}>
 				{canInvoices && (
 					<ITGrid item xs={12} lg={8}>
 						<ITCard
-							title={t("home.sections.latest")}
-							headerActions={<ITButton size="sm" variant="text" label={t("home.actions.invoices")} onClick={() => navigate("/invoices")} />}
+							className="sf:h-full"
+							title={t("home.sections.queue")}
+							headerActions={<ITButton size="sm" variant="text" label={t("home.actions.invoices")} onClick={() => navigate("/invoices?status=open")} />}
 						>
-							{!loading && recent.length === 0 ? (
-								<ITEmptyState title={t("home.emptyLatest")} />
+							{!loading && queue.length === 0 ? (
+								<ITEmptyState title={t("home.queueEmpty")} />
 							) : (
 								<ITStack spacing={1}>
-									{recent.map((invoice) => (
+									{queue.map((invoice) => (
 										<ITButton
 											key={invoice.id}
 											variant="text"
@@ -243,16 +309,26 @@ export function HomePage() {
 						</ITCard>
 					</ITGrid>
 				)}
-				<ITGrid item xs={12} lg={canInvoices ? 4 : 12}>
-					<ITCard title={t("home.sections.quick")}>
-						<ITStack spacing={2}>
-							{canCreateInvoice && <ITButton label={t("home.actions.newInvoice")} onClick={() => setCreating(true)} />}
-							{canCreateOrder && <ITButton variant="outlined" label={t("home.actions.newOrder")} onClick={() => navigate("/orders/new")} />}
-							{canOrders && <ITButton variant="outlined" label={t("home.tiles.orders")} onClick={() => navigate("/orders")} />}
-							{canReports && <ITButton variant="outlined" label={t("home.actions.reports")} onClick={() => navigate("/reports/stock")} />}
-						</ITStack>
-					</ITCard>
-				</ITGrid>
+				{canInvoices && (
+					<ITGrid item xs={12} lg={4}>
+						<ITCard className="sf:h-full" title={t("home.tiles.status")} headerActions={<FaChartPie aria-hidden />}>
+							{invoiceTotal === 0 ? (
+								<ITEmptyState title={t("home.tiles.noInvoices")} />
+							) : (
+								<ITStack spacing={4} alignItems="center">
+									<ITBentoDonut segments={statusSegments} center={invoiceTotal} caption={t("home.tiles.statusTotal")} size={148} />
+									<ITBentoPillRow>
+										{statusSegments.map((segment) => (
+											<ITBentoPill key={segment.label} dot={segment.color}>
+												{segment.label} · {segment.value}
+											</ITBentoPill>
+										))}
+									</ITBentoPillRow>
+								</ITStack>
+							)}
+						</ITCard>
+					</ITGrid>
+				)}
 			</ITGrid>
 
 			{canCreateInvoice && (

@@ -31,7 +31,6 @@ fun OrderStatusesScreen(statuses: OrderStatusesViewModel, onBack: () -> Unit) {
 				title = row.label ?: row.code,
 				tag = "order-status-${row.code}",
 				subtitle = row.description,
-				trailing = row.code,
 				badge = if (row.isTerminal()) text(Text.ORDER_STATUS_TERMINAL) to StatusTone.DEVELOPMENT else null,
 			)
 		}

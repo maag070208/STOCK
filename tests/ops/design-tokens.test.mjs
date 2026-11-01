@@ -11,7 +11,7 @@ const root = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const design = readDesign(join(root, "design/stockflow-DESIGN.md"));
 
 test("unit: the design document yields its colors, shapes and shell measures", () => {
-  assert.equal(Object.keys(design.colors).length, 35);
+  assert.equal(Object.keys(design.colors).length, 55);
   assert.equal(design.colors.primary, "#fe6e00");
   assert.equal(design.colors.background, "#f4f4f6");
   assert.equal(design.colors["on-surface-muted"], "#64748b");
@@ -56,7 +56,7 @@ test("unit: the app gets each type style in sp, with a unitless line height turn
 });
 
 test("unit: the app gets each component with its references resolved to values", () => {
-  // rgba(0, 0, 0, 0.70) is ARGB B3000000; "0 16px" is no vertical padding and 16 horizontal.
+  // "0 16px" is no vertical padding and 16 horizontal.
   assert.ok(kotlin.includes("val shellHeader = Component(backgroundColor = 0xFFF4F4F6L, textColor = 0xFF14171CL, rounded = 0, height = 64, paddingVertical = 0, paddingHorizontal = 16)"));
   assert.ok(kotlin.includes("val cardPanel = Component(backgroundColor = 0xFFFFFFFFL, textColor = 0xFF1F2937L, rounded = 24, paddingVertical = 24, paddingHorizontal = 24)"));
   assert.ok(kotlin.includes("val statusBadgeProduction = Component(backgroundColor = 0xFFDCFCE7L, textColor = 0xFF166534L, rounded = 9999, paddingVertical = 4, paddingHorizontal = 10)"));
@@ -74,7 +74,7 @@ test("unit: dark mode replaces the same workspace roles on the web and in the ap
   assert.ok(kotlin.includes("object DarkColors {"));
   assert.ok(kotlin.includes("const val background = 0xFF0E1116L"));
   assert.ok(kotlin.includes("const val surfaceElevated = 0xFF1A1D24L"));
-  // The shell's border: white at 10%.
+  // The shell's border at 10%.
   assert.ok(kotlin.includes("const val outline = 0x1AE5E7EBL"));
 });
 

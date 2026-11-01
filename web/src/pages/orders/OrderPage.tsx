@@ -1,6 +1,7 @@
 import { type Column, ITAlert, ITBadget, ITButton, ITFlex, ITPage, ITStack, ITText } from "@axzydev/axzy_ui_system";
 import { trail } from "@shared/lib/breadcrumbs";
 import { FactStrip } from "@shared/ui/FactStrip";
+import { FlowSteps } from "@shared/ui/FlowSteps";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
@@ -16,6 +17,16 @@ import { PlainTable } from "@shared/ui/PlainTable";
 // One order: its header, what each line asked for and how much has left, and the actions its status and the person's
 // permissions allow (order-fulfillment.md sections 6, 7a and 8). A validated order is locked: its receipt is all that is
 // left, and every other action is gone.
+// The step each status of the order stands on. A validated order is past the last one: nothing is left to do.
+const ORDER_STEP: Partial<Record<string, number>> = { CREATED: 0, FULFILLING: 1, FULFILLED: 2, VALIDATED: 4 };
+
+const nextOf = (order: Order) => {
+	if (order.status.code === "VALIDATED") return "nextDone";
+	if (order.status.code === "FULFILLED") return "nextValidate";
+	if (order.status.code === "FULFILLING") return "nextFulfilling";
+	return order.operator ? "nextWaiting" : "nextAssign";
+};
+
 export function OrderPage() {
 	const { t, i18n } = useTranslation(["orders", "common"]);
 	const { id = "" } = useParams();
@@ -32,6 +43,7 @@ export function OrderPage() {
 	const [order, setOrder] = useState<Order | null>(null);
 	const [missing, setMissing] = useState(false);
 	const [open, setOpen] = useState<OrderAction | "assign" | null>(null);
+	const [movingLine, setMovingLine] = useState<OrderLine | null>(null);
 	const [downloading, setDownloading] = useState(false);
 
 	const load = useCallback(async () => {
@@ -86,7 +98,29 @@ export function OrderPage() {
 		{ key: "quantity", label: t("detail.quantity"), type: "string", render: (line) => quantity(line.quantity, line.unit?.decimalPlaces) },
 		{ key: "picked", label: t("detail.picked"), type: "string", render: (line) => quantity(line.pickedQuantity, line.unit?.decimalPlaces) },
 		{ key: "pending", label: t("detail.pending"), type: "string", render: (line) => quantity(Number(line.quantity) - Number(line.pickedQuantity), line.unit?.decimalPlaces) },
+		// What was picked is moved from its own line: the material is already known.
+		...(actions.includes("transfer") || actions.includes("returnStock")
+			? [
+					{
+						key: "actions",
+						label: t("columns.actions"),
+						type: "actions" as const,
+						actions: (line: OrderLine) =>
+							Number(line.pickedQuantity) > 0 && (
+								<ITFlex gap={2} justify="end">
+									{actions.includes("transfer") && <ITButton size="sm" variant="outlined" label={t("detail.transfer")} onClick={() => move("transfer", line)} />}
+									{actions.includes("returnStock") && <ITButton size="sm" variant="outlined" label={t("detail.returnStock")} onClick={() => move("returnStock", line)} />}
+								</ITFlex>
+							),
+					},
+				]
+			: []),
 	];
+
+	const move = (action: "transfer" | "returnStock", line: OrderLine) => {
+		setMovingLine(line);
+		setOpen(action);
+	};
 
 	const saved = () => {
 		setOpen(null);
@@ -106,8 +140,6 @@ export function OrderPage() {
 					{order && <ITBadget color={STATUS_COLOR[order.status.code]} label={order.status.label ?? order.status.code} />}
 					{actions.includes("assign") && <ITButton label={t("detail.assign")} onClick={() => setOpen("assign")} />}
 					{actions.includes("reassignOperator") && <ITButton variant="outlined" label={t("detail.reassignOperator")} onClick={() => setOpen("reassignOperator")} />}
-					{actions.includes("transfer") && <ITButton variant="outlined" label={t("detail.transfer")} onClick={() => setOpen("transfer")} />}
-					{actions.includes("returnStock") && <ITButton variant="outlined" label={t("detail.returnStock")} onClick={() => setOpen("returnStock")} />}
 					{actions.includes("acceptDifference") && <ITButton variant="outlined" label={t("detail.acceptDifference")} onClick={() => setOpen("acceptDifference")} />}
 					{actions.includes("validate") && <ITButton label={t("detail.validate")} onClick={() => setOpen("validate")} />}
 					{actions.includes("cancel") && <ITButton variant="outlined" label={t("detail.cancel")} onClick={() => setOpen("cancel")} />}
@@ -117,6 +149,14 @@ export function OrderPage() {
 		>
 			{order && (
 				<ITStack spacing={6}>
+					{order.status.code !== "CANCELLED" && (
+						<FlowSteps
+							steps={[t("flow.created"), t("flow.fulfilling"), t("flow.fulfilled"), t("flow.validated")]}
+							current={ORDER_STEP[order.status.code] ?? 0}
+							next={t(`flow.${nextOf(order)}`, { picked: lines.filter((line) => Number(line.pickedQuantity) >= Number(line.quantity)).length, lines: lines.length })}
+						/>
+					)}
+
 					<FactStrip
 						perRow={3}
 						facts={[
@@ -141,8 +181,8 @@ export function OrderPage() {
 
 			<AssignOrderDialog order={order} isOpen={open === "assign"} title={t("assignDialog.title")} onClose={() => setOpen(null)} onSaved={saved} />
 			<ReassignOperatorDialog order={order} isOpen={open === "reassignOperator"} onClose={() => setOpen(null)} onSaved={saved} />
-			<TransferPicksDialog order={order} isOpen={open === "transfer"} onClose={() => setOpen(null)} onSaved={saved} />
-			<ReturnPicksDialog order={order} isOpen={open === "returnStock"} onClose={() => setOpen(null)} onSaved={saved} />
+			<TransferPicksDialog order={order} line={movingLine} isOpen={open === "transfer"} onClose={() => setOpen(null)} onSaved={saved} />
+			<ReturnPicksDialog order={order} line={movingLine} isOpen={open === "returnStock"} onClose={() => setOpen(null)} onSaved={saved} />
 			<AcceptDifferenceDialog order={order} isOpen={open === "acceptDifference"} onClose={() => setOpen(null)} onSaved={saved} />
 			<ValidateOrderDialog order={order} isOpen={open === "validate"} onClose={() => setOpen(null)} onSaved={saved} />
 			<CancelOrderDialog order={order} isOpen={open === "cancel"} onClose={() => setOpen(null)} onSaved={saved} />

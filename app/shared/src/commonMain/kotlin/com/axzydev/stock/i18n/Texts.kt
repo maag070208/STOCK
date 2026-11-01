@@ -19,7 +19,6 @@ enum class Text {
 	FIELD_REQUIRED,
 	BRAND_INTRO,
 	BRAND_LOADING,
-	HEALTH_LABEL,
 	HEALTH_CHECKING,
 	HEALTH_UP,
 	HEALTH_DOWN,
@@ -43,6 +42,44 @@ enum class Text {
 	SIGN_IN_HINT,
 	CHANGE_PASSWORD_HEADLINE,
 	HOME_PROMPT,
+	CAMERA_TORCH,
+	SCAN_MATERIAL,
+	SCAN_LOCATION,
+	SEARCH_MATERIAL,
+	SEARCH_LOCATION,
+	SEARCH_ORDERS,
+	SEARCH_WAREHOUSES,
+	SEARCH_CUSTOMERS,
+	NO_RESULTS,
+	NO_RESULTS_HINT,
+	QUEUE_COUNT,
+	QUEUE_PLACE,
+	EMPTY_COUNT,
+	EMPTY_PLACE,
+	EMPTY_ORDERS,
+	EMPTY_RECEIPTS,
+	EMPTY_DISCREPANCIES,
+	EMPTY_HINT,
+	STATE_TO_COUNT,
+	STATE_TO_PLACE,
+	STATE_PLACED,
+	STATE_DIFFERENCE,
+	STEP_LOCATION,
+	ADD_NOTE,
+	HOME_SCAN,
+	HOME_SCAN_HINT,
+	OF_PROGRESS,
+	EXPECTED_DIFFERENCE,
+	LEFT_TO_PLACE,
+	PICK_PENDING,
+	PICK_ALL_DONE,
+	PLACEMENT_CHOSEN,
+	NAV_HOME,
+	SHIFT_PROGRESS,
+	SHIFT_PROGRESS_HINT,
+	SHIFT_EMPTY,
+	GROUP_OPERATION,
+	GROUP_INVENTORY,
 	LOOKUP_HINT,
 	// The home hub: the modules, each with its own menu of pages.
 	MODULES_LABEL,
@@ -107,6 +144,18 @@ enum class Text {
 	REASSIGN_NOTHING,
 	REASSIGN_ABOVE_PICKED,
 	REASSIGN_ABOVE_TARGET,
+	REASSIGN_STEP_MATERIAL,
+	REASSIGN_STEP_TARGET,
+	REASSIGN_STEP_QUANTITY,
+	REASSIGN_LINES,
+	REASSIGN_NONE_PICKED,
+	REASSIGN_NO_TARGETS,
+	REASSIGN_MAX,
+	REASSIGN_REASONS,
+	REASSIGN_REASON_URGENT,
+	REASSIGN_REASON_PRIORITY,
+	REASSIGN_REASON_SHORTAGE,
+	REASSIGN_NEEDS,
 	COMING_SOON,
 	COMING_SOON_HINT,
 	BACK_HOME,
@@ -174,7 +223,6 @@ fun textFor(key: Text, language: Language): String =
 			Text.FIELD_REQUIRED -> "Este campo es obligatorio."
 			Text.BRAND_INTRO -> "Intro de StockFlow"
 			Text.BRAND_LOADING -> "Cargando StockFlow"
-			Text.HEALTH_LABEL -> "Estado de la API"
 			Text.HEALTH_CHECKING -> "Revisando la conexión…"
 			Text.HEALTH_UP -> "Conectado a la API"
 			Text.HEALTH_DOWN -> "La API responde con error"
@@ -198,6 +246,44 @@ fun textFor(key: Text, language: Language): String =
 			Text.SIGN_IN_HINT -> "Usa el usuario que te dio tu administrador."
 			Text.CHANGE_PASSWORD_HEADLINE -> "Elige *tu propia contraseña* para empezar."
 			Text.HOME_PROMPT -> "¿Qué vas a hacer hoy?"
+			Text.CAMERA_TORCH -> "Linterna"
+			Text.SCAN_MATERIAL -> "Escanea el código del material"
+			Text.SCAN_LOCATION -> "Escanea el código de la ubicación"
+			Text.SEARCH_MATERIAL -> "O búscalo por código o nombre"
+			Text.SEARCH_LOCATION -> "O búscala por su código"
+			Text.SEARCH_ORDERS -> "Busca por número o cliente"
+			Text.SEARCH_WAREHOUSES -> "Busca un almacén"
+			Text.SEARCH_CUSTOMERS -> "Busca un cliente"
+			Text.NO_RESULTS -> "Sin resultados"
+			Text.NO_RESULTS_HINT -> "Revisa lo que escribiste o escanea el código."
+			Text.QUEUE_COUNT -> "Por contar"
+			Text.QUEUE_PLACE -> "Por ubicar"
+			Text.EMPTY_COUNT -> "No tienes material por contar"
+			Text.EMPTY_PLACE -> "No tienes material por ubicar"
+			Text.EMPTY_ORDERS -> "No tienes órdenes por surtir"
+			Text.EMPTY_RECEIPTS -> "No tienes entradas asignadas"
+			Text.EMPTY_DISCREPANCIES -> "Sin diferencias abiertas"
+			Text.EMPTY_HINT -> "Cuando llegue trabajo nuevo aparecerá aquí."
+			Text.STATE_TO_COUNT -> "Por contar"
+			Text.STATE_TO_PLACE -> "Por ubicar"
+			Text.STATE_PLACED -> "Ubicado"
+			Text.STATE_DIFFERENCE -> "Con diferencia"
+			Text.STEP_LOCATION -> "Ubicación"
+			Text.ADD_NOTE -> "Agregar una nota"
+			Text.HOME_SCAN -> "Escanear un código"
+			Text.HOME_SCAN_HINT -> "Encuentra cualquier material al instante"
+			Text.OF_PROGRESS -> "{done} de {total} ubicadas"
+			Text.EXPECTED_DIFFERENCE -> "Esperado {expected} · Contado {counted}"
+			Text.LEFT_TO_PLACE -> "Por ubicar: {quantity}"
+			Text.PICK_PENDING -> "Materiales por surtir"
+			Text.PICK_ALL_DONE -> "Todo surtido"
+			Text.PLACEMENT_CHOSEN -> "Dónde lo pones"
+			Text.NAV_HOME -> "Inicio"
+			Text.SHIFT_PROGRESS -> "Avance del turno"
+			Text.SHIFT_PROGRESS_HINT -> "de {total} ubicadas"
+			Text.SHIFT_EMPTY -> "Sin tareas asignadas"
+			Text.GROUP_OPERATION -> "Operación"
+			Text.GROUP_INVENTORY -> "Inventario"
 			Text.LOOKUP_HINT -> "Lee el código de barras con la cámara, o escribe el código o el nombre."
 			Text.MODULES_LABEL -> "Módulos"
 			Text.MODULES_HINT -> "Elige un módulo para ver sus opciones."
@@ -259,6 +345,18 @@ fun textFor(key: Text, language: Language): String =
 			Text.REASSIGN_NOTHING -> "La orden no tiene material surtido de ese código."
 			Text.REASSIGN_ABOVE_PICKED -> "Es más de lo que está surtido."
 			Text.REASSIGN_ABOVE_TARGET -> "La orden destino no necesita esa cantidad."
+			Text.REASSIGN_STEP_MATERIAL -> "Material"
+			Text.REASSIGN_STEP_TARGET -> "Destino"
+			Text.REASSIGN_STEP_QUANTITY -> "Cantidad"
+			Text.REASSIGN_LINES -> "Elige el material surtido"
+			Text.REASSIGN_NONE_PICKED -> "Esta orden aún no tiene material surtido."
+			Text.REASSIGN_NO_TARGETS -> "Ninguna otra orden abierta de este almacén necesita este material."
+			Text.REASSIGN_MAX -> "Máximo {quantity}"
+			Text.REASSIGN_REASONS -> "Motivo"
+			Text.REASSIGN_REASON_URGENT -> "Entrega urgente"
+			Text.REASSIGN_REASON_PRIORITY -> "Prioridad del cliente"
+			Text.REASSIGN_REASON_SHORTAGE -> "Faltante en esa orden"
+			Text.REASSIGN_NEEDS -> "Necesita {quantity}"
 			Text.COMING_SOON -> "Próximamente"
 			Text.COMING_SOON_HINT -> "Esta sección todavía no está lista."
 			Text.BACK_HOME -> "Inicio"
@@ -321,7 +419,6 @@ fun textFor(key: Text, language: Language): String =
 			Text.FIELD_REQUIRED -> "This field is required."
 			Text.BRAND_INTRO -> "StockFlow intro"
 			Text.BRAND_LOADING -> "Loading StockFlow"
-			Text.HEALTH_LABEL -> "API status"
 			Text.HEALTH_CHECKING -> "Checking the connection…"
 			Text.HEALTH_UP -> "Connected to the API"
 			Text.HEALTH_DOWN -> "The API answered with an error"
@@ -345,6 +442,44 @@ fun textFor(key: Text, language: Language): String =
 			Text.SIGN_IN_HINT -> "Use the username your administrator gave you."
 			Text.CHANGE_PASSWORD_HEADLINE -> "Choose *a password of your own* to start."
 			Text.HOME_PROMPT -> "What will you do today?"
+			Text.CAMERA_TORCH -> "Flashlight"
+			Text.SCAN_MATERIAL -> "Scan the material's code"
+			Text.SCAN_LOCATION -> "Scan the location's code"
+			Text.SEARCH_MATERIAL -> "Or search by code or name"
+			Text.SEARCH_LOCATION -> "Or search by its code"
+			Text.SEARCH_ORDERS -> "Search by number or customer"
+			Text.SEARCH_WAREHOUSES -> "Search a warehouse"
+			Text.SEARCH_CUSTOMERS -> "Search a customer"
+			Text.NO_RESULTS -> "No results"
+			Text.NO_RESULTS_HINT -> "Check what you wrote or scan the code."
+			Text.QUEUE_COUNT -> "To count"
+			Text.QUEUE_PLACE -> "To place"
+			Text.EMPTY_COUNT -> "You have nothing to count"
+			Text.EMPTY_PLACE -> "You have nothing to place"
+			Text.EMPTY_ORDERS -> "You have no orders to pick"
+			Text.EMPTY_RECEIPTS -> "You have no receipts assigned"
+			Text.EMPTY_DISCREPANCIES -> "No open differences"
+			Text.EMPTY_HINT -> "New work will show up here."
+			Text.STATE_TO_COUNT -> "To count"
+			Text.STATE_TO_PLACE -> "To place"
+			Text.STATE_PLACED -> "Placed"
+			Text.STATE_DIFFERENCE -> "Difference"
+			Text.STEP_LOCATION -> "Location"
+			Text.ADD_NOTE -> "Add a note"
+			Text.HOME_SCAN -> "Scan a code"
+			Text.HOME_SCAN_HINT -> "Find any material instantly"
+			Text.OF_PROGRESS -> "{done} of {total} placed"
+			Text.EXPECTED_DIFFERENCE -> "Expected {expected} · Counted {counted}"
+			Text.LEFT_TO_PLACE -> "To place: {quantity}"
+			Text.PICK_PENDING -> "Materials to pick"
+			Text.PICK_ALL_DONE -> "All picked"
+			Text.PLACEMENT_CHOSEN -> "Where it goes"
+			Text.NAV_HOME -> "Home"
+			Text.SHIFT_PROGRESS -> "Shift progress"
+			Text.SHIFT_PROGRESS_HINT -> "of {total} placed"
+			Text.SHIFT_EMPTY -> "No tasks assigned"
+			Text.GROUP_OPERATION -> "Operation"
+			Text.GROUP_INVENTORY -> "Inventory"
 			Text.LOOKUP_HINT -> "Read the barcode with the camera, or type the code or the name."
 			Text.MODULES_LABEL -> "Modules"
 			Text.MODULES_HINT -> "Pick a module to see its options."
@@ -406,6 +541,18 @@ fun textFor(key: Text, language: Language): String =
 			Text.REASSIGN_NOTHING -> "The order has nothing picked for that code."
 			Text.REASSIGN_ABOVE_PICKED -> "That is more than is picked."
 			Text.REASSIGN_ABOVE_TARGET -> "The target order does not need that much."
+			Text.REASSIGN_STEP_MATERIAL -> "Material"
+			Text.REASSIGN_STEP_TARGET -> "Target"
+			Text.REASSIGN_STEP_QUANTITY -> "Quantity"
+			Text.REASSIGN_LINES -> "Choose the picked material"
+			Text.REASSIGN_NONE_PICKED -> "This order has nothing picked yet."
+			Text.REASSIGN_NO_TARGETS -> "No other open order of this warehouse needs this material."
+			Text.REASSIGN_MAX -> "At most {quantity}"
+			Text.REASSIGN_REASONS -> "Reason"
+			Text.REASSIGN_REASON_URGENT -> "Urgent delivery"
+			Text.REASSIGN_REASON_PRIORITY -> "Customer priority"
+			Text.REASSIGN_REASON_SHORTAGE -> "Shortage on that order"
+			Text.REASSIGN_NEEDS -> "Needs {quantity}"
 			Text.COMING_SOON -> "Coming soon"
 			Text.COMING_SOON_HINT -> "This section is not ready yet."
 			Text.BACK_HOME -> "Home"

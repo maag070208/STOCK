@@ -23,7 +23,7 @@ These are the colors **of the artwork**: icons, launcher and animations. The col
 | Pack file | Repository location | Used by |
 |---|---|---|
 | `master/*.svg` (full icon and glyph, light and dark) | `design/brand/master/` | Source for every other file |
-| `master/stockflow-glyph-light.svg`, `stockflow-glyph-dark.svg` | Also copied to `web/public/brand/` | The mark inside the web. The shell is dark in both modes, so it always shows the dark-background glyph |
+| `master/stockflow-glyph-light.svg`, `stockflow-glyph-dark.svg` | Also copied to `web/public/brand/` | The mark inside the web. The shell is a white card in light mode and a dark one in dark mode, and the glyph follows the mode |
 | `ios/AppIcon.appiconset/` | `app/iosApp/iosApp/Assets.xcassets/AppIcon.appiconset/` | iOS launcher. Light, Dark and Tinted at 1024 px |
 | `android/light/res/` | `app/androidApp/src/main/res/` | Android launcher, adaptive icon and Android 13 monochrome icon |
 | `android/dark/res/` | `design/brand/android-dark/` | Kept as the dark set. Not used by the launcher |

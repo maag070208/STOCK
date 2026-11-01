@@ -22,7 +22,11 @@
     "discrepancies": "Discrepancies",
     "labels": "Labels",
     "printers": "Printers",
-    "reports": "Reports"
+    "reports": "Reports",
+    "operation": "Operation",
+    "inventory": "Inventory",
+    "partners": "Business partners",
+    "printing": "Printing"
   },
   "language": {
     "label": "Language",
@@ -178,18 +182,26 @@
       "cancelled": "Cancelled"
     },
     "tiles": {
-      "placement": "Ready to place",
-      "placementCaption": "invoices ready for the shelf",
       "discrepancies": "Open discrepancies",
       "discrepanciesCaption": "counts to resolve",
       "orders": "Open orders",
       "ordersCaption": "to fulfill",
       "materials": "Active materials",
-      "materialsCaption": "in the catalog"
+      "materialsCaption": "in the catalog",
+      "inProcess": "Invoices in process",
+      "inProcessCaption": "to close",
+      "receivingPill": "{{count}} receiving",
+      "placementPill": "{{count}} to place",
+      "ordersOf": "of {{total}} orders",
+      "noDiscrepancies": "Everything matches",
+      "week": "Invoices this week",
+      "status": "Invoice status",
+      "statusTotal": "invoices",
+      "noInvoices": "No invoices yet"
     },
     "sections": {
-      "latest": "Latest invoices",
-      "quick": "Quick actions"
+      "quick": "Quick actions",
+      "queue": "To attend"
     },
     "actions": {
       "newInvoice": "New invoice",
@@ -198,9 +210,9 @@
       "reports": "View reports",
       "retry": "Retry"
     },
-    "emptyLatest": "No invoices captured yet.",
     "loadError": "The summary could not be read.",
-    "allInvoices": "All"
+    "allInvoices": "All",
+    "queueEmpty": "Nothing pending. All up to date."
   },
   "saved": "Changes saved.",
   "entry": {
@@ -210,5 +222,15 @@
     "count": "Count and resolve differences on the spot",
     "place": "Place in seconds, with stock up to date",
     "footer": "Inventory system"
+  },
+  "palette": {
+    "open": "Search or go to…",
+    "placeholder": "Search a screen, invoice, order or material",
+    "empty": "No results.",
+    "go": "Go to",
+    "create": "Create",
+    "invoices": "Invoices",
+    "orders": "Orders",
+    "materials": "Materials"
   }
 }

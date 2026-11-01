@@ -9,6 +9,7 @@ import { reportApi, warehouseOptionsOf, type MovementReportRow, type MovementsPa
 import { formatDateTime, formatQuantity } from "@shared/lib/format";
 import { DateRangeFilter, ExportButtons, ReportError, ReportTotals, WarehouseFilter, periodOf, totalEntries } from "./ReportParts";
 import { ReportTabs } from "./ReportTabs";
+import { cardBreakpoint, tableHeight } from "@shared/ui/tableLayout";
 
 // The movements of the warehouses the reader reaches (reports.md section 3): what came in, what went out, by period,
 // type, material and warehouse, with the totals of each.
@@ -88,9 +89,10 @@ export function MovementsReportPage() {
 					layout="fixed"
 					density="compact"
 					virtualized
-					virtualizedMaxHeight={400}
+					virtualizedMaxHeight={tableHeight()}
 					rowHeight={50}
 					showViewToggle={false}
+					autoCardBreakpoint={cardBreakpoint()}
  columns={columns}
  // The filters this screen manages travel as external filters: the table merges them with its own
  // before asking, and the export takes exactly the filters of the last answer.

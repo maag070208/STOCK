@@ -18,6 +18,9 @@ object Decimals {
 	}
 
 	// a + b, at the larger scale. Null when a value is not a decimal, or the sum is too large to hold.
+	// A quantity as a person writes it: the API's "20.000000" is 20.
+	fun plain(value: String): String = if ("." in value) value.trimEnd('0').trimEnd('.') else value
+
 	fun add(a: String, b: String): String? {
 		val scale = maxOf(scaleOf(a), scaleOf(b))
 		val left = units(a, scale) ?: return null

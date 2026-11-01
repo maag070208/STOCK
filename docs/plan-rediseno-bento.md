@@ -1,11 +1,11 @@
 # Bento redesign: web and app
 
-**Status:** in progress, 2026-10-31. **Web wave done** (tokens, shell, home, entry screen and every module screen restyled); the **app wave** is done for the shell, the home, the module menu and the entry screen, and every other screen inherits it through `PageScaffold` and the shared components. The design language is the Axzy UI System's `appearance="bento"`, the same one the reference projects use (`~/DEV/PTNV/RESPONSIVA/web` and `.../PuertoNuevoApp`).
+**Status:** in progress, 2026-11-01 (section 3b is the latest pass). **Web wave done** (tokens, shell, home, entry screen and every module screen restyled); the **app wave** is done for the shell, the home, the module menu and the entry screen, and every other screen inherits it through `PageScaffold` and the shared components. The design language is the Axzy UI System's `appearance="bento"`, the same one the reference projects use (`~/DEV/PTNV/RESPONSIVA/web` and `.../PuertoNuevoApp`).
 
 ## 1. Decisions
 
 - **One look, both platforms.** Light-first bento: soft gray canvas, borderless white cards with 24px corners, pastel tiles, pill controls and bold typography.
-- **Orange stays the brand.** The accent is StockFlow's orange (`#FE6E00`), not the reference teal: primary buttons, links, focus and the active pill of a few controls. The pastel tiles keep the kit's tones (`sea`, `lavender`, `mint`, `sun`).
+- **Orange stays the brand.** The accent is StockFlow's orange (`#FE6E00`), not the reference teal: primary buttons, links, focus and the active pill of a few controls. The tiles use StockFlow's own family (`ink`, `orange`, `amber`, `sand`): the kit's navy, lavender and mint are never shown (decided 2026-11-01).
 - **The kit does the surfaces.** The theme only passes the palette and the density. `radius` and `shadow` are **not** passed: the bento defaults (24px, diffuse shadow) are the design.
 - **Web first, then the app.** The web validates the language on real screens; the app ports the same tokens and component vocabulary.
 - **Density 0.8.** The rem scale is 80%, like the reference; the bento grid rows stay 84px.
@@ -53,6 +53,31 @@ The app runs the bento look: tokens regenerated from the same document, `Bento.k
 - The previous design is gone from the docs: `design-system.md`, `mobile-app.md` and `brand.md` describe the bento look, and `tests/ops/design-tokens.test.mjs` reads the new document.
 - The remaining Android screens were reviewed on the emulator (my receipts, count, stock, module menu) and inherit the look through `PageScaffold` and the shared components.
 - Verification: web build, lint, 89 unit tests, the whole e2e suite at 80/80 (with one retry: the suite shares one database and two specs are timing-sensitive), the ops suite, and the app host tests plus `android-home`, `android-design` (light and dark) and `android-intro` on the emulator. `tests/ops/compose.test.mjs` is blocked on this machine by the Docker Hub credentials (the base image cannot be pulled); it is an environment problem, not a code one.
+
+### 3b. Motion, grouping and flows (2026-11-01)
+
+The first pass restyled the surfaces but left the screens static and slow to use. This pass:
+
+- **Palette:** tiles and the app's tones come from design tokens in StockFlow's family; `info` is the brand's turquoise.
+- **Menu:** grouped in sections, open by default and folded from the top bar. `Cmd/Ctrl + K` (`CommandPalette`) reaches any screen, creates, and finds invoices, orders and materials.
+- **Home:** an animated mosaic (gauge, waves, week bars, climbing numbers) and "Por atender", the open invoices that have waited longest.
+- **Records:** `FlowSteps` on invoice and order: the steps, where the record is, what comes next and the action that does it. The invoice table went from eleven columns to six.
+- **New order:** one row per material, a number ready to use, the only warehouse chosen, Enter opens the next row.
+- **Reassign, web:** the actions live on the picked line; the dialog offers only orders that need the material, fills the quantity and gives common reasons in one click.
+- **App:** waves, gauge, rising tiles, screen transitions, modules by section, a floating bottom bar, and the API status under the greeting. Reassign is three touchable steps (material, target, quantity), with scanning optional, the quantity filled and back going one step.
+
+Polish that followed: tables take the height of the window and turn into cards on a phone (`shared/ui/tableLayout.ts`); status badges read in dark mode; the app gained a flashlight on the camera, loading skeletons, a press response on rows and tiles, and a vibration when a task ends.
+
+### 3c. Every app screen: scan first, search second (2026-11-01)
+
+The rule of the whole app: **the camera comes first; whoever cannot scan writes in a search box that finds as they write.** No field asks for an exact code.
+
+- `ScanSearch` (`ui/components/Scanner.kt`) is the one way to capture a code: the camera with its frame and a vibration on each read, then the search box. While the person writes the camera steps aside so the results stay above the keyboard.
+- Counting, placing, picking and reassigning list the person's work under the search box, and what is written narrows it. A touch on a row does what a scan does. The locations of a placement are found through the API as the person writes.
+- Quantities start at the expected or the largest possible value, with big plus and minus buttons, so most tasks only confirm. Back goes one step back.
+- Materials shows what was found above the camera, which stays ready for the next code. Existencias takes a scan or a search over its list; warehouses, customers and orders have a search box.
+- My receipts shows each invoice's progress and the state of each material, and a touch goes to what it needs next.
+- The home opens with one big "Escanear un código". Internal codes (`CREATED`, `TEMPORARY`) are gone from the screens.
 
 ## 4. Rules that broke things (and how they are handled)
 

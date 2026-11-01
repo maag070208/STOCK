@@ -199,6 +199,8 @@ class OrderReassignmentViewModelTest {
 		val view = viewModel { route(it) }
 		opened(view)
 		view.choose(view.state.value.targets.single())
+		// The quantity starts at the most that can move: what is picked, which the target needs in full.
+		assertEquals("20", view.state.value.quantity)
 		view.editNote("Pasa a la otra orden")
 
 		// More than the target needs (20), and more than the line picked (20): both are refused here.

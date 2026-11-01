@@ -56,6 +56,24 @@ class LookupViewModel(
 
 	fun submit() = search(mutableState.value.query.trim())
 
+	// What was written so far: the materials it finds, to pick from, even when it is one. Nothing opens while writing.
+	fun suggest() {
+		val value = mutableState.value.query.trim()
+		if (value.isEmpty()) return
+		running?.cancel()
+		running = viewModelScope.launch {
+			try {
+				val result = session.withToken { token -> api.lookup(token, value) }
+				mutableState.value = mutableState.value.copy(product = null, candidates = result.products, error = null)
+			} catch (e: CancellationException) {
+				throw e
+			} catch (e: Exception) {
+				// Half a word that finds nothing is not a failure: the list is simply empty until there is more.
+				mutableState.value = mutableState.value.copy(candidates = emptyList())
+			}
+		}
+	}
+
 	// A product from the list of several.
 	fun choose(product: LookupProduct) {
 		mutableState.value = mutableState.value.copy(product = product, candidates = emptyList())
