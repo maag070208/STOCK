@@ -19,6 +19,8 @@ The kit's `appearance="bento"` draws the light canvas (`#F4F4F6`), the borderles
 
 Pastel color enters only through `ITCard tone` or the kit's bento tones (`ITBentoTile`): one tone per meaning, `plain` when the value is zero. The home is a dashboard built with `ITBentoGrid`/`ITBentoStatStrip`/`ITBentoTile`, not a menu of modules.
 
+The **entry screen** is a split page: the form on the canvas on the left, and on the right a flat isometric scene of the product (a shelf with cartons and a scanned label) whose figures float, bob and pulse. The scene is drawn with the design's own colors and animates only while the person allows motion. There is **no language control on the entry screen**: the language is chosen inside the system, in the top bar, and moves to a system settings screen in a later wave.
+
 Nothing in the web or the app chooses a color, a text size or a corner radius by hand. They read the tokens.
 
 ## 2. What the design asks for

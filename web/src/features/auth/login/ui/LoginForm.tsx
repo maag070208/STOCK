@@ -8,9 +8,14 @@ export function LoginForm() {
 	return (
 		<form onSubmit={form.submit} noValidate>
 			<ITStack spacing={4}>
-				<ITText as="h2" className="sf:text-title-md sf:text-on-background">
-					{t("login.title")}
-				</ITText>
+				<ITStack spacing={1}>
+					<ITText as="h2" className="sf:text-headline-lg sf:text-on-background">
+						{t("login.title")}
+					</ITText>
+					<ITText className="sf:text-body-md" muted>
+						{t("login.hint")}
+					</ITText>
+				</ITStack>
 				<ITInput
 					name="username"
 					label={t("login.username")}

@@ -82,3 +82,62 @@ body {
 .sf-on-primary {
   color: var(--sf-color-on-primary) !important;
 }
+
+/*
+ * The figures of the entry illustration: the shelf floats, each carton bobs at its own pace, the scanned label drifts,
+ * the check pulses and the scan line runs down the bars. Decorative only, and off when the person asked for less motion.
+ */
+@keyframes sf-art-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+@keyframes sf-art-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+@keyframes sf-art-drift {
+  0%, 100% { transform: translateY(-5px) rotate(-1deg); }
+  50% { transform: translateY(5px) rotate(1.2deg); }
+}
+@keyframes sf-art-pop {
+  0%, 100% { transform: scale(1); }
+  45% { transform: scale(1.07); }
+  60% { transform: scale(0.98); }
+}
+@keyframes sf-art-scan {
+  0% { transform: translateY(0); opacity: 0; }
+  12% { opacity: 0.95; }
+  78% { opacity: 0.95; }
+  100% { transform: translateY(44px); opacity: 0; }
+}
+@keyframes sf-art-spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes sf-art-glow {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+.sf-art-scene { animation: sf-art-float 9s ease-in-out infinite; }
+.sf-art-carton-a { animation: sf-art-bob 6.5s ease-in-out infinite; }
+.sf-art-carton-b { animation: sf-art-bob 7.5s ease-in-out 0.8s infinite; }
+.sf-art-carton-c { animation: sf-art-bob 5.8s ease-in-out 0.4s infinite; }
+.sf-art-label { animation: sf-art-drift 7s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+.sf-art-check { animation: sf-art-pop 3.6s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+.sf-art-scan { animation: sf-art-scan 2.8s ease-in-out infinite; }
+.sf-art-ring { animation: sf-art-spin 36s linear infinite; transform-box: fill-box; transform-origin: center; }
+.sf-art-dot { animation: sf-art-glow 3.4s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .sf-art-scene,
+  .sf-art-carton-a,
+  .sf-art-carton-b,
+  .sf-art-carton-c,
+  .sf-art-label,
+  .sf-art-check,
+  .sf-art-scan,
+  .sf-art-ring,
+  .sf-art-dot {
+    animation: none !important;
+  }
+}

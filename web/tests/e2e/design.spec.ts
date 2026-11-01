@@ -125,7 +125,7 @@ test.describe("shell", () => {
 
 test.describe("login", () => {
   // The entry screen is built only with the Axzy UI System (see DOCUMENTACION_DETALLADA_COMPONENTES.txt).
-  test("the entry screen shows the brand, the sign-in form and the language field", async ({ page }) => {
+  test("the entry screen splits into the brand, the form and the illustration, with no language control", async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 800 });
     await page.goto("/#/login");
     await expect(page.getByTestId("brand-intro")).toBeHidden({ timeout: 8000 });
@@ -135,15 +135,10 @@ test.describe("login", () => {
     await expect(page.getByLabel("Usuario", { exact: true })).toBeVisible();
     await expect(page.getByLabel("Contraseña", { exact: true })).toBeVisible();
     await expect(page.getByRole("button", { name: "Entrar" })).toBeVisible();
-    await expect(page.getByRole("combobox", { name: "Idioma" })).toBeVisible();
-  });
-
-  test("the language field switches the screen without leaving it", async ({ page }) => {
-    await page.setViewportSize({ width: 1280, height: 800 });
-    await page.goto("/#/login");
-    await page.getByRole("combobox", { name: "Idioma" }).selectOption("en");
-    await expect(page.getByRole("heading", { name: "Sign in" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Sign in" })).toBeVisible();
+    // The language is chosen inside the system (the top bar), not on the entry screen.
+    await expect(page.getByRole("combobox", { name: "Idioma" })).toHaveCount(0);
+    // The right panel is the flat illustration of the product.
+    await expect(page.locator("main svg").first()).toBeVisible();
   });
 
   test("on a phone the entry screen stacks and nothing scrolls sideways", async ({ page }) => {

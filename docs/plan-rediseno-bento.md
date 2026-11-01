@@ -24,7 +24,7 @@
 - Design document and token pipeline; `appearance="bento"`, density 0.8, no `radius`/`shadow`.
 - Shell: `ITLayout` with `variant="bento"` sidebar and top bar, profile at the bottom, white floating cards over the canvas.
 - Home: dashboard with the greeting, the invoice status strip (`ITBentoStatStrip`, click filters the list), pastel tiles with real counts per permission, latest invoices and quick actions.
-- Entry screen: brand panel in the accent color next to the form card; on a phone the brand is a compact header and the card takes the screen.
+- Entry screen: split page, the form on the canvas on the left and an animated flat illustration of the product on the right (no language control there; the language lives in the top bar). The Android entry has the same illustration, animated with Compose.
 - Invoice list/detail: status colors moved to the entity, the detail's lines table in a card, chips and status badges.
 - Report pages: pill tabs, filters and totals inside a card.
 - Access and stock: the kit's pill tabs.
@@ -36,9 +36,9 @@ Every module screen inherits the appearance; the audit checked products, stock, 
 
 Known polish left for the end of the wave: the `Nuevo rol` action inside the access panel could move to the page header; the home could grow a third row (recent activity) when the data justifies it.
 
-### Wave 3 — app (next)
+### Wave 3 — app (in progress)
 
-1. Tokens: run `node scripts/design-tokens.mjs` (no `--web`) once the app's `StockFlowTheme` reads the new names; add the bento tones (`BentoTone`), canvas, ink, field and the 24px/28px shapes.
+1. Tokens (done): `node scripts/design-tokens.mjs` regenerated the app's `DesignTokens.kt` from the bento document; `ui/theme/Bento.kt` adds the tones, the ink, the field and the 24/20/16dp shapes, and the app compiles with its host tests green. The shell, the cards, the rows, the fields and the buttons were restyled, the bento components were added (`ui/components/Bento.kt`, `BrandArt.kt`), and the home and the entry screen were migrated; the other screens use the same `PageScaffold` and inherit the look.
 2. Components to port from the reference app (`~/DEV/PTNV/RESPONSIVA/PuertoNuevoApp/shared/src/commonMain/kotlin/.../core/`): `Bento.kt` (tile, pill button, chips), `BentoBottomBar`, `BentoTopBar`, `BentoDrawer`, `BentoTabs`, `BentoCharts` (gauge, waves, spark, donut), `BentoState`, and the bento `AppTextField`.
 3. Screens in waves: shell + home first (with the same tiles as the web home), then the receiving flow (count/placement), orders, materials, stock and labels.
 4. The design e2e on Android (`tests/e2e-app/android-design.test.mjs`) moves from the orange hero to the bento contract: canvas color, white bento cards, bottom bar, ink active destination.

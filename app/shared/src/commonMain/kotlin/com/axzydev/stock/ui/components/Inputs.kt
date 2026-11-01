@@ -173,6 +173,6 @@ fun PrimaryButton(text: String, onClick: () -> Unit, tag: String, modifier: Modi
 			Icon(icon, content)
 			Spacer(Modifier.width(DesignTokens.Spacing.sm.dp))
 		}
-		AppText(text, requireNotNull(primary.typography).toTextStyle().copy(fontWeight = StockFlowType.titleMd.fontWeight), content, maxLines = 1)
+		AppText(text, (primary.typography ?: DesignTokens.Typography.labelMd).toTextStyle().copy(fontWeight = StockFlowType.titleMd.fontWeight), content, maxLines = 1)
 	}
 }

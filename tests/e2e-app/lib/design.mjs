@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { readDesign } from "../../../scripts/design-tokens.mjs";
 import { root } from "./android.mjs";
 
-export const design = readDesign(join(root, "design/command-center-DESIGN.md"));
+export const design = readDesign(join(root, "design/stockflow-DESIGN.md"));
 export const colors = design.colors;
 export const rgb = (hex) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
 
@@ -27,11 +27,20 @@ export function workspace(mode) {
 // How far a pixel is from a color: the largest difference of its three channels.
 export const distance = (pixel, expected) => Math.max(...pixel.map((value, i) => Math.abs(value - expected[i])));
 
-// How tall the orange is at the top of the screen, in pixels: the strip behind the status bar, plus the hero on a
-// screen that has one. The intro has only the strip.
-export function orangeHeight(shot) {
-  const orange = rgb(colors.primary);
-  let y = 0;
-  while (y < shot.height && distance(shot.at(4, y), orange) <= 3) y++;
-  return y;
+// Whether the screen shows artwork of its own over the canvas: the brand intro, or the entry illustration. It is a
+// share of the pixels of the middle of the screen that are not the canvas.
+export function hasArtwork(shot, canvas) {
+  let painted = 0;
+  let total = 0;
+  const left = Math.round(shot.width * 0.2);
+  const right = Math.round(shot.width * 0.8);
+  const top = Math.round(shot.height * 0.2);
+  const bottom = Math.round(shot.height * 0.8);
+  for (let y = top; y < bottom; y += 4) {
+    for (let x = left; x < right; x += 4) {
+      total += 1;
+      if (distance(shot.at(x, y), canvas) > 12) painted += 1;
+    }
+  }
+  return painted / total > 0.02;
 }

@@ -206,6 +206,7 @@
     "subtitle": "Invoices, counts, placement and stock in one flow, on the web and in the app.",
     "scan": "Scan the material and the location",
     "count": "Count and resolve differences on the spot",
-    "place": "Place in seconds, with stock up to date"
+    "place": "Place in seconds, with stock up to date",
+    "footer": "Inventory system"
   }
 }

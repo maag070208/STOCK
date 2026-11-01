@@ -4,10 +4,12 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -30,6 +32,7 @@ import com.axzydev.stock.i18n.text
 import com.axzydev.stock.ui.components.AppIcon
 import com.axzydev.stock.ui.components.AppText
 import com.axzydev.stock.ui.components.BentoPageHeader
+import com.axzydev.stock.ui.components.BrandIllustration
 import com.axzydev.stock.ui.components.BentoScreen
 import com.axzydev.stock.ui.components.BentoSectionTitle
 import com.axzydev.stock.ui.components.Card
@@ -68,16 +71,14 @@ private fun rememberButtonScroll(): Pair<ScrollState, (Boolean) -> Unit> {
 private fun EntryScreen(headline: Text, scrollState: ScrollState, form: @Composable () -> Unit) {
 	StockFlowTheme(dark = false) {
 		BentoScreen(scrollState = scrollState) {
-			Spacer(Modifier.height(DesignTokens.Spacing.xl.dp))
-			Column(
-				Modifier.fillMaxWidth(),
-				horizontalAlignment = Alignment.CenterHorizontally,
-				verticalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.md.dp),
-			) {
-				Image(painterResource(Res.drawable.stockflow_glyph_light), contentDescription = null, modifier = Modifier.height(56.dp))
-				AppText(AppInfo.NAME, StockFlowType.headlineLg, StockFlow.colors.onBackground)
+			BrandIllustration(Modifier.height(190.dp))
+			Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
+				Image(painterResource(Res.drawable.stockflow_glyph_light), contentDescription = null, modifier = Modifier.height(28.dp))
+				Spacer(Modifier.width(DesignTokens.Spacing.sm.dp))
+				AppText(AppInfo.NAME, StockFlowType.titleMd, StockFlow.colors.onBackground)
 			}
-			BentoPageHeader(text(headline))
+			// The copy of the screens marks the emphasis with *asterisks*; the plain headline shows the words only.
+			BentoPageHeader(text(headline).replace("*", ""))
 			Card { form() }
 		}
 	}

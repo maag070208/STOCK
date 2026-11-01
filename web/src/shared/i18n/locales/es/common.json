@@ -206,6 +206,7 @@
     "subtitle": "Facturas, conteo, ubicación y existencias en un solo flujo, desde la web y desde la app.",
     "scan": "Escanea el material y la ubicación",
     "count": "Cuenta y resuelve diferencias en el momento",
-    "place": "Ubica en segundos, con existencias al día"
+    "place": "Ubica en segundos, con existencias al día",
+    "footer": "Sistema de inventario"
   }
 }

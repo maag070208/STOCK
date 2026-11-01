@@ -1,11 +1,12 @@
-// F0-19 · e2e: the Android app is drawn in the colors of design/command-center-DESIGN.md, in the layout of the
-// reference the owner chose on 2026-10-14 (design-system.md section 7).
-// The expected colors are read from the document, and compared with the pixels of the screen.
+// F0-19 · e2e: the Android app is drawn in the bento design (design/stockflow-DESIGN.md): a soft gray canvas, white
+// cards, pastel tiles and the orange accent. The expected colors are read from the document and compared with the
+// pixels of the screen. The entry illustration and the figures of the home carry their own animation, so the checks
+// read the surface behind a label, never the glyph of the moment.
 import { test, after } from "node:test";
 import assert from "node:assert/strict";
 import { adb, bounds, darkMode, isEmulator, launch, screenshot, signIn, waitForText } from "./lib/android.mjs";
 import { newUser } from "./lib/api.mjs";
-import { colors, distance, rgb, workspace } from "./lib/design.mjs";
+import { colors, distance, hasArtwork, rgb, workspace } from "./lib/design.mjs";
 
 function assertColor(actual, expected, tolerance, what) {
   assert.ok(distance(actual, expected) <= tolerance, `${what}: expected about rgb(${expected}), the screen shows rgb(${actual})`);
@@ -25,6 +26,28 @@ function closestInside(shot, box, expected) {
   return best;
 }
 
+// The pastel tones of the bento tiles (app/shared/.../ui/theme/Bento.kt), which are the design's, not the palette's.
+const MINT = [0xdd, 0xf3, 0xe8];
+const SEA = [0xe0, 0xf0, 0xf7];
+
+async function checkSignIn() {
+  const xml = await waitForText("Iniciar sesión");
+  const shot = screenshot();
+  const expected = workspace(darkMode() ? "dark" : "light");
+
+  // The entry screen is the canvas, with the illustration above the form.
+  assertColor(shot.at(4, 4), expected.canvas, 1, "status bar strip");
+  assert.ok(hasArtwork(shot, expected.canvas), "the entry screen must show the brand illustration");
+  assertColor(closestInside(shot, bounds(xml, "StockFlow"), expected.title), expected.title, 6, "brand name");
+
+  // The title, and the one primary control: the orange pill with white text.
+  const title = bounds(xml, "Iniciar sesión");
+  assertColor(closestInside(shot, title, rgb(colors["on-surface"])), rgb(colors["on-surface"]), 6, "entry title");
+  const button = bounds(xml, "Entrar");
+  assertColor(shot.at(button.left - 16, button.centerY), rgb(colors.primary), 1, "sign-in button");
+  assertColor(closestInside(shot, button, rgb(colors["on-primary"])), rgb(colors["on-primary"]), 6, "sign-in button text");
+}
+
 async function checkHome(mode) {
   const expected = workspace(mode);
   const user = await newUser(["WAREHOUSE_OPERATOR"]);
@@ -33,47 +56,25 @@ async function checkHome(mode) {
   await signIn(user.username, user.password);
   const xml = await waitForText("Conectado a la API");
   const shot = screenshot();
-  const orange = rgb(colors.primary);
-  const white = rgb(colors["on-primary"]);
 
-  // Hero: the strip behind the status bar and the hero are the brand's orange in both modes, and the greeting is white.
-  assertColor(shot.at(4, 4), orange, 1, "status bar strip");
+  // The canvas, the greeting in ink, and the two tasks of the receipt on their pastel tiles.
+  assertColor(shot.at(4, 4), expected.canvas, 1, "status bar strip");
   const greeting = bounds(xml, "Hola, Persona de Prueba");
-  assertColor(shot.at(4, greeting.centerY), orange, 1, "hero");
-  assertColor(closestInside(shot, bounds(xml, "StockFlow"), white), white, 3, "brand name");
+  assertColor(closestInside(shot, greeting, expected.title), expected.title, 6, "greeting");
 
-  // Sheet: the workspace canvas of the mode, with the orange pill button and the card. The left margin is read, so the
-  // check does not depend on how tall the home's content is (it starts with the tasks of the receipt).
-  assertColor(shot.at(6, Math.round(shot.height * 0.85)), expected.canvas, 1, "sheet");
-  const button = bounds(xml, "Buscar material");
-  assertColor(shot.at(Math.round(shot.width / 2), button.top - 4), orange, 1, "lookup button");
-  assertColor(closestInside(shot, button, white), white, 3, "lookup button text");
-  const label = bounds(xml, "ESTADO DE LA API");
-  assertColor(closestInside(shot, label, expected.muted), expected.muted, 6, "card label");
+  const count = bounds(xml, "Contar");
+  assertColor(shot.at(Math.max(4, count.left - 16), count.centerY), MINT, 2, "count tile");
+  const place = bounds(xml, "Ubicar");
+  assertColor(shot.at(Math.max(4, place.left - 16), place.centerY), SEA, 2, "placement tile");
 
-  // Badge: pale green with dark green text, as "production ready" in the document. It keeps its colors in both modes.
+  // The module tiles are white cards on the canvas.
+  const materials = bounds(xml, "Materiales");
+  assertColor(shot.at(Math.max(4, materials.left - 16), materials.centerY), rgb(colors.surface), 1, "module card");
+
+  // The state of the API is the pale green of a healthy service, in both modes.
   const badge = bounds(xml, "Conectado a la API");
   assertColor(shot.at(badge.left + 6, badge.top + 3), rgb(colors["status-production-bg"]), 1, "badge fill");
   assertColor(closestInside(shot, badge, rgb(colors["status-production-fg"])), rgb(colors["status-production-fg"]), 6, "badge text");
-}
-
-// The entry screen: the orange hero with the brand and the headline, and the sheet with the form: gray pill fields
-// and the orange pill button. It is the brand moment, so it looks the same in dark mode (design-system.md section 7).
-async function checkSignIn() {
-  const xml = await waitForText("Iniciar sesión");
-  const shot = screenshot();
-  const orange = rgb(colors.primary);
-  assertColor(shot.at(4, 4), orange, 1, "status bar strip");
-  assertColor(shot.at(4, bounds(xml, "StockFlow").centerY), orange, 1, "hero");
-  const title = bounds(xml, "Iniciar sesión");
-  assertColor(shot.at(title.left - 4, title.centerY), rgb(colors.background), 1, "sheet");
-  assertColor(closestInside(shot, title, rgb(colors["on-surface"])), rgb(colors["on-surface"]), 3, "sheet title");
-  // The username field: its label sits inside the gray pill while the field is empty.
-  const field = bounds(xml, "Usuario");
-  assertColor(shot.at(field.right + 12, field.centerY), rgb(colors.surface), 1, "field");
-  // The primary button: the design's orange with white text.
-  const button = bounds(xml, "Entrar");
-  assertColor(shot.at(button.left - 12, button.centerY), rgb(colors.primary), 1, "sign-in button");
 }
 
 // An emulator is switched to each mode. A phone is checked in the mode it is in, and its setting is not touched.
@@ -81,7 +82,7 @@ const nightBefore = /Night mode: (\w+)/.exec(adb("shell", "cmd", "uimode", "nigh
 if (isEmulator) after(() => adb("shell", "cmd", "uimode", "night", nightBefore));
 
 for (const mode of isEmulator ? ["light", "dark"] : [darkMode() ? "dark" : "light"]) {
-  test(`e2e: in ${mode} mode the home is the orange hero over the design's workspace`, async () => {
+  test(`e2e: in ${mode} mode the home is the bento dashboard over the design's canvas`, async () => {
     if (isEmulator) adb("shell", "cmd", "uimode", "night", mode === "dark" ? "yes" : "no");
     await checkHome(mode);
   });

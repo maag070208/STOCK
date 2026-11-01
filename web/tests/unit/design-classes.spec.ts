@@ -6,7 +6,19 @@ import { fileURLToPath } from "node:url";
 
 const src = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "src");
 // Plain class names that are hooks for app/index.css, not utilities.
-const hooks = new Set(["sf-shell", "sf-on-primary"]);
+const hooks = new Set([
+  "sf-shell",
+  "sf-on-primary",
+  "sf-art-scene",
+  "sf-art-carton-a",
+  "sf-art-carton-b",
+  "sf-art-carton-c",
+  "sf-art-label",
+  "sf-art-check",
+  "sf-art-scan",
+  "sf-art-ring",
+  "sf-art-dot",
+]);
 
 function components(dir: string): string[] {
   return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {

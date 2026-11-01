@@ -24,7 +24,7 @@ fun StatusBadge(text: String, tone: StatusTone, modifier: Modifier = Modifier) {
 	val spec = tone.spec
 	AppText(
 		text = text,
-		style = requireNotNull(spec.typography).toTextStyle(),
+		style = (spec.typography ?: DesignTokens.Typography.labelSm).toTextStyle(),
 		color = Color(spec.textColor),
 		modifier = modifier
 			.background(Color(spec.backgroundColor), RoundedCornerShape(spec.rounded.dp))
