@@ -67,7 +67,7 @@ Confirmed by the owner, 2026-10-14:
 
 The owner adopted a design for the interface on 2026-10-13: [design-system.md](design-system.md). From then on:
 
-- The interface (web and app) takes its colors, type and shapes from the design file: orange `#fe6e00`, warm neutrals and the black glass shell.
+- The interface (web and app) takes its colors, type and shapes from the bento design file: orange `#fe6e00` as the accent, ink neutrals and pastel tiles on a soft canvas.
 - The brand pack gives the **artwork** only: icons, launcher, favicons and Lottie animations. The artwork keeps its own colors, and is still copied without edits (rule 1).
 - A test checks that the glyphs served by the web are exact copies of the masters.
 - The app draws the glyph from vector drawables that `scripts/brand-vectors.mjs` writes from the masters. A vector cannot be a byte copy of an SVG, so a test checks that every path, color and stroke of the master is in it, unchanged.

@@ -15,7 +15,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 
-// The app's look comes from design/command-center-DESIGN.md through DesignTokens, and from nowhere else.
+// The app's look comes from design/stockflow-DESIGN.md through DesignTokens, and from nowhere else.
 // There is no Material theme underneath: every screen is drawn with the pieces in ui/components.
 
 // The workspace colors. The shell and the status badges look the same in both modes,
