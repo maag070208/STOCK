@@ -100,7 +100,7 @@ function css(design) {
     // Tailwind's own palette, radii, shadows, fonts and text sizes are cleared: only the design's exist.
     ...["color", "radius", "shadow", "font", "text"].map((namespace) => `  --${namespace}-*: initial;`),
     ...Object.entries(design.colors).map(([key, value]) => `  --color-${key}: ${value};`),
-    ...Object.entries(design.rounded).filter(([key]) => key !== "pill").map(([key, value]) => `  --radius-${key}: ${value};`),
+    ...Object.entries(design.rounded).map(([key, value]) => `  --radius-${key}: ${value};`),
     ...Object.entries(design.shadows).map(([key, value]) => `  --shadow-${key}: ${value};`),
     `  --font-sans: ${design.typography["body-md"].fontFamily};`,
     `  --font-mono: ${design.typography["code-sm"].fontFamily};`,

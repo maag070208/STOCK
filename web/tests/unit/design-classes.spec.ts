@@ -9,6 +9,7 @@ const src = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "src");
 const hooks = new Set([
   "sf-shell",
   "sf-on-primary",
+  "sf-rise",
   "sf-art-scene",
   "sf-art-carton-a",
   "sf-art-carton-b",

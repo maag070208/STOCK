@@ -1,9 +1,21 @@
 package com.axzydev.stock
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -48,6 +60,9 @@ import com.axzydev.stock.i18n.Language
 import com.axzydev.stock.i18n.LocalLanguage
 import com.axzydev.stock.i18n.Text
 import com.axzydev.stock.i18n.textFor
+import com.axzydev.stock.ui.components.AppIcon
+import com.axzydev.stock.ui.components.BentoBottomBar
+import com.axzydev.stock.ui.components.BentoNavItem
 import com.axzydev.stock.ui.components.ShellStatusBar
 import com.axzydev.stock.ui.customers.CustomersScreen
 import com.axzydev.stock.ui.home.HomeScreen
@@ -122,6 +137,7 @@ fun App(
 		PlacementViewModel(
 			receiving,
 			locationsApi,
+			products,
 			session,
 			{ textFor(Text.FIELD_REQUIRED, currentLanguage) },
 			{ textFor(Text.QUANTITY_INVALID, currentLanguage) },
@@ -130,7 +146,7 @@ fun App(
 			noConnection,
 		)
 	}
-	val balances = viewModel { StockViewModel(stock, session, noConnection) }
+	val balances = viewModel { StockViewModel(stock, products, session, noConnection) }
 	val locations = viewModel { WarehousesViewModel(warehouses, session, noConnection) }
 	val customers = viewModel { CustomersViewModel(customersApi, session, noConnection) }
 	val orderStatuses = viewModel { OrderStatusesViewModel(catalogsApi, session, noConnection) }
@@ -210,6 +226,26 @@ fun App(
 									else -> moduleId = null
 								}
 							}
+							// The way around is there on the hub and on a module's menu; a page is work, and takes the whole screen.
+							val destinations = listOf(
+								BentoNavItem(AppIcon.HOME, textFor(Text.NAV_HOME, language), entry == null, "nav-home") { moduleId = null },
+							) + modules.map { (module) ->
+								BentoNavItem(module.icon, textFor(module.title, language), entry?.module?.id == module.id, "nav-${module.id}") {
+									moduleId = module.id
+									pageId = null
+								}
+							}
+							Column(Modifier.fillMaxSize()) {
+							Box(Modifier.weight(1f).then(if (page == null) Modifier.consumeWindowInsets(WindowInsets.navigationBars) else Modifier)) {
+							AnimatedContent(
+								targetState = moduleId to pageId,
+								transitionSpec = {
+									if (reducedMotionEnabled()) EnterTransition.None togetherWith ExitTransition.None
+									else (fadeIn(tween(220)) + slideInVertically(tween(220)) { it / 40 }) togetherWith fadeOut(tween(120))
+								},
+							) { (shownModule, shownPage) ->
+							val entry = modules.firstOrNull { it.module.id == shownModule }
+							val page = entry?.pages?.firstOrNull { it.id == shownPage }
 							when {
 								entry == null -> HomeScreen(
 									client = client,
@@ -255,7 +291,18 @@ fun App(
 												pageId = COUNT
 											},
 										)
-										else -> MyReceiptsScreen(receipts) { pageId = null }
+										else -> MyReceiptsScreen(
+											receipts = receipts,
+											onCount = { target ->
+												count.choose(target)
+												pageId = COUNT
+											},
+											onPlace = { target ->
+												placement.open(target)
+												pageId = PLACEMENT
+											},
+											onBack = { pageId = null },
+										)
 									}
 
 									"materials" -> LookupScreen(lookup) {
@@ -281,6 +328,10 @@ fun App(
 
 									else -> ModuleMenuScreen(entry, onBack = { moduleId = null }, onOpenPage = { pageId = it.id })
 								}
+							}
+							}
+							}
+							if (page == null) BentoBottomBar(destinations)
 							}
 						}
 					}

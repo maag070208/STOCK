@@ -2,6 +2,7 @@ package com.axzydev.stock.feature.receipts
 
 import com.axzydev.stock.data.api.Authorized
 import com.axzydev.stock.data.locations.LocationsApi
+import com.axzydev.stock.data.products.ProductApi
 import com.axzydev.stock.data.receipts.ReceivingApi
 import com.axzydev.stock.i18n.Language
 import io.ktor.client.engine.mock.MockEngine
@@ -91,6 +92,7 @@ class PlacementViewModelTest {
 		return PlacementViewModel(
 			receiving,
 			locationsApi,
+			ProductApi(MockEngine(MockEngineConfig().apply { addHandler { route(it) } }), "http://test/api/v1") { Language.ES },
 			session,
 			{ "obligatorio" },
 			{ "cantidad no válida" },

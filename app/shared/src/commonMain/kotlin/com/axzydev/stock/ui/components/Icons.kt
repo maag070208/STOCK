@@ -21,7 +21,7 @@ import com.axzydev.stock.ui.theme.AppLayout
 
 // The app's line icons, drawn on a 24-unit grid with a round 1.8-unit stroke. There is no icon font or Material
 // dependency (mobile-app.md section 7), so each one is a few lines of geometry.
-enum class AppIcon { USER, LOCK, EYE, EYE_OFF, SEARCH, BACK, SIGN_OUT, SCAN, INBOX, BOXES, WAREHOUSE, CLIPBOARD, ALERT, CHEVRON }
+enum class AppIcon { HOME, CHECK, ARROW, USER, LOCK, EYE, EYE_OFF, SEARCH, BACK, SIGN_OUT, SCAN, INBOX, BOXES, WAREHOUSE, CLIPBOARD, ALERT, CHEVRON }
 
 private const val GRID = 24f
 private const val STROKE = 1.8f
@@ -38,6 +38,15 @@ private fun DrawScope.draw(icon: AppIcon, color: Color) {
 	val line = Stroke(width = STROKE, cap = StrokeCap.Round, join = StrokeJoin.Round)
 	fun path(build: Path.() -> Unit) = drawPath(Path().apply(build), color, style = line)
 	when (icon) {
+		AppIcon.CHECK -> path { moveTo(4f, 12.5f); lineTo(9.5f, 18f); lineTo(20f, 6.5f) }
+		AppIcon.ARROW -> path { moveTo(5f, 12f); lineTo(19f, 12f); moveTo(13f, 6f); lineTo(19f, 12f); lineTo(13f, 18f) }
+		AppIcon.HOME -> {
+			// The mosaic of the dashboard.
+			drawRoundRect(color, topLeft = Offset(3.5f, 3.5f), size = Size(8f, 10f), cornerRadius = CornerRadius(2f), style = line)
+			drawRoundRect(color, topLeft = Offset(14.5f, 3.5f), size = Size(6f, 6f), cornerRadius = CornerRadius(2f), style = line)
+			drawRoundRect(color, topLeft = Offset(3.5f, 16.5f), size = Size(8f, 4f), cornerRadius = CornerRadius(2f), style = line)
+			drawRoundRect(color, topLeft = Offset(14.5f, 12.5f), size = Size(6f, 8f), cornerRadius = CornerRadius(2f), style = line)
+		}
 		AppIcon.USER -> {
 			drawCircle(color, radius = 4f, center = Offset(12f, 8f), style = line)
 			path { moveTo(4f, 21f); arcTo(Rect(4f, 13f, 20f, 29f), 180f, 180f, false) }

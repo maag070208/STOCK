@@ -1,12 +1,13 @@
 import { type Column, ITAlert, ITBadget, ITButton, ITCard, ITEmptyState, ITFlex, ITPage, ITStack, ITText } from "@axzydev/axzy_ui_system";
 import { trail } from "@shared/lib/breadcrumbs";
 import { FactStrip } from "@shared/ui/FactStrip";
+import { FlowSteps } from "@shared/ui/FlowSteps";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { FaBalanceScale, FaTrash, FaUserEdit, FaUserPlus } from "react-icons/fa";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { toast } from "@app/store";
-import { captureSummary, invoiceApi, staffApi, STATUS_COLOR, type Assignment, type Invoice, type InvoiceLine, type StaffMember } from "@entities/invoice";
+import { captureSummary, invoiceApi, invoiceStage, staffApi, STATUS_COLOR, type Assignment, type Invoice, type InvoiceLine, type InvoiceStage, type StaffMember } from "@entities/invoice";
 import { useCan } from "@entities/user";
 import { AdjustDialog, AssignDialog } from "@features/invoice/InvoiceDialogs";
 import { BulkAssignDialog, CancelInvoiceDialog } from "@features/invoice/InvoiceWorkDialogs";
@@ -15,6 +16,10 @@ import { ApiError } from "@shared/api/client";
 import { IconButton } from "@shared/ui/IconButton";
 import { formatDate, formatQuantity } from "@shared/lib/format";
 import { PlainTable } from "@shared/ui/PlainTable";
+
+// The step each stage of the invoice stands on, and what the screen says comes next.
+const STEP_OF: Record<InvoiceStage, number> = { capture: 0, assign: 1, count: 2, resolve: 2, place: 3, done: 5 };
+const NEXT_OF = { capture: "nextCapture", assign: "nextAssign", count: "nextCount", resolve: "nextResolve", place: "nextPlace", done: "nextDone" } as const;
 
 export function InvoicePage() {
 	const { t, i18n } = useTranslation(["invoices", "common"]);
@@ -63,6 +68,7 @@ export function InvoicePage() {
 	const summary = captureSummary(lines);
 	const anyCounted = lines.some((line) => line.assignments.some((assignment) => assignment.countedQuantity !== null));
 	const capturing = open && !anyCounted;
+	const stage = invoice ? invoiceStage(invoice) : null;
 	const countedLines = lines.filter((line) => line.assignments.length > 0 && line.assignments.every((assignment) => assignment.countedQuantity !== null)).length;
 	const placedLines = lines.filter((line) => line.assignments.length > 0 && line.assignments.every((assignment) => assignment.placed)).length;
 	const quantity = (value: number | null | undefined, line: InvoiceLine) => (value === null || value === undefined ? "" : formatQuantity(value, line.unit?.decimalPlaces, i18n.language));
@@ -88,32 +94,42 @@ export function InvoicePage() {
 		{ key: "product", label: t("form.product"), type: "string", render: (row) => `${row.line.product.code ?? ""} · ${row.line.product.name ?? ""}` },
 		{ key: "quantity", label: t("detail.invoiced"), type: "string", render: (row) => `${quantity(row.line.invoicedQuantity ?? row.line.quantity, row.line)} ${row.line.unit?.label ?? ""}` },
 		{ key: "operator", label: t("form.operator"), type: "string", render: (row) => row.assignment?.operator.name ?? row.assignment?.operator.code ?? t("detail.notAssigned") },
-		{ key: "expected", label: t("detail.expected"), type: "string", render: (row) => (row.assignment ? quantity(row.assignment.expectedQuantity, row.line) : "") },
-		{ key: "counted", label: t("detail.counted"), type: "string", render: (row) => (row.assignment ? quantity(row.assignment.countedQuantity, row.line) : "") },
-		{ key: "accepted", label: t("detail.accepted"), type: "string", render: (row) => (row.assignment ? quantity(row.assignment.acceptedQuantity, row.line) : "") },
 		{
-			key: "outcome",
-			label: t("columns.status"),
+			key: "count",
+			label: t("detail.count"),
 			type: "string",
-			render: (row) =>
-				!row.assignment || row.assignment.outcome === null ? (
-					row.assignment ? <ITBadget color="gray" label={t("detail.notCounted")} /> : ""
-				) : row.assignment.outcome === "MATCH" ? (
-					<ITBadget color="success" label={t(row.assignment.readyToPlace ? "detail.readyToPlace" : "detail.match")} />
-				) : (
-					<ITBadget color="danger" label={`${t("detail.discrepancy")} ${row.assignment.difference! > 0 ? "+" : ""}${quantity(row.assignment.difference, row.line)}`} />
-				),
+			render: (row) => {
+				const assignment = row.assignment;
+				if (!assignment) return "";
+				if (assignment.outcome === null) {
+					return (
+						<ITFlex align="center" gap={2} wrap="wrap">
+							{quantity(assignment.expectedQuantity, row.line)}
+							<ITBadget color="gray" label={t("detail.notCounted")} />
+						</ITFlex>
+					);
+				}
+				const counted = t("detail.ofExpected", { counted: quantity(assignment.countedQuantity, row.line), expected: quantity(assignment.expectedQuantity, row.line) });
+				return (
+					<ITFlex align="center" gap={2} wrap="wrap">
+						{counted}
+						{assignment.outcome === "MATCH" ? (
+							<ITBadget color="success" label={t(assignment.readyToPlace ? "detail.readyToPlace" : "detail.match")} />
+						) : (
+							<ITBadget color="danger" label={`${t("detail.discrepancy")} ${assignment.difference! > 0 ? "+" : ""}${quantity(assignment.difference, row.line)}`} />
+						)}
+					</ITFlex>
+				);
+			},
 		},
-		{ key: "placed", label: t("detail.placed"), type: "string", render: (row) => (row.assignment ? quantity(row.assignment.placedQuantity, row.line) : "") },
-		{ key: "remaining", label: t("detail.remaining"), type: "string", render: (row) => (row.assignment ? quantity(row.assignment.remainingQuantity, row.line) : "") },
 		{
-			key: "locations",
-			label: t("detail.locations"),
+			key: "placed",
+			label: t("detail.placed"),
 			type: "string",
 			render: (row) =>
-				row.assignment?.placements.length
-					? row.assignment.placements.map((placement) => `${placement.locationCode}: ${quantity(placement.quantity, row.line)}`).join(" · ")
-					: t("detail.noLocations"),
+				!row.assignment
+					? ""
+					: `${quantity(row.assignment.placedQuantity, row.line)}${row.assignment.placements.length ? ` · ${row.assignment.placements.map((placement) => placement.locationCode).join(", ")}` : ""}`,
 		},
 		{
 			key: "actions",
@@ -149,7 +165,6 @@ export function InvoicePage() {
 				invoice && (
 					<ITFlex align="center" gap={3} wrap="wrap">
 						<ITBadget color={STATUS_COLOR[invoice.status.code]} label={invoice.status.label ?? invoice.status.code} />
-						{open && can.assign && !anyCounted && lines.length > 0 && <ITButton variant="outlined" label={t("detail.assignAll")} onClick={() => setAssigningAll(true)} />}
 						{open && can.create && !anyCounted && <ITButton variant="outlined" color="danger" label={t("cancellation.button")} onClick={() => setCancelling(true)} />}
 					</ITFlex>
 				)
@@ -166,7 +181,21 @@ export function InvoicePage() {
 						]}
 					/>
 
-					{!open && <ITAlert variant="info">{t("closing.readOnly")}</ITAlert>}
+					{stage && (
+						<FlowSteps
+							steps={[t("flow.capture"), t("flow.assign"), t("flow.count"), t("flow.place"), t("flow.done")]}
+							current={STEP_OF[stage]}
+							next={t(`flow.${NEXT_OF[stage]}`, { counted: countedLines, placed: placedLines, lines: lines.length })}
+							action={
+								open && can.assign && !anyCounted && lines.length > 0 ? (
+									// Until something is counted the whole invoice can still go to someone else.
+									<ITButton variant={stage === "assign" ? "filled" : "outlined"} label={t("detail.assignAll")} onClick={() => setAssigningAll(true)} />
+								) : stage === "resolve" && can.resolve ? (
+									<ITButton label={t("flow.resolve")} onClick={() => navigate("/discrepancies")} />
+								) : undefined
+							}
+						/>
+					)}
 
 					{can.create && capturing && (
 						<ITCard title={t("capture.title")}>

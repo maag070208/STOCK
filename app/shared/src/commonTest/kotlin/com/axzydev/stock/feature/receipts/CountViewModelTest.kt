@@ -98,7 +98,7 @@ class CountViewModelTest {
 		assertEquals("a1", target.assignment.id)
 		assertEquals("F-100", target.invoice)
 		assertEquals("w1", target.warehouseId)
-		assertEquals("10.000000", view.state.value.quantity)
+		assertEquals("10", view.state.value.quantity)
 		assertEquals("p1", requests.first { it.url.encodedPath == "/api/v1/receipts/mine" }.url.parameters["productId"])
 		view.editQuantity("8")
 		view.save()

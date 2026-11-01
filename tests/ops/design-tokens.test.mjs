@@ -1,5 +1,5 @@
 // F0-17 · unit: the design document is the single source of the tokens for web and app.
-// The generated files must match what the script produces from design/command-center-DESIGN.md.
+// The generated files must match what the script produces from design/stockflow-DESIGN.md.
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -8,18 +8,18 @@ import { fileURLToPath } from "node:url";
 import { readDesign, outputs } from "../../scripts/design-tokens.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
-const design = readDesign(join(root, "design/command-center-DESIGN.md"));
+const design = readDesign(join(root, "design/stockflow-DESIGN.md"));
 
 test("unit: the design document yields its colors, shapes and shell measures", () => {
-  assert.equal(Object.keys(design.colors).length, 35);
+  assert.equal(Object.keys(design.colors).length, 55);
   assert.equal(design.colors.primary, "#fe6e00");
-  assert.equal(design.colors.background, "#fcfaf7");
-  assert.equal(design.colors["on-surface-muted"], "#797067");
-  assert.deepEqual(design.rounded, { xs: "4px", sm: "6px", md: "8px", lg: "12px", pill: "9999px" });
+  assert.equal(design.colors.background, "#f4f4f6");
+  assert.equal(design.colors["on-surface-muted"], "#64748b");
+  assert.deepEqual(design.rounded, { xs: "4px", sm: "6px", md: "8px", lg: "12px", xl: "16px", "2xl": "20px", "3xl": "24px", pill: "9999px" });
   assert.equal(design.spacing["2xl"], "32px");
-  assert.equal(design.layout["shell-sidebar-expanded"], "256px");
+  assert.equal(design.layout["shell-sidebar-expanded"], "248px");
   assert.equal(design.elevation["shell-opacity"], "0.70");
-  assert.equal(design.typography["headline-lg"].fontWeight, 700);
+  assert.equal(design.typography["headline-lg"].fontWeight, 800);
   assert.equal(design.typography["label-sm"].letterSpacing, "0.05em");
 });
 
@@ -46,20 +46,20 @@ const css = files["web/src/app/design-tokens.css"];
 test("unit: the web theme is the design's only: Tailwind's own palette, radii, shadows and type are cleared", () => {
   for (const namespace of ["color", "radius", "shadow", "font", "text"]) assert.ok(css.includes(`--${namespace}-*: initial;`), namespace);
   assert.ok(css.includes("--radius-md: 8px;"));
-  assert.ok(css.includes("--text-headline-lg--font-weight: 700;"));
+  assert.ok(css.includes("--text-headline-lg--font-weight: 800;"));
 });
 
 test("unit: the app gets each type style in sp, with a unitless line height turned into a size", () => {
-  assert.ok(kotlin.includes("val headlineLg = TypeStyle(fontSize = 24f, fontWeight = 700, lineHeight = 32f, letterSpacingEm = 0f, monospace = false)"));
-  assert.ok(kotlin.includes("val displayHero = TypeStyle(fontSize = 96f, fontWeight = 600, lineHeight = 96f, letterSpacingEm = -0.025f, monospace = false)"));
+  assert.ok(kotlin.includes("val headlineLg = TypeStyle(fontSize = 24f, fontWeight = 800, lineHeight = 32f, letterSpacingEm = -0.02f, monospace = false)"));
+  assert.ok(kotlin.includes("val displayHero = TypeStyle(fontSize = 72f, fontWeight = 800, lineHeight = 72f, letterSpacingEm = -0.03f, monospace = false)"));
   assert.ok(kotlin.includes("val codeSm = TypeStyle(fontSize = 14f, fontWeight = 400, lineHeight = 20f, letterSpacingEm = 0f, monospace = true)"));
 });
 
 test("unit: the app gets each component with its references resolved to values", () => {
-  // rgba(0, 0, 0, 0.70) is ARGB B3000000; "0 16px" is no vertical padding and 16 horizontal.
-  assert.ok(kotlin.includes("val shellHeader = Component(backgroundColor = 0xB3000000L, textColor = 0xFFFFFFFFL, rounded = 0, height = 64, paddingVertical = 0, paddingHorizontal = 16)"));
-  assert.ok(kotlin.includes("val cardPanel = Component(backgroundColor = 0x00000000L, textColor = 0xFF423D38L, typography = Typography.bodyMd, rounded = 12, paddingVertical = 24, paddingHorizontal = 24)"));
-  assert.ok(kotlin.includes("val statusBadgeProduction = Component(backgroundColor = 0xFFDCFCE7L, textColor = 0xFF016630L, typography = Typography.labelSm, rounded = 9999, paddingVertical = 4, paddingHorizontal = 10)"));
+  // "0 16px" is no vertical padding and 16 horizontal.
+  assert.ok(kotlin.includes("val shellHeader = Component(backgroundColor = 0xFFF4F4F6L, textColor = 0xFF14171CL, rounded = 0, height = 64, paddingVertical = 0, paddingHorizontal = 16)"));
+  assert.ok(kotlin.includes("val cardPanel = Component(backgroundColor = 0xFFFFFFFFL, textColor = 0xFF1F2937L, rounded = 24, paddingVertical = 24, paddingHorizontal = 24)"));
+  assert.ok(kotlin.includes("val statusBadgeProduction = Component(backgroundColor = 0xFFDCFCE7L, textColor = 0xFF166534L, rounded = 9999, paddingVertical = 4, paddingHorizontal = 10)"));
 });
 
 test("unit: dark mode replaces the same workspace roles on the web and in the app", () => {
@@ -69,16 +69,16 @@ test("unit: dark mode replaces the same workspace roles on the web and in the ap
   assert.ok(css.includes("--sf-color-on-surface-muted: var(--sf-color-dark-on-surface-muted);"));
   assert.ok(css.includes("--sf-color-outline: var(--sf-shell-border);"));
   // A part marked data-light keeps the light colors in dark mode.
-  assert.ok(css.includes(".dark [data-light] {\n  --sf-color-background: #fcfaf7;"));
+  assert.ok(css.includes(".dark [data-light] {\n  --sf-color-background: #f4f4f6;"));
   assert.ok(css.includes("--sf-color-surface-elevated: #ffffff;"));
   assert.ok(kotlin.includes("object DarkColors {"));
-  assert.ok(kotlin.includes("const val background = 0xFF413830L"));
-  assert.ok(kotlin.includes("const val surfaceElevated = 0xFF4A423AL"));
-  // The shell's border: white at 10%.
-  assert.ok(kotlin.includes("const val outline = 0x1AFFFFFFL"));
+  assert.ok(kotlin.includes("const val background = 0xFF0E1116L"));
+  assert.ok(kotlin.includes("const val surfaceElevated = 0xFF1A1D24L"));
+  // The shell's border at 10%.
+  assert.ok(kotlin.includes("const val outline = 0x1AE5E7EBL"));
 });
 
 test("unit: the Android window opens in the workspace color, light and dark", () => {
-  assert.ok(files["app/androidApp/src/main/res/values/design_colors.xml"].includes('<color name="design_background">#FCFAF7</color>'));
-  assert.ok(files["app/androidApp/src/main/res/values-night/design_colors.xml"].includes('<color name="design_background">#413830</color>'));
+  assert.ok(files["app/androidApp/src/main/res/values/design_colors.xml"].includes('<color name="design_background">#F4F4F6</color>'));
+  assert.ok(files["app/androidApp/src/main/res/values-night/design_colors.xml"].includes('<color name="design_background">#0E1116</color>'));
 });

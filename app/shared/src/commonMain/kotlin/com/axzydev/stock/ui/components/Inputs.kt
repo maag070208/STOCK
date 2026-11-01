@@ -176,3 +176,26 @@ fun PrimaryButton(text: String, onClick: () -> Unit, tag: String, modifier: Modi
 		AppText(text, (primary.typography ?: DesignTokens.Typography.labelMd).toTextStyle().copy(fontWeight = StockFlowType.titleMd.fontWeight), content, maxLines = 1)
 	}
 }
+
+// The other way forward: the same pill, quiet, so the primary button stays the obvious one.
+@Composable
+fun SecondaryButton(text: String, onClick: () -> Unit, tag: String, modifier: Modifier = Modifier, icon: AppIcon? = null) {
+	val content = StockFlow.colors.onSurface
+	Row(
+		modifier = modifier
+			.fillMaxWidth()
+			.heightIn(min = AppBento.buttonHeight)
+			.background(StockFlow.colors.surfaceElevated, AppLayout.pill)
+			.clickable(role = Role.Button, onClick = onClick)
+			.padding(horizontal = DesignTokens.Spacing.xl.dp)
+			.testTag(tag),
+		horizontalArrangement = Arrangement.Center,
+		verticalAlignment = Alignment.CenterVertically,
+	) {
+		if (icon != null) {
+			Icon(icon, content)
+			Spacer(Modifier.width(DesignTokens.Spacing.sm.dp))
+		}
+		AppText(text, StockFlowType.labelMd, content, maxLines = 1)
+	}
+}

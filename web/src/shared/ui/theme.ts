@@ -36,3 +36,7 @@ export const themeSettings = {
 		},
 	},
 } as const;
+
+// The tiles of the kit take its four tone names; index.css paints them in StockFlow's family, so a screen names the color
+// it means.
+export const BENTO_TONE = { ink: "sea", orange: "lavender", amber: "sun", sand: "mint" } as const;

@@ -2,6 +2,7 @@ package com.axzydev.stock.ui.nav
 
 import com.axzydev.stock.i18n.Text
 import com.axzydev.stock.ui.components.AppIcon
+import com.axzydev.stock.ui.theme.BentoTone
 
 // The home is a hub: it shows one button per module the person may use, and each module opens its own menu of pages.
 // A page that the API does not have yet is still listed, marked `comingSoon`, so the shape of the app is visible.
@@ -21,12 +22,20 @@ data class ModulePage(
 	val comingSoon: Boolean = false,
 )
 
+// A section of the home, the same as the web's menu.
+enum class ModuleGroup(val title: Text) {
+	OPERATION(Text.GROUP_OPERATION),
+	INVENTORY(Text.GROUP_INVENTORY),
+}
+
 // A module: a button on the home, with its own menu of pages.
 data class Module(
 	val id: String,
 	val title: Text,
 	val hint: Text,
 	val icon: AppIcon,
+	val group: ModuleGroup,
+	val tone: BentoTone,
 	val pages: List<ModulePage>,
 	// The module shows when the person holds any of these permissions. Empty: any signed-in person.
 	val anyOf: List<String> = emptyList(),
@@ -46,6 +55,8 @@ val MODULES: List<Module> = listOf(
 		title = Text.MODULE_RECEIPTS,
 		hint = Text.MODULE_RECEIPTS_HINT,
 		icon = AppIcon.INBOX,
+		group = ModuleGroup.OPERATION,
+		tone = BentoTone.Orange,
 		anyOf = listOf("receipts.view"),
 		pages = listOf(
 			ModulePage("my-receipts", Text.PAGE_MY_RECEIPTS, Text.PAGE_MY_RECEIPTS_HINT, AppIcon.INBOX),
@@ -59,6 +70,8 @@ val MODULES: List<Module> = listOf(
 		title = Text.MODULE_MATERIALS,
 		hint = Text.MODULE_MATERIALS_HINT,
 		icon = AppIcon.SEARCH,
+		group = ModuleGroup.INVENTORY,
+		tone = BentoTone.Amber,
 		anyOf = listOf("products.view"),
 		pages = listOf(
 			ModulePage("lookup", Text.PAGE_LOOKUP, Text.PAGE_LOOKUP_HINT, AppIcon.SEARCH),
@@ -69,6 +82,8 @@ val MODULES: List<Module> = listOf(
 		title = Text.MODULE_STOCK,
 		hint = Text.MODULE_STOCK_HINT,
 		icon = AppIcon.BOXES,
+		group = ModuleGroup.INVENTORY,
+		tone = BentoTone.Ink,
 		anyOf = listOf("stock.view"),
 		pages = listOf(
 			ModulePage("balances", Text.PAGE_STOCK, Text.PAGE_STOCK_HINT, AppIcon.BOXES),
@@ -79,6 +94,8 @@ val MODULES: List<Module> = listOf(
 		title = Text.MODULE_LOCATIONS,
 		hint = Text.MODULE_LOCATIONS_HINT,
 		icon = AppIcon.WAREHOUSE,
+		group = ModuleGroup.INVENTORY,
+		tone = BentoTone.Sand,
 		anyOf = listOf("locations.view"),
 		pages = listOf(
 			ModulePage("warehouses", Text.PAGE_WAREHOUSES, Text.PAGE_WAREHOUSES_HINT, AppIcon.WAREHOUSE),
@@ -91,6 +108,8 @@ val MODULES: List<Module> = listOf(
 		title = Text.MODULE_ORDERS,
 		hint = Text.MODULE_ORDERS_HINT,
 		icon = AppIcon.CLIPBOARD,
+		group = ModuleGroup.OPERATION,
+		tone = BentoTone.Sand,
 		pages = listOf(
 			ModulePage("customers", Text.PAGE_CUSTOMERS, Text.PAGE_CUSTOMERS_HINT, AppIcon.USER, anyOf = listOf("customers.view")),
 			ModulePage("order-status", Text.PAGE_ORDER_STATUS, Text.PAGE_ORDER_STATUS_HINT, AppIcon.CLIPBOARD, anyOf = listOf("catalogs.view")),

@@ -24,6 +24,7 @@ import kotlinx.coroutines.launch
 data class OrderPickState(
 	val loading: Boolean = false,
 	val orders: List<Order> = emptyList(),
+	val listQuery: String = "",
 	val order: Order? = null,
 	val scan: String = "",
 	val line: OrderLine? = null,
@@ -108,11 +109,17 @@ class OrderPickViewModel(
 		}
 	}
 
-	// The hero's back from the form: return to the list and read it fresh.
+	// One step back: from the quantity to the locations, from the locations to the materials, and from there to the
+	// list, which is read fresh.
 	fun back() {
+		val current = mutableState.value
 		lastScan = null
 		lastLocationScan = null
-		load()
+		when {
+			current.saved == null && current.location != null -> mutableState.value = current.copy(location = null, quantity = "", quantityError = null, error = null)
+			current.saved == null && current.line != null -> mutableState.value = current.copy(line = null, balances = emptyList(), locationScan = "", locationError = null, error = null)
+			else -> load()
+		}
 	}
 
 	// Leaving the page: whatever was open is let go, and the next entry loads it fresh.
@@ -149,9 +156,44 @@ class OrderPickViewModel(
 
 	fun submitLocation() = confirmLocation(mutableState.value.locationScan.trim())
 
+	fun editListQuery(value: String) {
+		mutableState.value = mutableState.value.copy(listQuery = value)
+	}
+
+	// A line of the order, touched from its list: the same as scanning its material.
+	fun choose(line: OrderLine) {
+		val order = mutableState.value.order ?: return
+		running?.cancel()
+		mutableState.value = mutableState.value.copy(fieldError = null, scanError = null, error = null)
+		running = viewModelScope.launch {
+			try {
+				session.withToken { token -> openLine(token, order, line) }
+			} catch (e: CancellationException) {
+				throw e
+			} catch (e: ApiError) {
+				mutableState.value = mutableState.value.copy(error = e.message)
+			} catch (e: Exception) {
+				mutableState.value = mutableState.value.copy(error = unreachable())
+			}
+		}
+	}
+
+	private suspend fun openLine(token: String, order: Order, line: OrderLine) {
+		val balances = stock.balances(token, order.warehouse.id, line.product.id)
+		mutableState.value = mutableState.value.copy(scan = "", line = line, balances = balances, location = null, quantity = "")
+	}
+
 	// A location from the list the API showed: the operator taps it instead of scanning its code.
 	fun choose(balance: LocationBalance) {
-		mutableState.value = mutableState.value.copy(location = balance, locationScan = "", locationError = null, quantityError = null)
+		mutableState.value = confirmed(mutableState.value, balance)
+	}
+
+	// With the location known, the quantity starts at the most that can be taken: what it holds, or what the line still
+	// needs when that is less.
+	private fun confirmed(current: OrderPickState, balance: LocationBalance): OrderPickState {
+		val needs = current.line?.remaining ?: balance.quantity
+		val most = if (Decimals.above(balance.quantity, needs)) needs else balance.quantity
+		return current.copy(location = balance, quantity = Decimals.plain(most), locationScan = "", locationError = null, quantityError = null)
 	}
 
 	fun editQuantity(value: String) {
@@ -247,8 +289,7 @@ class OrderPickViewModel(
 					if (line == null) {
 						mutableState.value = mutableState.value.copy(scanError = notInOrder(), line = null, balances = emptyList(), location = null, quantity = "")
 					} else {
-						val balances = stock.balances(token, order.warehouse.id, line.product.id)
-						mutableState.value = mutableState.value.copy(scan = "", line = line, balances = balances, location = null, quantity = "")
+						openLine(token, order, line)
 					}
 				}
 			} catch (e: CancellationException) {
@@ -277,7 +318,7 @@ class OrderPickViewModel(
 				session.withToken { token ->
 					val shown = current.balances.firstOrNull { it.locationCode.equals(value, ignoreCase = true) }
 					if (shown != null) {
-						mutableState.value = mutableState.value.copy(location = shown, locationScan = "")
+						mutableState.value = confirmed(mutableState.value, shown)
 					} else {
 						val exists = locations.inWarehouse(token, order.warehouse.id, value).any { it.code.equals(value, ignoreCase = true) }
 						mutableState.value = mutableState.value.copy(location = null, locationError = if (exists) locationEmpty() else notInWarehouse())

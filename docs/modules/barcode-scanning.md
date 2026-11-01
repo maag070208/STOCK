@@ -87,3 +87,7 @@ The app uses the permissions that already exist. Scanning adds no permission of 
 1. **Printing labels.** Product and location labels are needed before the first scan. They are printed from the label catalog. See [labels.md](labels.md).
 3. **Supplier barcodes.** Does the business want EAN or UPC codes from suppliers, or only the internal code? *Proposed:* internal code only in v1.
 4. **Camera or reader.** Is the scanning done with the phone's camera, or with a dedicated handheld reader? *Proposed:* camera in v1, as the vision doc already says.
+
+## Scan first, search second
+
+Every screen of the app that asks for a material or a location follows one order: the camera comes first, ready to read, and the second way in is a search box that finds as the person writes. No field asks for an exact code. The app's `ScanSearch` component is the only way to build it, so the rule holds on every screen.

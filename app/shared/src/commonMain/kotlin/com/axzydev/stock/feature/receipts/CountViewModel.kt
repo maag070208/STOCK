@@ -29,6 +29,9 @@ data class CountTarget(
 // What the count page shows. The operator scans a material; the app finds the open assignments of that material, opens
 // the one when it is alone, and lists them when there are several. The count form then takes the counted quantity.
 data class CountState(
+	// What the operator still has to count, listed so nothing needs a scan to be found.
+	val queue: List<CountTarget> = emptyList(),
+	val loadingQueue: Boolean = false,
 	val query: String = "",
 	val looking: Boolean = false,
 	// Several products matched the value by name: the operator picks one before the assignments are looked for.
@@ -67,8 +70,34 @@ class CountViewModel(
 	// The camera reads the same label many times a second: the last value it gave is not looked up again.
 	private var lastScan: String? = null
 
+	// The operator's assignments that are not counted yet. A list that cannot be read leaves the scan working.
+	fun load() {
+		val current = mutableState.value
+		mutableState.value = current.copy(loadingQueue = true)
+		viewModelScope.launch {
+			val queue = try {
+				session.withToken { token ->
+					receiving.mine(token)
+						.filter { it.invoice.status.code == OPEN }
+						.flatMap { receipt ->
+							receipt.lines.flatMap { line ->
+								line.assignments
+									.filter { it.countedQuantity == null }
+									.map { CountTarget(it, receipt.invoice.number, receipt.invoice.warehouse.id, line.product, line.unit) }
+							}
+						}
+				}
+			} catch (e: CancellationException) {
+				throw e
+			} catch (e: Exception) {
+				emptyList()
+			}
+			mutableState.value = mutableState.value.copy(queue = queue, loadingQueue = false)
+		}
+	}
+
 	fun edit(query: String) {
-		mutableState.value = mutableState.value.copy(query = query, fieldError = null)
+		mutableState.value = mutableState.value.copy(query = query, fieldError = null, error = null)
 	}
 
 	// The camera read a value: it is looked up at once, as if typed.
@@ -92,7 +121,7 @@ class CountViewModel(
 
 	fun choose(target: CountTarget) {
 		operationKey = null
-		mutableState.value = mutableState.value.copy(targets = emptyList(), target = target, quantity = target.assignment.expectedQuantity)
+		mutableState.value = mutableState.value.copy(targets = emptyList(), target = target, quantity = com.axzydev.stock.data.Decimals.plain(target.assignment.expectedQuantity))
 	}
 
 	fun editQuantity(value: String) {
@@ -138,7 +167,7 @@ class CountViewModel(
 		}
 		running?.cancel()
 		operationKey = null
-		mutableState.value = CountState(query = value, looking = true)
+		mutableState.value = CountState(queue = mutableState.value.queue, query = value, looking = true)
 		running = viewModelScope.launch {
 			val base = mutableState.value
 			mutableState.value = guarded(base) { token ->
@@ -162,10 +191,11 @@ class CountViewModel(
 							.map { CountTarget(it, receipt.invoice.number, receipt.invoice.warehouse.id, line.product, line.unit) }
 					}
 			}
+		val queue = mutableState.value.queue
 		return when {
-			targets.isEmpty() -> CountState(query = query, error = notInAssignment())
-			targets.size == 1 -> CountState(query = query, target = targets.single(), quantity = targets.single().assignment.expectedQuantity)
-			else -> CountState(query = query, targets = targets)
+			targets.isEmpty() -> CountState(queue = queue, query = query, error = notInAssignment())
+			targets.size == 1 -> CountState(queue = queue, query = query, target = targets.single(), quantity = com.axzydev.stock.data.Decimals.plain(targets.single().assignment.expectedQuantity))
+			else -> CountState(queue = queue, query = query, targets = targets)
 		}
 	}
 

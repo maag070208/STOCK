@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
@@ -11,7 +12,9 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -24,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import com.axzydev.stock.i18n.Text
 import com.axzydev.stock.i18n.text
 import com.axzydev.stock.ui.theme.AppBento
+import com.axzydev.stock.ui.theme.BentoTone
 import com.axzydev.stock.ui.theme.DesignTokens
 import com.axzydev.stock.ui.theme.StockFlow
 import com.axzydev.stock.ui.theme.StockFlowType
@@ -32,15 +36,16 @@ import com.axzydev.stock.ui.theme.StockFlowType
 // the design's corners, and no shadow.
 
 // The height a module button keeps, so the buttons of the home line up whatever their text.
-private val MODULE_HEIGHT = 128.dp
+private val MODULE_HEIGHT = 140.dp
 
 private val panelShape = RoundedCornerShape(AppBento.tile)
 
 // A module on the home: its icon, its name and one line about what it holds. `comingSoon` marks a module the API
 // does not serve yet.
 @Composable
-fun ModuleButton(icon: AppIcon, title: String, hint: String, onClick: () -> Unit, tag: String, modifier: Modifier = Modifier, comingSoon: Boolean = false) {
+fun ModuleButton(icon: AppIcon, title: String, hint: String, onClick: () -> Unit, tag: String, modifier: Modifier = Modifier, tone: BentoTone = BentoTone.Plain, comingSoon: Boolean = false) {
 	val shape = panelShape
+	val colors = AppBento.tone(tone)
 	Column(
 		modifier
 			.fillMaxWidth()
@@ -51,9 +56,11 @@ fun ModuleButton(icon: AppIcon, title: String, hint: String, onClick: () -> Unit
 			.testTag(tag),
 		verticalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.sm.dp),
 	) {
-		Icon(icon, StockFlow.colors.primary)
+		Box(Modifier.size(40.dp).background(colors.container, CircleShape), contentAlignment = Alignment.Center) {
+			Icon(icon, colors.content, size = 20.dp)
+		}
 		AppText(title, StockFlowType.titleMd, StockFlow.colors.onSurface, maxLines = 1)
-		AppText(hint, StockFlowType.bodyMd, StockFlow.colors.onSurfaceMuted, maxLines = 3)
+		AppText(hint, StockFlowType.labelSm, StockFlow.colors.onSurfaceMuted, maxLines = 2)
 		if (comingSoon) {
 			Spacer(Modifier.weight(1f))
 			StatusBadge(text(Text.COMING_SOON), StatusTone.PLANNED, Modifier.testTag("$tag-badge"))
@@ -126,7 +133,7 @@ fun ListMessage(text: String, tag: String, error: Boolean = false) {
 	)
 }
 
-// A whole page of a module: the hero with a back button and the title, and the sheet with the content.
+// A whole page of a module: the back button with the title beside it, so the work starts high on the screen.
 @Composable
 fun PageScaffold(
 	title: String,
@@ -138,8 +145,7 @@ fun PageScaffold(
 	content: @Composable ColumnScope.() -> Unit,
 ) {
 	BentoScreen(modifier = modifier) {
-		BentoTopBar(title = "", onBack = onBack, backLabel = backLabel, backTag = backTag)
-		BentoPageHeader(title, subtitle)
+		BentoTopBar(title = title, subtitle = subtitle, onBack = onBack, backLabel = backLabel, backTag = backTag)
 		content()
 	}
 }

@@ -100,10 +100,16 @@ class OrderReassignmentViewModel(
 		}
 	}
 
-	// The hero's back from the form: the alerts are read again.
+	// One step back: from the quantity to the targets, from the targets to the material, and from there to the alerts,
+	// which are read again.
 	fun back() {
+		val current = mutableState.value
 		lastScan = null
-		load()
+		when {
+			current.saved == null && current.target != null -> mutableState.value = current.copy(target = null, quantity = "", note = "", quantityError = null, noteError = null, error = null)
+			current.saved == null && current.line != null -> mutableState.value = current.copy(line = null, targets = emptyList(), error = null)
+			else -> load()
+		}
 	}
 
 	// Leaving the page: whatever was open is let go, and the next entry loads it fresh.
@@ -126,9 +132,32 @@ class OrderReassignmentViewModel(
 
 	fun submitScan() = find(mutableState.value.scan.trim())
 
-	// The target order, from the list the app showed.
+	// A picked line of the order, chosen from the list: the same as scanning its material.
+	fun selectLine(line: OrderLine) {
+		val order = mutableState.value.order ?: return
+		running?.cancel()
+		mutableState.value = mutableState.value.copy(scanError = null, fieldError = null, error = null)
+		running = viewModelScope.launch {
+			try {
+				session.withToken { token -> open(token, order, line) }
+			} catch (e: CancellationException) {
+				throw e
+			} catch (e: ApiError) {
+				mutableState.value = mutableState.value.copy(error = e.message)
+			} catch (e: Exception) {
+				mutableState.value = mutableState.value.copy(error = unreachable())
+			}
+		}
+	}
+
+	// The target order, from the list the app showed. The quantity starts at the most that can move: what is picked, or
+	// what the target still needs when that is less.
 	fun choose(target: ReassignmentTarget) {
-		mutableState.value = mutableState.value.copy(target = target, targetError = null, quantityError = null)
+		val current = mutableState.value
+		val picked = current.line?.pickedQuantity ?: "0"
+		val needs = target.line.remaining ?: picked
+		val most = if (Decimals.above(picked, needs)) needs else picked
+		mutableState.value = current.copy(target = target, quantity = Decimals.plain(most), targetError = null, quantityError = null)
 	}
 
 	fun editQuantity(value: String) {
@@ -232,8 +261,7 @@ class OrderReassignmentViewModel(
 						mutableState.value = mutableState.value.copy(scanError = nothingPicked(), line = null, targets = emptyList(), target = null, quantity = "")
 						return@withToken
 					}
-					val targets = targetsFor(token, order, picked)
-					mutableState.value = mutableState.value.copy(scan = "", line = picked, targets = targets, target = null, quantity = "")
+					open(token, order, picked)
 				}
 			} catch (e: CancellationException) {
 				throw e
@@ -243,6 +271,11 @@ class OrderReassignmentViewModel(
 				mutableState.value = mutableState.value.copy(scanError = unreachable())
 			}
 		}
+	}
+
+	private suspend fun open(token: String, order: Order, line: OrderLine) {
+		val targets = targetsFor(token, order, line)
+		mutableState.value = mutableState.value.copy(scan = "", line = line, targets = targets, target = null, quantity = "")
 	}
 
 	// The open orders of the same warehouse whose line for this material still needs some of it. Each candidate is read

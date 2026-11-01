@@ -4,7 +4,7 @@
 // read the surface behind a label, never the glyph of the moment.
 import { test, after } from "node:test";
 import assert from "node:assert/strict";
-import { adb, bounds, darkMode, isEmulator, launch, screenshot, signIn, waitForText } from "./lib/android.mjs";
+import { adb, bounds, darkMode, isEmulator, launch, screenshot, scrollTo, signIn, sleep, waitForText } from "./lib/android.mjs";
 import { newUser } from "./lib/api.mjs";
 import { colors, distance, hasArtwork, rgb, workspace } from "./lib/design.mjs";
 
@@ -26,10 +26,10 @@ function closestInside(shot, box, expected) {
   return best;
 }
 
-// The pastel tones of the bento tiles (app/shared/.../ui/theme/Bento.kt), which are the design's, not the palette's.
-// Dark mode has its own pair for each tone.
-const MINT = { light: [0xdd, 0xf3, 0xe8], dark: [0x14, 0x3a, 0x2a] };
-const SEA = { light: [0xe0, 0xf0, 0xf7], dark: [0x12, 0x30, 0x3d] };
+// The tones of the bento tiles, from the design document. Dark mode has its own pair for each tone.
+const tone = (name) => ({ light: rgb(colors[`tone-${name}-bg`]), dark: rgb(colors[`dark-tone-${name}-bg`]) });
+const ORANGE = tone("orange");
+const INK = tone("ink");
 
 async function checkSignIn() {
   const xml = await waitForText("Iniciar sesión");
@@ -56,6 +56,8 @@ async function checkHome(mode) {
   await checkSignIn();
   await signIn(user.username, user.password);
   const xml = await waitForText("Conectado a la API");
+  // The tiles rise into place in their first moments; the colors are read once they stand.
+  await sleep(900);
   const shot = screenshot();
 
   // The canvas, the greeting in ink, and the two tasks of the receipt on their pastel tiles.
@@ -64,19 +66,20 @@ async function checkHome(mode) {
   assertColor(closestInside(shot, greeting, expected.title), expected.title, 6, "greeting");
 
   const count = bounds(xml, "Contar");
-  assertColor(shot.at(Math.max(4, count.left - 16), count.centerY), MINT[mode], 2, "count tile");
+  assertColor(shot.at(Math.max(4, count.left - 16), count.centerY), ORANGE[mode], 2, "count tile");
   const place = bounds(xml, "Ubicar");
-  assertColor(shot.at(Math.max(4, place.left - 16), place.centerY), SEA[mode], 2, "placement tile");
-
-  // The module tiles are white cards in light mode and the dark surface in dark mode.
-  const materials = bounds(xml, "Materiales");
-  const card = mode === "dark" ? rgb(colors["dark-surface"]) : rgb(colors.surface);
-  assertColor(shot.at(Math.max(4, materials.left - 16), materials.centerY), card, 2, "module card");
+  assertColor(shot.at(Math.max(4, place.left - 16), place.centerY), INK[mode], 2, "placement tile");
 
   // The state of the API is the pale green of a healthy service, in both modes.
   const badge = bounds(xml, "Conectado a la API");
   assertColor(shot.at(badge.left + 6, badge.top + 3), rgb(colors["status-production-bg"]), 1, "badge fill");
   assertColor(closestInside(shot, badge, rgb(colors["status-production-fg"])), rgb(colors["status-production-fg"]), 6, "badge text");
+
+  // The modules are lower on the screen: white cards in light mode and the dark surface in dark mode.
+  const lower = await scrollTo("module-orders");
+  const orders = bounds(lower, "Órdenes");
+  const card = mode === "dark" ? rgb(colors["dark-surface"]) : rgb(colors.surface);
+  assertColor(screenshot().at(Math.max(4, orders.left - 16), orders.centerY), card, 2, "module card");
 }
 
 // An emulator is switched to each mode. A phone is checked in the mode it is in, and its setting is not touched.

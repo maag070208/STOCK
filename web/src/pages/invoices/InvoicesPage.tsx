@@ -22,7 +22,8 @@ export function InvoicesPage() {
 	const [chip, setChip] = useState<StatusChip>(statusChip(params.get("status")));
 	const [statuses, setStatuses] = useState<CatalogItem[]>([]);
 	const [total, setTotal] = useState<number | null>(null);
-	const [creating, setCreating] = useState(false);
+	// `?new=1` opens the modal on arrival: the way in from the search of the top bar.
+	const [creating, setCreating] = useState(params.get("new") === "1");
 	const [warehouses, setWarehouses] = useState<Ref[]>([]);
 
 	useEffect(() => {

@@ -115,6 +115,16 @@ export async function fill(tag, text) {
   type(text);
 }
 
+// Replaces what a field already holds: its text is deleted with the keyboard, then the new value is typed.
+export async function replace(tag, length, text) {
+  const xml = await scrollTo(tag);
+  if (!xml) throw new Error(`no field tagged "${tag}" appeared`);
+  tap(xml, tag);
+  await sleep(700);
+  adb("shell", "input", "keyevent", "KEYCODE_MOVE_END", ...Array(length).fill("KEYCODE_DEL"));
+  type(text);
+}
+
 // The height of the screen in pixels, whatever size the device overrides.
 function screenHeight() {
   const match = /(?:Override|Physical) size: \d+x(\d+)/.exec(adb("shell", "wm", "size"));
@@ -137,6 +147,10 @@ export async function scrollTo(tag, limitMs = 15000) {
       const down = bottom > height * 0.95;
       const x = String(Math.round((left + right) / 2));
       adb("shell", "input", "swipe", x, String(Math.round(height * (down ? 0.7 : 0.3))), x, String(Math.round(height * (down ? 0.3 : 0.7))), "250");
+    } else {
+      // Off the screen an element is not in the tree yet: what is below is reached by scrolling down.
+      const height = screenHeight();
+      adb("shell", "input", "swipe", "300", String(Math.round(height * 0.7)), "300", String(Math.round(height * 0.3)), "250");
     }
     await sleep(250);
   }

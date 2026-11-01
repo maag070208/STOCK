@@ -7,7 +7,7 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { homedir, tmpdir } from "node:os";
 import { join } from "node:path";
 import { randomUUID } from "node:crypto";
-import { adb, enter, fill, isEmulator, launch, signIn, tap, waitForText, waitUntil } from "./lib/android.mjs";
+import { scrollTo, adb, enter, fill, isEmulator, launch, signIn, tap, waitForText, waitUntil } from "./lib/android.mjs";
 import { newProduct, newUser } from "./lib/api.mjs";
 import { code128Png } from "./lib/barcode.mjs";
 
@@ -19,9 +19,13 @@ async function openLookup(roles = ["WAREHOUSE_OPERATOR"], { camera = false } = {
   // The camera permission is the app's own, given on the emulator only: a phone keeps the choices of its owner.
   if (camera) adb("shell", "pm", "grant", app, "android.permission.CAMERA");
   await signIn(user.username, user.password);
-  const home = await waitUntil((xml) => xml.includes('resource-id="open-lookup"'), 30000);
+  assert.ok(await waitUntil((xml) => xml.includes('text="Conectado a la API"'), 30000), "signed in");
+  const home = await scrollTo("module-materials");
   assert.ok(home, "the home offers the lookup to whoever reads products");
-  tap(home, "open-lookup");
+  tap(home, "module-materials");
+  const menu = await waitUntil((xml) => xml.includes('resource-id="page-materials-lookup"'), 15000);
+  assert.ok(menu, "the materials menu holds the lookup");
+  tap(menu, "page-materials-lookup");
   await waitForText("Código, código de barras o nombre");
 }
 
@@ -43,7 +47,7 @@ test("e2e: a typed code shows its product, and a name with three matches lists t
   adb("shell", "input", "keyevent", "KEYCODE_MOVE_END", ...Array(product.code.length).fill("KEYCODE_DEL"));
   adb("shell", "input", "text", word);
   enter();
-  const list = await waitForText("3 materiales coinciden. Elige uno.");
+  const list = await waitForText("3 MATERIALES COINCIDEN. ELIGE UNO.");
   assert.doesNotMatch(list, /resource-id="lookup-product"/);
   tap(list, `candidate-${named[1].code}`);
   const picked = await waitUntil((xml) => xml.includes('resource-id="lookup-product"'), 10000);

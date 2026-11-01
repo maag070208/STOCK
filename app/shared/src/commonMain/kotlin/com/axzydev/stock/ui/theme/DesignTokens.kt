@@ -38,7 +38,7 @@ object DesignTokens {
 		const val success = 0xFF12B76AL
 		const val warning = 0xFFF59E0BL
 		const val danger = 0xFFE5484DL
-		const val info = 0xFF6D4AFFL
+		const val info = 0xFF3A86A8L
 		const val statusMockBg = 0xFFFEF3C7L
 		const val statusMockFg = 0xFF92400EL
 		const val statusPlannedBg = 0xFFF1F5F9L
@@ -53,6 +53,26 @@ object DesignTokens {
 		const val darkSurface = 0xFF1A1D24L
 		const val darkOnSurface = 0xFFF1F5F9L
 		const val darkOnSurfaceMuted = 0xFF94A3B8L
+		const val toneInkBg = 0xFF14171CL
+		const val toneInkFg = 0xFFFFFFFFL
+		const val darkToneInkBg = 0xFF262A33L
+		const val darkToneInkFg = 0xFFF1F5F9L
+		const val toneOrangeBg = 0xFFFFF0E3L
+		const val toneOrangeFg = 0xFF7C2D00L
+		const val darkToneOrangeBg = 0xFF3A2212L
+		const val darkToneOrangeFg = 0xFFFFD9BDL
+		const val toneAmberBg = 0xFFFFECCFL
+		const val toneAmberFg = 0xFF6B4200L
+		const val darkToneAmberBg = 0xFF3A2C14L
+		const val darkToneAmberFg = 0xFFFFE0B0L
+		const val toneSandBg = 0xFFEFECE7L
+		const val toneSandFg = 0xFF3F3A33L
+		const val darkToneSandBg = 0xFF2A2823L
+		const val darkToneSandFg = 0xFFE9E4DAL
+		const val toneRoseBg = 0xFFFCE4E6L
+		const val toneRoseFg = 0xFF9B2335L
+		const val darkToneRoseBg = 0xFF41191FL
+		const val darkToneRoseFg = 0xFFF5B5BDL
 
 		// The design's own names, for lookups and for the tests that compare against the document.
 		val byName: Map<String, Long> = mapOf(
@@ -91,6 +111,26 @@ object DesignTokens {
 			"dark-surface" to darkSurface,
 			"dark-on-surface" to darkOnSurface,
 			"dark-on-surface-muted" to darkOnSurfaceMuted,
+			"tone-ink-bg" to toneInkBg,
+			"tone-ink-fg" to toneInkFg,
+			"dark-tone-ink-bg" to darkToneInkBg,
+			"dark-tone-ink-fg" to darkToneInkFg,
+			"tone-orange-bg" to toneOrangeBg,
+			"tone-orange-fg" to toneOrangeFg,
+			"dark-tone-orange-bg" to darkToneOrangeBg,
+			"dark-tone-orange-fg" to darkToneOrangeFg,
+			"tone-amber-bg" to toneAmberBg,
+			"tone-amber-fg" to toneAmberFg,
+			"dark-tone-amber-bg" to darkToneAmberBg,
+			"dark-tone-amber-fg" to darkToneAmberFg,
+			"tone-sand-bg" to toneSandBg,
+			"tone-sand-fg" to toneSandFg,
+			"dark-tone-sand-bg" to darkToneSandBg,
+			"dark-tone-sand-fg" to darkToneSandFg,
+			"tone-rose-bg" to toneRoseBg,
+			"tone-rose-fg" to toneRoseFg,
+			"dark-tone-rose-bg" to darkToneRoseBg,
+			"dark-tone-rose-fg" to darkToneRoseFg,
 		)
 	}
 
