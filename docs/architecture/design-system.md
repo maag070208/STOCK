@@ -27,17 +27,17 @@ Nothing in the web or the app chooses a color, a text size or a corner radius by
 
 | Subject | Rule |
 |---|---|
-| Two layers | A light, warm workspace. Around it, a dark shell that looks like glass |
-| Workspace | Canvas `#fcfaf7`, text `#423d38`, muted text `#797067`, thin borders `#e3e0dd` |
-| Shell | Black at 70% opacity, 12px blur, a white border at 10%, white text. Never fully opaque |
-| Accent | Orange `#fe6e00`. It carries action, the active item, focus and brand. Most surfaces stay neutral |
-| Type | The system sans font. No web font. Module titles are 1.5rem bold. Small labels are uppercase with wide tracking |
-| Corners | Inputs 6px, controls 8px, cards 12px, badges fully round. The shell panels are square |
-| Spacing | A 4px rhythm. Sections 24px apart, cards 24px inside, card grids 16px apart |
-| Layout | Content up to 1400px wide. Top bar 64px. Sidebar 256px, or 64px collapsed |
-| Status badges | Five soft tones: yellow, gray, blue, lavender and green |
-| Sign-in | Two equal halves: a white panel and an orange panel with a white card |
-| Dark mode | It exists. The identity stays in the light workspace with the dark shell |
+| One canvas | A bento canvas holds everything: no dark glass shell, no colored page backgrounds |
+| Workspace | Canvas `#f4f4f6`, ink `#14171c`, surface `#ffffff`, muted text `#64748b`, thin borders `#e5e7eb` |
+| Shell | A white floating sidebar card and a top bar the color of the canvas, with round white controls and ink text |
+| Accent | Orange `#fe6e00`. It carries action, the active state and focus; it is not a surface. The tiles are pastel, one tone per meaning |
+| Type | The system sans font, bold headings (800). Numbers are tabular. Labels are 12px semibold |
+| Corners | Cards 24px, bento tiles 20px, fields 16px, controls and badges full pills. Never a square card |
+| Spacing | A 4px rhythm. Sections 24px apart, cards 24px inside, bento grid 10px apart |
+| Layout | Content up to 1440px wide. Top bar 64px. Sidebar 248px, or 72px collapsed |
+| Status badges | The pastel tones of the catalogs (`status-*-bg` / `status-*-fg`), one per meaning; a value in zero is `plain` |
+| Sign-in | A split page: the form on a white panel, and a flat isometric illustration of the product, animated, on the right. No language control there |
+| Dark mode | It exists in full: canvas `#0e1116`, surface `#1a1d24`. The switch lives in the top bar |
 
 ## 3. Tokens are generated
 
@@ -90,7 +90,7 @@ The generated theme clears Tailwind's own colors, radii, shadows, fonts and text
 |---|---|
 | Colors | `sf:bg-background`, `sf:text-on-surface-muted`, `sf:border-outline-strong`, `sf:bg-primary`, and one per color in the design |
 | Type | `sf:text-display-hero`, `sf:text-headline-xl`, `sf:text-headline-lg`, `sf:text-title-md`, `sf:text-body-lg`, `sf:text-body-md`, `sf:text-body-sm`, `sf:text-label-md`, `sf:text-label-sm`, `sf:text-code-sm`. Each sets size, line height, weight and tracking |
-| Corners | `sf:rounded-xs` 4px, `sf:rounded-sm` 6px, `sf:rounded-md` 8px, `sf:rounded-lg` 12px, `sf:rounded-full` for badges |
+| Corners | `sf:rounded-xs` 4px, `sf:rounded-sm` 6px, `sf:rounded-md` 8px, `sf:rounded-lg` 12px, `sf:rounded-xl` 16px, `sf:rounded-2xl` 20px, `sf:rounded-3xl` 24px, `sf:rounded-pill` for controls and badges |
 | Shadows | `sf:shadow-subtle`, `sf:shadow-raised`, `sf:shadow-dialog` |
 | Spacing | Tailwind's number scale, which is the design's 4px rhythm: `1` = xs 4px, `2` = sm 8px, `3` = md 12px, `4` = lg 16px, `6` = xl 24px, `8` = 2xl 32px, `10` = 3xl 40px, `16` = 4xl 64px |
 
@@ -100,15 +100,14 @@ Layout measures, motion, elevation and component specifications are plain variab
 
 The kit draws the shell and, from F1, the tables, forms and dialogs. It receives the design in three ways:
 
-1. **Palette** (`shared/ui/theme.ts`): accent, semantic colors and the neutral table colors, passed to `ITThemeProvider`. `appearance` is `flat` and `shadow` is `1`. The kit's `radius` is not set, because it gives one value to every corner and the design has four.
-2. **The kit's public variables** (`app/index.css`): `--it-sidebar-*`, `--it-topbar-*` and `--it-layout-bg` take the shell colors. They are set in CSS because, in light mode, the kit turns a dark shell white.
-3. **Overrides that depend on the kit's markup** (`app/index.css`, under `.sf-shell`). They are few, and each one is a candidate for a public variable in the kit:
+1. **Palette and appearance** (`shared/ui/theme.ts`): the accent, the semantic colors, the neutral table colors and the shell, passed to `ITThemeProvider` with `appearance: "bento"` and `density: 0.8`. `radius` and `shadow` are **not** passed: the bento defaults (24px cards, diffuse shadow) are the design.
+2. **The app's own CSS** (`app/index.css`): the canvas and type from the tokens; the kit's text colors mapped to the design's ink; the tabular-figures hook; the dashboard entrance animation; and the entry illustration's keyframes.
+3. **Two small overrides** (`app/index.css`), each one a candidate for a kit variable:
 
 | Override | Reason |
 |---|---|
-| `backdrop-filter` on `aside` and `header` | The kit blurs its shell only in the `soft` look, which also adds glows |
-| Width of `.w-[248px]` and `.w-[72px]` | The kit's flat sidebar is 248px and 72px. The design asks for 256px and 64px |
-| Corner and padding of `aside nav [role="button"]` | The kit draws navigation items as pills with its own padding |
+| `max-width: none` on the page column (`main > div > .max-w-7xl`) | `ITPage` centers in 80rem, which at density 0.8 is 1024px; the design's column is the shell's 1440px |
+| Accent focus ring on the sidebar rail | The browser's default ring does not match the design |
 
 The sidebar starts open, and the menu button in the top bar collapses it (`expandOnHover: false`, controlled by `AppShell`). The content container is capped with `contentClassName="sf:max-w-(--sf-layout-container-max)"`.
 
@@ -121,8 +120,10 @@ The app's interface has **no Material**: the dependency is removed. Every screen
 | `StockFlowTheme`, `StockFlow.colors` | `ui/theme/StockFlowTheme.kt` | The workspace colors, light and dark, from the tokens. Follows the system setting |
 | `StockFlowType` | `ui/theme/StockFlowTheme.kt` | The ten type styles of the design, in the system sans font |
 | `AppText` | `ui/components/AppText.kt` | The only way the app draws text: a type style and a color |
-| `ShellStatusBar`, `ShellTopBar` | `ui/components/Shell.kt` | The shell: black glass behind the status bar, and the 64dp top bar with its faint border |
-| `Card` | `ui/components/Card.kt` | The quiet card: thin border, 12dp corners, 24dp inside |
+| `BentoScreen`, `BentoTopBar`, `BentoPageHeader`, `BentoIconButton`, `BentoTile`, `BentoStat`, `BentoLabel`, `BentoSectionTitle` | `ui/components/Bento.kt` | The bento shell: the canvas, the top bar of round white controls and the title, the tiles and the small counters |
+| `BrandIllustration` | `ui/components/BrandArt.kt` | The flat isometric illustration of the entry screen, animated with Compose |
+| `ShellStatusBar` | `ui/components/Shell.kt` | The strip behind the status bar, in the canvas color; the icons follow the mode |
+| `Card` | `ui/components/Card.kt` | The bento card: a white 24dp surface, no border, 24dp inside |
 | `StatusBadge`, `StatusTone` | `ui/components/StatusBadge.kt` | The five status tones, each read from its component in the design |
 | `TextInput`, `PrimaryButton`, `ShellAction` | `ui/components/Inputs.kt` | The surface input, the primary button (`buttonPrimary`, pressed `buttonPrimaryHover`) and the text action of the shell (`buttonGhostShell`) |
 | The brand mark | `composeResources/drawable/stockflow_glyph_{light,dark}.xml` | The master glyph as vector drawables, written by `scripts/brand-vectors.mjs`. Same paths and colors; only the frame is cropped to the art |
@@ -155,14 +156,14 @@ The design was written for another product, on the desktop. These are the places
 | Subject | Design | StockFlow |
 |---|---|---|
 | Name | Evreghen Command Center | StockFlow. The design's name stays on the file only |
-| Sign-in, white half | A global map | The StockFlow mark and the wordmark in the hero type style. From 1280px wide; narrower two-column screens use `headline-xl` so the wordmark fits |
+| Sign-in | A 3D render on the white half | A flat isometric illustration of the warehouse drawn with the design's colors, with its figures floating; the wordmark sits above the form |
 | Artwork colors | Orange and warm neutrals only | Icons and Lottie animations keep the brand pack's navy, orange and turquoise. Artwork is not edited ([brand.md](brand.md) rule 1) |
 | Navigation label, web | 13px bold | The kit sets 14px and weight 600 inline. It stays until the kit takes a variable for it |
-| Layout, app | Sidebar and top bar of black glass | The app's layout is the mobile reference the owner chose on 2026-10-14, in StockFlow's orange: an orange hero under an orange status bar strip, with the brand on a white tile and the screen's headline (its key words in `primary-warm`), and the content on a sheet whose 32dp top corners lie over the hero. Fields and buttons are pills. The hero has line drawings (two rings and a gear) in white at 16%. The sign-in screens add the reference's phone: a white card with the StockFlow glyph, half under the sheet. Colors and type stay the design's; the sizes the design does not give live in `AppLayout` (`StockFlowTheme.kt`) |
+| Layout, app | White floating sidebar and top bar cards | The app is the bento look in Compose: the canvas, a top bar of round white controls with the title, and white 24dp cards below (no hero). Fields are filled 16dp pills, buttons are pills, status is a pastel chip; the entry screen carries the same animated illustration as the web, drawn with `Canvas` (`BrandIllustration`). The bento tokens live in `AppBento` (`ui/theme/Bento.kt`) |
 | Page padding, app | 32px | 16dp at the sides of a phone |
-| Card shadow, app | Soft shadow and thin border | Border only. The card is transparent, and a Compose shadow shows through it |
+| Card shadow, app | Soft shadow and thin border | The card is a white 24dp surface with no border and no drawn shadow: the canvas separates it |
 | Card shadow, web | Soft shadow | Not used yet: the first cards arrive with F1 |
-| Surface inputs | "Neutral border", no height given | Web: 36px tall and 6px corners, as the shell input. App: a 56dp pill filled with `surface`, an icon on the left and the label inside while it is empty; an orange border with the cursor, a red one with an error; an eye shows a password |
+| Surface inputs | "Neutral border", no height given | Web: the kit's filled pill. App: a 52dp field filled with `surface-soft` and 16dp corners, an icon on the left and the label inside while it is empty; an orange ring with the cursor, a red one with an error; an eye shows a password |
 | Touch targets, app | Buttons 40px, shell input 36px | 56dp pills, as in the reference, above the 48dp a thumb needs |
 | Sign-in, app | Two halves side by side | The hero and sheet layout above, with the form on the sheet under a centered title. It keeps the light look in dark mode, because it is the brand moment |
 | Dark mode, app | — | The hero, the status bar strip and the brand tile stay orange and white; the sheet and its fields take the dark workspace colors |
@@ -176,7 +177,7 @@ The design was written for another product, on the desktop. These are the places
 | `tests/ops/design-tokens.test.mjs` | The generator reads the design file, and every generated file is up to date |
 | `tests/ops/app-design.test.mjs` | The app has no Material and no color typed by hand; the Android window uses the design's color |
 | `web/tests/unit/theme.spec.ts`, `design-classes.spec.ts` | The kit's theme comes from the tokens; every class has the prefix; the layer order is the one in section 4 |
-| `web/tests/e2e/design.spec.ts` | Computed styles in the browser against the tokens: canvas, shell glass, sizes, active item, sign-in halves, type, dark mode, phone |
+| `web/tests/e2e/design.spec.ts` | Computed styles in the browser against the tokens: canvas, white shell cards, sizes, active item, the split entry screen, type, dark mode, phone |
 | `app/shared/src/commonTest/.../ui/StockFlowThemeTest.kt` | Light and dark roles, type conversion, status tones. Runs on Android and on iOS |
 | `tests/e2e-app/android-design.test.mjs` | The pixels of the Android screen against the design file, in light and dark mode |
 

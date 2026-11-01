@@ -41,7 +41,9 @@
     "copied": "Copiado",
     "add": "Agregar",
     "remove": "Quitar",
-    "confirm": "Confirmar"
+    "confirm": "Confirmar",
+    "darkMode": "Modo oscuro",
+    "lightMode": "Modo claro"
   },
   "status": {
     "active": "Activo",

@@ -41,7 +41,9 @@
     "copied": "Copied",
     "add": "Add",
     "remove": "Remove",
-    "confirm": "Confirm"
+    "confirm": "Confirm",
+    "darkMode": "Dark mode",
+    "lightMode": "Light mode"
   },
   "status": {
     "active": "Active",

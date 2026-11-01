@@ -5,8 +5,8 @@ import { authApi, useSessionUser, userLoaded } from "@entities/user";
 import { setLocale } from "@shared/i18n";
 import { supportedLocales, type Locale } from "@shared/i18n/resources";
 
-// The language field. On the entry screen it is the kit's select; the top bar keeps a compact
-// control drawn on the dark glass of the shell.
+// The language field. On the entry screen it is the kit's select; the top bar keeps a compact pill, drawn with the
+// design's tokens so it reads on the light bento bar and on the dark one.
 // Signed in, the choice is saved on the person's profile (web.md section 6).
 export function LanguageSwitch({ compact = false }: { compact?: boolean }) {
 	const { t, i18n } = useTranslation();
@@ -29,7 +29,7 @@ export function LanguageSwitch({ compact = false }: { compact?: boolean }) {
 					id={id}
 					value={i18n.language}
 					onChange={(event) => void change(event.target.value as Locale)}
-					className="sf:h-9 sf:rounded-sm sf:border sf:border-shell-border/20 sf:bg-transparent sf:px-2 sf:text-body-md sf:text-on-shell sf:scheme-dark sf:focus:outline-2 sf:focus:outline-primary-focus"
+					className="sf:h-9 sf:rounded-pill sf:border sf:border-outline sf:bg-surface-soft sf:px-3 sf:text-body-md sf:text-on-surface sf:focus:outline-2 sf:focus:outline-primary-focus"
 				>
 					{supportedLocales.map((locale) => (
 						<option key={locale} value={locale} className="sf:text-on-surface">

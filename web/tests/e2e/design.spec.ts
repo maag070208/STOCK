@@ -115,6 +115,13 @@ test.describe("shell", () => {
     expect(await other.evaluate((el) => getComputedStyle(el).backgroundColor)).toBe("rgba(0, 0, 0, 0)");
   });
 
+  test("the top bar switches the system between light and dark", async ({ page }) => {
+    await page.getByRole("button", { name: "Modo oscuro" }).click();
+    await expect(page.locator("html")).toHaveClass(/dark/);
+    await page.getByRole("button", { name: "Modo claro" }).click();
+    await expect(page.locator("html")).not.toHaveClass(/dark/);
+  });
+
   test("the rail shows the brand mark and the icon of each item", async ({ page }) => {
     const rail = page.locator("aside").first();
     await rail.hover();

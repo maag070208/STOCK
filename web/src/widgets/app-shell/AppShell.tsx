@@ -7,6 +7,7 @@ import { FaBalanceScale, FaBoxes, FaClipboardList, FaCubes, FaFileInvoice, FaHan
 import { APP_SCREENS, isScreenVisible, type AppScreen } from "@entities/permission";
 import { authApi, signedOut, usePermissions, useSessionUser } from "@entities/user";
 import { LanguageSwitch } from "@widgets/language-switch/LanguageSwitch";
+import { ThemeSwitch } from "@widgets/theme-switch/ThemeSwitch";
 
 const ICONS: Record<string, ReactNode> = {
 	home: <FaHome />,
@@ -65,7 +66,12 @@ export function AppShell({ children }: { children: ReactNode }) {
 				variant: "bento",
 				logo: <img src="/brand/stockflow-glyph-dark.svg" alt="" className="sf:size-9" />,
 				logoText: t("app.name"),
-				children: <LanguageSwitch compact />,
+				children: (
+					<>
+						<ThemeSwitch />
+						<LanguageSwitch compact />
+					</>
+				),
 				userMenu: user
 					? {
 							userName: user.name,
