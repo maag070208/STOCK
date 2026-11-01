@@ -47,9 +47,12 @@ Known polish left for the end of the wave: the `Nuevo rol` action inside the acc
 
 The app runs the bento look: tokens regenerated from the same document, `Bento.kt` and `BrandArt.kt` components, the shell (`BentoScreen`), white cards, filled pill fields, pastel status chips, the dashboard home and the animated entry illustration. The host tests are green and the device suites (`android-home`, `android-design` in light and dark, `android-intro`) pass on the emulator.
 
-### Wave 4 — close
+### Wave 4 — done
 
-Dark mode reviewed on both platforms, the previous design removed from the docs, and the "one look" checklist in `design-system.md` updated.
+- Dark mode reviewed on both platforms: the web has a light/dark switch in the top bar and the design e2e covers it; the Android design e2e covers light and dark.
+- The previous design is gone from the docs: `design-system.md`, `mobile-app.md` and `brand.md` describe the bento look, and `tests/ops/design-tokens.test.mjs` reads the new document.
+- The remaining Android screens were reviewed on the emulator (my receipts, count, stock, module menu) and inherit the look through `PageScaffold` and the shared components.
+- Verification: web build, lint, 89 unit tests, the whole e2e suite at 80/80 (with one retry: the suite shares one database and two specs are timing-sensitive), the ops suite, and the app host tests plus `android-home`, `android-design` (light and dark) and `android-intro` on the emulator. `tests/ops/compose.test.mjs` is blocked on this machine by the Docker Hub credentials (the base image cannot be pulled); it is an environment problem, not a code one.
 
 ## 4. Rules that broke things (and how they are handled)
 

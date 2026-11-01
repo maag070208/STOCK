@@ -92,7 +92,8 @@
     "ORDER_PICKS_TRANSFERRED": "Material surtido traspasado",
     "ORDER_PICKS_RETURNED": "Material surtido devuelto",
     "REPORT_EXPORTED": "Reporte exportado",
-    "INVOICE_CLOSED": "Factura cerrada"
+    "INVOICE_CLOSED": "Factura cerrada",
+    "INVOICE_CANCELLED": "Factura cancelada"
   },
   "targets": {
     "user": "Usuario",
