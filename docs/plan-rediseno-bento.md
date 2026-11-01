@@ -63,7 +63,7 @@ The first pass restyled the surfaces but left the screens static and slow to use
 - **Reassign, web:** the actions live on the picked line; the dialog offers only orders that need the material, fills the quantity and gives common reasons in one click.
 - **App:** waves, gauge, rising tiles, screen transitions, modules by section, a floating bottom bar, and the API status under the greeting. Reassign is three touchable steps (material, target, quantity), with scanning optional, the quantity filled and back going one step.
 
-Left for a later pass: the kit's status badges are hard to read in dark mode; the remaining app screens (receipts, stock) only inherit the shell.
+Polish that followed: tables take the height of the window and turn into cards on a phone (`shared/ui/tableLayout.ts`); status badges read in dark mode; the app gained a flashlight on the camera, loading skeletons, a press response on rows and tiles, and a vibration when a task ends.
 
 ### 3c. Every app screen: scan first, search second (2026-11-01)
 

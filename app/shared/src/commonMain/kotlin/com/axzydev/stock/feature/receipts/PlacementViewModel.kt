@@ -174,7 +174,7 @@ class PlacementViewModel(
 		mutableState.value = if (current.lines.any { it.locationId == location.id }) {
 			current.copy(scan = "", suggestions = emptyList())
 		} else {
-			current.copy(scan = "", suggestions = emptyList(), scanError = null, lines = current.lines + PlacementLine(location.id, location.code, current.unassigned ?: ""))
+			current.copy(scan = "", suggestions = emptyList(), scanError = null, lines = current.lines + PlacementLine(location.id, location.code, Decimals.plain(current.unassigned ?: "")))
 		}
 	}
 
@@ -303,7 +303,7 @@ class PlacementViewModel(
 					else -> current.copy(
 						scan = "",
 						suggestions = emptyList(),
-						lines = current.lines + PlacementLine(location.id, location.code, current.unassigned ?: ""),
+						lines = current.lines + PlacementLine(location.id, location.code, Decimals.plain(current.unassigned ?: "")),
 					)
 				}
 			} catch (e: CancellationException) {

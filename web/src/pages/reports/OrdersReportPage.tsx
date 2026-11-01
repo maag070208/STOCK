@@ -8,6 +8,7 @@ import { reportApi, warehouseOptionsOf, type OrderReportPage as OrdersAnswer, ty
 import { formatDate, formatDateTime, formatQuantity } from "@shared/lib/format";
 import { DateRangeFilter, ExportButtons, PartnerFilter, ReportError, ReportTotals, WarehouseFilter, periodOf, totalEntries } from "./ReportParts";
 import { ReportTabs } from "./ReportTabs";
+import { cardBreakpoint, tableHeight } from "@shared/ui/tableLayout";
 
 // The orders of the warehouses the reader reaches (reports.md section 3): what was asked, what was picked and what moved
 // to or from another order, by period, customer and status, with the picked quantity of each status.
@@ -92,9 +93,10 @@ export function OrdersReportPage() {
 					layout="fixed"
 					density="compact"
 					virtualized
-					virtualizedMaxHeight={400}
+					virtualizedMaxHeight={tableHeight()}
 					rowHeight={50}
 					showViewToggle={false}
+					autoCardBreakpoint={cardBreakpoint()}
  columns={columns}
  // The filters this screen manages travel as external filters: the table merges them with its own
  // before asking, and the export takes exactly the filters of the last answer.

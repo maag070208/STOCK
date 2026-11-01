@@ -13,6 +13,7 @@ class CameraPermission(val access: CameraAccess, val request: () -> Unit)
 expect fun rememberCameraPermission(): CameraPermission
 
 // The camera's picture, reading barcodes: each value it reads goes to `onScanned`, as the raw text of the code.
-// Android uses CameraX with ML Kit; iOS uses AVFoundation (mobile-app.md section 2). It only runs with the permission.
+// Android uses CameraX with ML Kit (mobile-app.md section 2). It only runs with the permission. `torch` lights the label
+// in a dark aisle; a device without a flash ignores it.
 @Composable
-expect fun CameraPreview(onScanned: (String) -> Unit, modifier: Modifier = Modifier)
+expect fun CameraPreview(onScanned: (String) -> Unit, modifier: Modifier = Modifier, torch: Boolean = false)

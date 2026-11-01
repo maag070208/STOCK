@@ -32,6 +32,7 @@ import com.axzydev.stock.ui.components.AppText
 import com.axzydev.stock.ui.components.BentoChip
 import com.axzydev.stock.ui.components.BentoChoiceRow
 import com.axzydev.stock.ui.components.BentoResult
+import com.axzydev.stock.ui.components.BentoSkeleton
 import com.axzydev.stock.ui.components.BentoState
 import com.axzydev.stock.ui.components.BentoLabel
 import com.axzydev.stock.ui.components.BentoSteps
@@ -81,7 +82,7 @@ fun ReassignmentScreen(reassign: OrderReassignmentViewModel, onBack: () -> Unit)
 			state.saved != null -> ReassignmentResult(state, reassign)
 
 			// The order is read again with its lines before anything is chosen.
-			state.loading -> AppText(text(Text.LOADING), StockFlowType.bodyLg, StockFlow.colors.onSurfaceMuted)
+			state.loading -> BentoSkeleton(tag = "reassign-loading")
 
 			else -> ReassignmentForm(state, reassign, finding, saving)
 		}
@@ -92,7 +93,7 @@ fun ReassignmentScreen(reassign: OrderReassignmentViewModel, onBack: () -> Unit)
 @Composable
 private fun AlertList(state: OrderReassignmentState, reassign: OrderReassignmentViewModel) {
 	state.error?.let { AppText(it, StockFlowType.bodyLg, StockFlow.colors.danger, Modifier.testTag("reassign-error")) }
-	if (state.loading) AppText(text(Text.LOADING), StockFlowType.bodyLg, StockFlow.colors.onSurfaceMuted)
+	if (state.loading) BentoSkeleton(tag = "reassign-loading")
 	if (state.alerts.isEmpty() && !state.loading) AppText(text(Text.EMPTY), StockFlowType.bodyLg, StockFlow.colors.onSurfaceMuted)
 	if (state.alerts.isNotEmpty()) BentoLabel(text(Text.REASSIGN_ALERTS))
 	state.alerts.forEachIndexed { index, alert ->

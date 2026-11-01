@@ -119,12 +119,12 @@ class PlacementViewModelTest {
 		view.scanned("K05A")
 		advanceUntilIdle()
 		// The first row is prefilled with everything that is left.
-		assertEquals("80.000000", view.state.value.lines.single().quantity)
+		assertEquals("80", view.state.value.lines.single().quantity)
 		view.editQuantity(0, "50")
 		view.scanned("K05B")
 		advanceUntilIdle()
 		// The second row is prefilled with what remains after the first.
-		assertEquals("30.000000", view.state.value.lines[1].quantity)
+		assertEquals("30", view.state.value.lines[1].quantity)
 		view.save()
 		advanceUntilIdle()
 		val request = requests.first { it.url.encodedPath.endsWith("/placements") }

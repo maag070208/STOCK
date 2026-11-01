@@ -42,6 +42,7 @@ enum class Text {
 	SIGN_IN_HINT,
 	CHANGE_PASSWORD_HEADLINE,
 	HOME_PROMPT,
+	CAMERA_TORCH,
 	SCAN_MATERIAL,
 	SCAN_LOCATION,
 	SEARCH_MATERIAL,
@@ -245,6 +246,7 @@ fun textFor(key: Text, language: Language): String =
 			Text.SIGN_IN_HINT -> "Usa el usuario que te dio tu administrador."
 			Text.CHANGE_PASSWORD_HEADLINE -> "Elige *tu propia contraseña* para empezar."
 			Text.HOME_PROMPT -> "¿Qué vas a hacer hoy?"
+			Text.CAMERA_TORCH -> "Linterna"
 			Text.SCAN_MATERIAL -> "Escanea el código del material"
 			Text.SCAN_LOCATION -> "Escanea el código de la ubicación"
 			Text.SEARCH_MATERIAL -> "O búscalo por código o nombre"
@@ -440,6 +442,7 @@ fun textFor(key: Text, language: Language): String =
 			Text.SIGN_IN_HINT -> "Use the username your administrator gave you."
 			Text.CHANGE_PASSWORD_HEADLINE -> "Choose *a password of your own* to start."
 			Text.HOME_PROMPT -> "What will you do today?"
+			Text.CAMERA_TORCH -> "Flashlight"
 			Text.SCAN_MATERIAL -> "Scan the material's code"
 			Text.SCAN_LOCATION -> "Scan the location's code"
 			Text.SEARCH_MATERIAL -> "Or search by code or name"

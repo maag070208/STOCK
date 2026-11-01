@@ -8,6 +8,7 @@ import { kardexClosing, kardexRows, reportApi, warehouseOptionsOf, type KardexPa
 import { formatDateTime, formatQuantity } from "@shared/lib/format";
 import { DateRangeFilter, ExportButtons, ReportError, ReportTotals, WarehouseFilter, periodOf } from "./ReportParts";
 import { ReportTabs } from "./ReportTabs";
+import { cardBreakpoint, tableHeight } from "@shared/ui/tableLayout";
 
 // The kardex of one material in one warehouse (reports.md section 3): its movements in order, with the running balance of
 // the location and of the warehouse as the API computed them. The screen never adds quantities up.
@@ -125,9 +126,10 @@ export function KardexPage() {
 					layout="fixed"
 					density="compact"
 					virtualized
-					virtualizedMaxHeight={400}
+					virtualizedMaxHeight={tableHeight()}
 					rowHeight={50}
 					showViewToggle={false}
+					autoCardBreakpoint={cardBreakpoint()}
  columns={columns}
  fetchData={(params) => {
  const asked = { ...params.filters, ...chosen };

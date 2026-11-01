@@ -6,6 +6,7 @@ import { auditApi, type AuditRecord } from "@entities/audit";
 import type { TableParams } from "@shared/api/table";
 import { dyn } from "@shared/i18n";
 import { formatDateTime } from "@shared/lib/format";
+import { cardBreakpoint, tableHeight } from "@shared/ui/tableLayout";
 
 const TARGETS = ["user", "role", "policy", "catalog", "catalog_item", "access"];
 
@@ -55,9 +56,10 @@ export function AuditPage() {
 				layout="fixed"
 				density="compact"
 				virtualized
-				virtualizedMaxHeight={400}
+				virtualizedMaxHeight={tableHeight()}
 				rowHeight={50}
-				showViewToggle={false} columns={columns} fetchData={(params) => auditApi.query(params as TableParams)}
+				showViewToggle={false}
+				autoCardBreakpoint={cardBreakpoint()} columns={columns} fetchData={(params) => auditApi.query(params as TableParams)}
 			/>
 		</ITPage>
 	);

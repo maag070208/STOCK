@@ -8,6 +8,7 @@ import { reportApi, warehouseOptionsOf, type InvoiceReportPage as InvoicesAnswer
 import { formatDate, formatQuantity } from "@shared/lib/format";
 import { DateRangeFilter, ExportButtons, PartnerFilter, ReportError, ReportTotals, WarehouseFilter, periodOf, totalEntries } from "./ReportParts";
 import { ReportTabs } from "./ReportTabs";
+import { cardBreakpoint, tableHeight } from "@shared/ui/tableLayout";
 
 // The invoices and entries of the warehouses the reader reaches (reports.md section 3): what was expected, counted and
 // placed, by period, supplier and status, with the counted quantity of each status.
@@ -90,9 +91,10 @@ export function InvoicesReportPage() {
 					layout="fixed"
 					density="compact"
 					virtualized
-					virtualizedMaxHeight={400}
+					virtualizedMaxHeight={tableHeight()}
 					rowHeight={50}
 					showViewToggle={false}
+					autoCardBreakpoint={cardBreakpoint()}
  columns={columns}
  // The filters this screen manages travel as external filters: the table merges them with its own
  // before asking, and the export takes exactly the filters of the last answer.

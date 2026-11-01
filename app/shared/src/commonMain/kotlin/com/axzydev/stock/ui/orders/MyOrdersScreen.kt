@@ -20,6 +20,7 @@ import com.axzydev.stock.ui.components.BentoHero
 import com.axzydev.stock.ui.components.BentoLabel
 import com.axzydev.stock.ui.components.BentoQuantity
 import com.axzydev.stock.ui.components.BentoResult
+import com.axzydev.stock.ui.components.BentoSkeleton
 import com.axzydev.stock.ui.components.BentoState
 import com.axzydev.stock.ui.components.BentoSteps
 import com.axzydev.stock.ui.components.ListSearch
@@ -54,7 +55,7 @@ fun MyOrdersScreen(pick: OrderPickViewModel, onBack: () -> Unit) {
 			state.saved != null -> PickResult(state, pick)
 
 			// The order is read again with its lines before anything is scanned.
-			state.loading -> AppText(text(Text.LOADING), StockFlowType.bodyLg, StockFlow.colors.onSurfaceMuted)
+			state.loading -> BentoSkeleton(tag = "pick-loading")
 
 			else -> PickForm(state, pick)
 		}
@@ -65,7 +66,10 @@ fun MyOrdersScreen(pick: OrderPickViewModel, onBack: () -> Unit) {
 @Composable
 private fun OrderList(state: OrderPickState, pick: OrderPickViewModel) {
 	state.error?.let { AppText(it, StockFlowType.bodyLg, StockFlow.colors.danger, Modifier.testTag("orders-error")) }
-	if (state.loading) return
+	if (state.loading) {
+		BentoSkeleton(tag = "orders-loading")
+		return
+	}
 	if (state.orders.isEmpty()) {
 		BentoState(text(Text.EMPTY_ORDERS), "orders-empty", text(Text.EMPTY_HINT))
 		return

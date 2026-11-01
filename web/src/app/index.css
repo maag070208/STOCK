@@ -125,6 +125,57 @@ body {
   }
 }
 
+/* The kit's status badges are light tints with dark text; over a dark surface the same roles turn into a glow of the
+   color with light text. Each badge sets them for itself, so nothing else of the kit moves. */
+.dark span[style*="var(--color-success-100)"] {
+  --color-success-100: color-mix(in srgb, var(--sf-color-success) 20%, transparent);
+  --color-success-200: color-mix(in srgb, var(--sf-color-success) 34%, transparent);
+  --color-success-800: color-mix(in srgb, var(--sf-color-success) 62%, white);
+}
+.dark span[style*="var(--color-warning-100)"] {
+  --color-warning-100: color-mix(in srgb, var(--sf-color-warning) 20%, transparent);
+  --color-warning-200: color-mix(in srgb, var(--sf-color-warning) 34%, transparent);
+  --color-warning-800: color-mix(in srgb, var(--sf-color-warning) 62%, white);
+}
+.dark span[style*="var(--color-danger-100)"] {
+  --color-danger-100: color-mix(in srgb, var(--sf-color-danger) 20%, transparent);
+  --color-danger-200: color-mix(in srgb, var(--sf-color-danger) 34%, transparent);
+  --color-danger-800: color-mix(in srgb, var(--sf-color-danger) 62%, white);
+}
+.dark span[style*="var(--color-info-100)"] {
+  --color-info-100: color-mix(in srgb, var(--sf-color-info) 20%, transparent);
+  --color-info-200: color-mix(in srgb, var(--sf-color-info) 34%, transparent);
+  --color-info-800: color-mix(in srgb, var(--sf-color-info) 62%, white);
+}
+.dark span[style*="var(--color-primary-100)"] {
+  --color-primary-100: color-mix(in srgb, var(--sf-color-primary) 20%, transparent);
+  --color-primary-200: color-mix(in srgb, var(--sf-color-primary) 34%, transparent);
+  --color-primary-800: color-mix(in srgb, var(--sf-color-primary) 62%, white);
+}
+.dark span[style*="var(--color-secondary-100)"] {
+  --color-secondary-100: color-mix(in srgb, var(--sf-color-on-surface-muted) 20%, transparent);
+  --color-secondary-200: color-mix(in srgb, var(--sf-color-on-surface-muted) 34%, transparent);
+  --color-secondary-800: color-mix(in srgb, var(--sf-color-on-surface-muted) 62%, white);
+}
+.dark span[style*="var(--color-gray-100)"] {
+  --color-gray-100: color-mix(in srgb, var(--sf-color-on-surface-muted) 20%, transparent);
+  --color-gray-200: color-mix(in srgb, var(--sf-color-on-surface-muted) 34%, transparent);
+  --color-gray-800: color-mix(in srgb, var(--sf-color-on-surface-muted) 62%, white);
+}
+
+/* On a phone the actions of a page matter more than the trail back: the menu is one touch away. */
+@media (max-width: 767px) {
+  .sf-shell nav[aria-label="Ruta de navegación"],
+  .sf-shell nav[aria-label="Breadcrumbs"] {
+    display: none;
+  }
+}
+
+/* A row that opens something says so under the pointer. */
+.sf-shell tbody tr {
+  transition: background-color 150ms ease;
+}
+
 /*
  * The page column. The kit's `ITPage` centers its content in 80rem, and with the bento density that is 1024px; the
  * design's column is the shell's own (--sf-layout-container-max). The pages keep their own horizontal padding.

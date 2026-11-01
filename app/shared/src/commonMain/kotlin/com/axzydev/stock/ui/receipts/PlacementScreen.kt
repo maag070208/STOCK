@@ -22,6 +22,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import com.axzydev.stock.data.Decimals
 import com.axzydev.stock.feature.receipts.PlacementLine
 import com.axzydev.stock.feature.receipts.PlacementState
 import com.axzydev.stock.feature.receipts.PlacementTarget
@@ -35,6 +36,7 @@ import com.axzydev.stock.ui.components.BentoHero
 import com.axzydev.stock.ui.components.BentoLabel
 import com.axzydev.stock.ui.components.BentoQuantity
 import com.axzydev.stock.ui.components.BentoResult
+import com.axzydev.stock.ui.components.BentoSkeleton
 import com.axzydev.stock.ui.components.BentoState
 import com.axzydev.stock.ui.components.PageScaffold
 import com.axzydev.stock.ui.components.PrimaryButton
@@ -92,7 +94,7 @@ private fun Queue(state: PlacementState, placement: PlacementViewModel) {
 	val shown = state.targets.filter { state.queueQuery.matches(it.product.code, it.product.name, it.invoice) }
 	state.error?.let { AppText(it, StockFlowType.bodyLg, StockFlow.colors.danger, Modifier.testTag("placement-error")) }
 	when {
-		state.loading -> Unit
+		state.loading -> BentoSkeleton(tag = "placement-loading")
 		state.targets.isEmpty() -> BentoState(text(Text.EMPTY_PLACE), "placement-empty", text(Text.EMPTY_HINT))
 		shown.isEmpty() -> BentoState(text(Text.NO_RESULTS), "placement-no-results", text(Text.NO_RESULTS_HINT), AppIcon.SEARCH)
 		else -> {
@@ -113,7 +115,9 @@ private fun PlacementForm(state: PlacementState, placement: PlacementViewModel) 
 	val left = state.unassigned ?: state.remaining
 	BentoHero(lineTitle(target), formatQuantity(left, target.unit?.decimalPlaces), text(Text.QUEUE_PLACE), "placement-target", subtitle = target.invoice)
 
-	ScanSearch(
+	// With everything given a place there is nothing left to scan: only the confirmation remains.
+	val allPlaced = state.lines.isNotEmpty() && Decimals.same(left.ifEmpty { "0" }, "0")
+	if (!allPlaced) ScanSearch(
 		instruction = text(Text.SCAN_LOCATION),
 		searchLabel = text(Text.SEARCH_LOCATION),
 		query = state.scan,

@@ -28,6 +28,7 @@ import com.axzydev.stock.ui.components.BentoHero
 import com.axzydev.stock.ui.components.BentoLabel
 import com.axzydev.stock.ui.components.BentoQuantity
 import com.axzydev.stock.ui.components.BentoResult
+import com.axzydev.stock.ui.components.BentoSkeleton
 import com.axzydev.stock.ui.components.BentoState
 import com.axzydev.stock.ui.components.PageScaffold
 import com.axzydev.stock.ui.components.PrimaryButton
@@ -95,7 +96,7 @@ fun CountScreen(count: CountViewModel, onBack: () -> Unit, onPlace: (PlacementTa
 private fun Queue(state: CountState, count: CountViewModel) {
 	val shown = state.queue.filter { state.query.matches(it.product.code, it.product.name, it.invoice) }
 	when {
-		state.loadingQueue -> Unit
+		state.loadingQueue && state.queue.isEmpty() -> BentoSkeleton(tag = "count-loading")
 		state.queue.isEmpty() -> BentoState(text(Text.EMPTY_COUNT), "count-empty", text(Text.EMPTY_HINT))
 		shown.isEmpty() -> BentoState(text(Text.NO_RESULTS), "count-no-results", text(Text.NO_RESULTS_HINT), AppIcon.SEARCH)
 		else -> {

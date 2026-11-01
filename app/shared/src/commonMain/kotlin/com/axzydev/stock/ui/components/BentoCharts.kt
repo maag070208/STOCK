@@ -1,6 +1,7 @@
 package com.axzydev.stock.ui.components
 
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
@@ -9,11 +10,19 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -25,12 +34,15 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.axzydev.stock.brand.reducedMotionEnabled
+import com.axzydev.stock.ui.theme.AppBento
+import com.axzydev.stock.ui.theme.DesignTokens
+import com.axzydev.stock.ui.theme.StockFlow
 import kotlin.math.PI
-import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt
 import kotlin.math.sin
@@ -43,9 +55,47 @@ private const val ARRIVAL_MS = 900
 private const val RISE_MS = 420
 private const val RISE_STEP_MS = 70L
 private const val WAVE_MS = 3200
+private const val PRESS_MS = 90
+private const val PRESSED_SCALE = 0.97f
+private const val SKELETON_MS = 800
 
 // The low tide of a wave: an empty queue is calm water, not a tile without its visual.
 private const val WAVE_FLOOR = 0.2f
+
+// A full queue is high water, not a tile under water: the text keeps its ground.
+private const val WAVE_CEILING = 0.62f
+
+/** Answers the finger: anything tappable sinks a little while it is pressed. */
+@Composable
+fun Modifier.pressable(interaction: MutableInteractionSource): Modifier {
+	val pressed by interaction.collectIsPressedAsState()
+	val scale by animateFloatAsState(if (pressed) PRESSED_SCALE else 1f, tween(PRESS_MS))
+	return graphicsLayer {
+		scaleX = scale
+		scaleY = scale
+	}
+}
+
+/** A placeholder with the shape of what is coming, breathing while it comes. */
+@Composable
+fun BentoSkeleton(rows: Int = 3, tag: String = "skeleton") {
+	val alpha = if (reducedMotionEnabled()) {
+		remember { mutableFloatStateOf(0.6f) }
+	} else {
+		rememberInfiniteTransition().animateFloat(0.45f, 0.9f, infiniteRepeatable(tween(SKELETON_MS, easing = LinearEasing), RepeatMode.Reverse))
+	}
+	Column(Modifier.fillMaxWidth().testTag(tag), verticalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.md.dp)) {
+		repeat(rows) {
+			Box(
+				Modifier
+					.fillMaxWidth()
+					.height(76.dp)
+					.graphicsLayer { this.alpha = alpha.value }
+					.background(StockFlow.colors.surfaceElevated, RoundedCornerShape(AppBento.tile)),
+			)
+		}
+	}
+}
 
 /** A number that climbs to [target] when it arrives, and again when it changes. */
 @Composable
@@ -101,7 +151,7 @@ fun BentoWave(level: Float, color: Color, modifier: Modifier = Modifier) {
 				animationSpec = infiniteRepeatable(tween(WAVE_MS, easing = LinearEasing), RepeatMode.Restart),
 			)
 		}
-	val target = max(WAVE_FLOOR, level.coerceIn(0f, 1f))
+	val target = WAVE_FLOOR + (WAVE_CEILING - WAVE_FLOOR) * level.coerceIn(0f, 1f)
 	val shown = remember { Animatable(if (reducedMotionEnabled()) target else 0f) }
 	LaunchedEffect(target) { shown.animateTo(target, tween(ARRIVAL_MS, easing = FastOutSlowInEasing)) }
 	Canvas(modifier.clearAndSetSemantics {}) {

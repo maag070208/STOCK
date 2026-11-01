@@ -1,9 +1,13 @@
 package com.axzydev.stock.ui.components
 
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -30,11 +34,16 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -42,6 +51,7 @@ import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
+import com.axzydev.stock.brand.reducedMotionEnabled
 import com.axzydev.stock.data.Decimals
 import com.axzydev.stock.ui.theme.AppBento
 import com.axzydev.stock.ui.theme.BentoTone
@@ -137,14 +147,16 @@ fun BentoTile(
 ) {
 	val colors = AppBento.tone(tone)
 	val shape = RoundedCornerShape(AppBento.tile)
+	val interaction = remember { MutableInteractionSource() }
 	Box(
 		modifier
 			.fillMaxWidth()
 			.heightIn(min = 148.dp)
 			.height(IntrinsicSize.Min)
+			.pressable(interaction)
 			.clip(shape)
 			.background(colors.container)
-			.then(if (onClick != null) Modifier.clickable(role = Role.Button, onClick = onClick) else Modifier)
+			.then(if (onClick != null) Modifier.clickable(interactionSource = interaction, indication = null, role = Role.Button, onClick = onClick) else Modifier)
 			.testTag(tag),
 	) {
 		if (waveLevel != null) BentoWave(waveLevel, waveColor ?: colors.content, Modifier.matchParentSize())
@@ -268,12 +280,14 @@ fun BentoChip(label: String, selected: Boolean, tag: String, onClick: () -> Unit
 @Composable
 fun BentoChoiceRow(title: String, tag: String, onClick: () -> Unit, subtitle: String? = null, detail: String? = null, tone: BentoTone = BentoTone.Orange, icon: AppIcon? = null) {
 	val colors = AppBento.tone(tone)
+	val interaction = remember { MutableInteractionSource() }
 	Row(
 		Modifier
 			.fillMaxWidth()
+			.pressable(interaction)
 			.clip(RoundedCornerShape(AppBento.tile))
 			.background(StockFlow.colors.surfaceElevated)
-			.clickable(role = Role.Button, onClick = onClick)
+			.clickable(interactionSource = interaction, indication = null, role = Role.Button, onClick = onClick)
 			.padding(DesignTokens.Spacing.lg.dp)
 			.testTag(tag),
 		verticalAlignment = Alignment.CenterVertically,
@@ -352,6 +366,12 @@ private fun StepButton(sign: String, label: String, tag: String, onClick: () -> 
 @Composable
 fun BentoResult(title: String, tag: String, success: Boolean = true, content: @Composable ColumnScope.() -> Unit = {}) {
 	val color = if (success) StockFlow.colors.success else StockFlow.colors.warning
+	val haptics = LocalHapticFeedback.current
+	val pop = remember { Animatable(if (reducedMotionEnabled()) 1f else 0.4f) }
+	LaunchedEffect(Unit) {
+		haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+		pop.animateTo(1f, spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow))
+	}
 	Column(
 		Modifier
 			.fillMaxWidth()
@@ -361,7 +381,16 @@ fun BentoResult(title: String, tag: String, success: Boolean = true, content: @C
 		horizontalAlignment = Alignment.CenterHorizontally,
 		verticalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.sm.dp),
 	) {
-		Box(Modifier.size(64.dp).background(color.copy(alpha = 0.14f), CircleShape), contentAlignment = Alignment.Center) {
+		Box(
+			Modifier
+				.size(64.dp)
+				.graphicsLayer {
+					scaleX = pop.value
+					scaleY = pop.value
+				}
+				.background(color.copy(alpha = 0.14f), CircleShape),
+			contentAlignment = Alignment.Center,
+		) {
 			Icon(if (success) AppIcon.CHECK else AppIcon.ALERT, color, size = 30.dp)
 		}
 		AppText(title, StockFlowType.titleMd, StockFlow.colors.onSurface, maxLines = 3)

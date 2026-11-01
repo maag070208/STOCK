@@ -17,7 +17,7 @@ fun <T> RemoteList(
 	row: @Composable (T) -> Unit,
 ) {
 	when {
-		state.loading -> ListMessage(text(Text.LOADING), "$tag-loading")
+		state.loading -> BentoSkeleton(tag = "$tag-loading")
 		state.error != null -> {
 			ListMessage(state.error, "$tag-error", error = true)
 			PrimaryButton(text(Text.RETRY), onRetry, tag = "$tag-retry")

@@ -9,6 +9,7 @@ import { invoiceApi, invoiceFilters, STATUS_COLOR, statusChip, type Invoice, typ
 import { useCan } from "@entities/user";
 import { NewInvoiceDialog } from "@features/invoice/NewInvoiceDialog";
 import { formatDate } from "@shared/lib/format";
+import { cardBreakpoint, tableHeight } from "@shared/ui/tableLayout";
 
 // The invoices the person can see: every one with ALL, those of their warehouses with AREA (the API decides). One search
 // box and three status chips drive the query (F8-05), and a new invoice is captured in a modal over the list (F8-06).
@@ -134,9 +135,10 @@ export function InvoicesPage() {
 						layout="fixed"
 						density="compact"
 						virtualized
-						virtualizedMaxHeight={400}
+						virtualizedMaxHeight={tableHeight()}
 						rowHeight={50}
 						showViewToggle={false}
+						autoCardBreakpoint={cardBreakpoint()}
  columns={columns}
  fetchData={fetchData}
  reloadTrigger={`${applied}|${chip}`}

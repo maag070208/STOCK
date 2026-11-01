@@ -9,6 +9,7 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -36,7 +37,10 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import com.axzydev.stock.brand.reducedMotionEnabled
@@ -68,6 +72,8 @@ fun ScannerPanel(instruction: String, onScanned: (String) -> Unit) {
 	val shape = RoundedCornerShape(AppBento.card)
 	val haptics = LocalHapticFeedback.current
 	var last by remember { mutableStateOf<String?>(null) }
+	var torch by remember { mutableStateOf(false) }
+	val torchLabel = text(Text.CAMERA_TORCH)
 	val latest by rememberUpdatedState(onScanned)
 	if (permission.access == CameraAccess.GRANTED) {
 		Box(Modifier.fillMaxWidth().height(CAMERA_HEIGHT).clip(shape).testTag("camera")) {
@@ -80,8 +86,23 @@ fun ScannerPanel(instruction: String, onScanned: (String) -> Unit) {
 					latest(value)
 				},
 				modifier = Modifier.fillMaxSize(),
+				torch = torch,
 			)
 			ScanFrame()
+			Box(
+				Modifier
+					.align(Alignment.TopEnd)
+					.padding(DesignTokens.Spacing.md.dp)
+					.size(44.dp)
+					.clip(CircleShape)
+					.background(if (torch) StockFlow.colors.primary else AppBento.ink().copy(alpha = 0.72f))
+					.clickable(role = Role.Button) { torch = !torch }
+					.semantics { contentDescription = torchLabel }
+					.testTag("camera-torch"),
+				contentAlignment = Alignment.Center,
+			) {
+				Icon(AppIcon.FLASH, AppBento.onInk(), size = 22.dp)
+			}
 			Box(Modifier.align(Alignment.BottomCenter).padding(DesignTokens.Spacing.md.dp).background(AppBento.ink().copy(alpha = 0.72f), AppBento.pill).padding(horizontal = DesignTokens.Spacing.md.dp, vertical = DesignTokens.Spacing.xs.dp)) {
 				AppText(instruction, StockFlowType.labelMd, AppBento.onInk(), maxLines = 1)
 			}

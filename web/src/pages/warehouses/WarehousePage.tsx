@@ -11,6 +11,7 @@ import { RackDialog } from "@features/warehouse/RackDialog";
 import type { TableParams } from "@shared/api/table";
 import { ApiError } from "@shared/api/client";
 import { toast } from "@app/store";
+import { cardBreakpoint, tableHeight } from "@shared/ui/tableLayout";
 
 type Group = { aisle: string; rack: string };
 type Confirm = { kind: "deactivateLocation" | "reactivateLocation"; location: Location };
@@ -183,9 +184,10 @@ export function WarehousePage() {
 						layout="fixed"
 						density="compact"
 						virtualized
-						virtualizedMaxHeight={400}
+						virtualizedMaxHeight={tableHeight()}
 						rowHeight={50}
-						showViewToggle={false} columns={columns} externalFilters={filters} fetchData={(params) => locationApi.query(params as TableParams)} reloadTrigger={reload}
+						showViewToggle={false}
+						autoCardBreakpoint={cardBreakpoint()} columns={columns} externalFilters={filters} fetchData={(params) => locationApi.query(params as TableParams)} reloadTrigger={reload}
 					/>
 				</ITStack>
 			</ITStack>

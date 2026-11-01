@@ -21,7 +21,7 @@ import com.axzydev.stock.ui.theme.AppLayout
 
 // The app's line icons, drawn on a 24-unit grid with a round 1.8-unit stroke. There is no icon font or Material
 // dependency (mobile-app.md section 7), so each one is a few lines of geometry.
-enum class AppIcon { HOME, CHECK, ARROW, USER, LOCK, EYE, EYE_OFF, SEARCH, BACK, SIGN_OUT, SCAN, INBOX, BOXES, WAREHOUSE, CLIPBOARD, ALERT, CHEVRON }
+enum class AppIcon { HOME, CHECK, ARROW, FLASH, USER, LOCK, EYE, EYE_OFF, SEARCH, BACK, SIGN_OUT, SCAN, INBOX, BOXES, WAREHOUSE, CLIPBOARD, ALERT, CHEVRON }
 
 private const val GRID = 24f
 private const val STROKE = 1.8f
@@ -38,6 +38,7 @@ private fun DrawScope.draw(icon: AppIcon, color: Color) {
 	val line = Stroke(width = STROKE, cap = StrokeCap.Round, join = StrokeJoin.Round)
 	fun path(build: Path.() -> Unit) = drawPath(Path().apply(build), color, style = line)
 	when (icon) {
+		AppIcon.FLASH -> path { moveTo(13f, 3f); lineTo(5f, 14f); lineTo(11.5f, 14f); lineTo(10.5f, 21f); lineTo(19f, 10f); lineTo(12.5f, 10f); close() }
 		AppIcon.CHECK -> path { moveTo(4f, 12.5f); lineTo(9.5f, 18f); lineTo(20f, 6.5f) }
 		AppIcon.ARROW -> path { moveTo(5f, 12f); lineTo(19f, 12f); moveTo(13f, 6f); lineTo(19f, 12f); lineTo(13f, 18f) }
 		AppIcon.HOME -> {

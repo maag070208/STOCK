@@ -147,7 +147,7 @@ export function CommandPalette() {
 
 	return (
 		<>
-			<ITButton variant="text" className="sf:w-80 sf:max-w-full sf:justify-start sf:bg-surface-soft sf:font-normal sf:text-on-surface-muted" onClick={() => setOpen(true)}>
+			<ITButton variant="text" className="sf:w-80 sf:max-w-full sf:justify-start sf:bg-surface-soft sf:font-normal sf:text-on-surface-muted sf:[&>span]:w-full" onClick={() => setOpen(true)}>
 				<ITFlex align="center" gap={2} className="sf:w-full">
 					<FaSearch aria-hidden />
 					<ITText as="span" className="sf:flex-1 sf:text-left sf:text-on-surface-muted">{t("palette.open")}</ITText>
