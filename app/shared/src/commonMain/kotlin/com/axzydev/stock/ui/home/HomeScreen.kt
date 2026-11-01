@@ -4,8 +4,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -15,7 +13,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.unit.dp
+import com.axzydev.stock.AppInfo
 import com.axzydev.stock.data.health.HealthClient
 import com.axzydev.stock.data.health.HealthState
 import com.axzydev.stock.data.session.SessionUser
@@ -24,22 +22,26 @@ import com.axzydev.stock.i18n.Text
 import com.axzydev.stock.i18n.text
 import com.axzydev.stock.ui.components.AppIcon
 import com.axzydev.stock.ui.components.AppText
+import com.axzydev.stock.ui.components.BentoIconButton
+import com.axzydev.stock.ui.components.BentoLabel
+import com.axzydev.stock.ui.components.BentoPageHeader
+import com.axzydev.stock.ui.components.BentoScreen
+import com.axzydev.stock.ui.components.BentoTile
+import com.axzydev.stock.ui.components.BentoTopBar
 import com.axzydev.stock.ui.components.Card
-import com.axzydev.stock.ui.components.HeroBar
-import com.axzydev.stock.ui.components.HeroHeadline
-import com.axzydev.stock.ui.components.HeroIconButton
-import com.axzydev.stock.ui.components.HeroScreen
 import com.axzydev.stock.ui.components.ModuleButton
-import com.axzydev.stock.ui.components.PageRow
 import com.axzydev.stock.ui.components.StatusBadge
 import com.axzydev.stock.ui.components.StatusTone
 import com.axzydev.stock.ui.nav.Module
 import com.axzydev.stock.ui.nav.ModuleEntry
 import com.axzydev.stock.ui.nav.ModulePage
+import com.axzydev.stock.ui.theme.BentoTone
 import com.axzydev.stock.ui.theme.DesignTokens
 import com.axzydev.stock.ui.theme.StockFlow
 import com.axzydev.stock.ui.theme.StockFlowType
 
+// The home is the dashboard of the shift, not a menu: the greeting, the two tasks of the receipt with how much is
+// pending in each, the modules the person may use, and the state of the API. It is the same layout as the web home.
 @Composable
 fun HomeScreen(
 	client: HealthClient,
@@ -61,34 +63,51 @@ fun HomeScreen(
 	val placementCount = work.rows.sumOf { receipt ->
 		receipt.lines.sumOf { line -> line.assignments.count { it.readyToPlace && !it.placed } }
 	}
-	HeroScreen(
-		hero = {
-			HeroBar { HeroIconButton(AppIcon.SIGN_OUT, text(Text.SIGN_OUT), onSignOut, tag = "sign-out") }
-			HeroHeadline(text(Text.GREETING).replace("{name}", "*${user.name.replace("*", "")}*"), Modifier.padding(top = DesignTokens.Spacing.lg.dp))
-			AppText(text(Text.HOME_PROMPT), StockFlowType.bodyLg, StockFlow.colors.onPrimary)
-		},
-	) {
-		if (receiptEntry != null) {
-			receiptEntry.pages.firstOrNull { it.id == "count" }?.let { page ->
-				PageRow(
-					icon = page.icon,
-					title = "${text(page.title)} · $pendingCount",
-					hint = text(page.hint),
-					onClick = { onOpenPage(receiptEntry.module, page) },
-					tag = "task-count",
-				)
-			}
-			receiptEntry.pages.firstOrNull { it.id == "placement" }?.let { page ->
-				PageRow(
-					icon = page.icon,
-					title = "${text(page.title)} · $placementCount",
-					hint = text(page.hint),
-					onClick = { onOpenPage(receiptEntry.module, page) },
-					tag = "task-placement",
-				)
+	val countPage = receiptEntry?.pages?.firstOrNull { it.id == "count" }
+	val placementPage = receiptEntry?.pages?.firstOrNull { it.id == "placement" }
+
+	BentoScreen {
+		BentoTopBar(
+			title = AppInfo.NAME,
+			actions = { BentoIconButton(AppIcon.SIGN_OUT, text(Text.SIGN_OUT), onSignOut, tag = "sign-out") },
+		)
+		BentoPageHeader(
+			text(Text.GREETING).replace("{name}", user.name),
+			text(Text.HOME_PROMPT),
+		)
+
+		// The work of the receipt, side by side: each tile opens the task it counts.
+		if (countPage != null || placementPage != null) {
+			Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.md.dp)) {
+				if (countPage != null) {
+					BentoTile(
+						label = text(Text.PAGE_COUNT),
+						value = pendingCount.toString(),
+						caption = text(Text.PAGE_COUNT_HINT),
+						tone = BentoTone.Mint,
+						icon = AppIcon.SCAN,
+						onClick = { onOpenPage(receiptEntry!!.module, countPage) },
+						tag = "task-count",
+						modifier = Modifier.weight(1f),
+					)
+				}
+				if (placementPage != null) {
+					BentoTile(
+						label = text(Text.PAGE_PLACEMENT),
+						value = placementCount.toString(),
+						caption = text(Text.PAGE_PLACEMENT_HINT),
+						tone = BentoTone.Sea,
+						icon = AppIcon.WAREHOUSE,
+						onClick = { onOpenPage(receiptEntry!!.module, placementPage) },
+						tag = "task-placement",
+						modifier = Modifier.weight(1f),
+					)
+				}
 			}
 		}
-		AppText(text(Text.MODULES_LABEL).uppercase(), StockFlowType.labelSm, StockFlow.colors.onSurfaceMuted, Modifier.testTag("modules-label"))
+
+		// The modules the person may use, as bento tiles.
+		BentoLabel(text(Text.MODULES_LABEL), Modifier.testTag("modules-label"))
 		AppText(text(Text.MODULES_HINT), StockFlowType.bodyMd, StockFlow.colors.onSurfaceMuted)
 		modules.chunked(2).forEach { pair ->
 			Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.md.dp)) {
@@ -106,8 +125,9 @@ fun HomeScreen(
 				if (pair.size == 1) Spacer(Modifier.weight(1f))
 			}
 		}
+
 		Card {
-			AppText(text = text(Text.HEALTH_LABEL).uppercase(), style = StockFlowType.labelSm, color = StockFlow.colors.onSurfaceMuted)
+			BentoLabel(text(Text.HEALTH_LABEL))
 			StatusBadge(text = text(healthMessage(state)), tone = healthTone(state))
 		}
 	}
