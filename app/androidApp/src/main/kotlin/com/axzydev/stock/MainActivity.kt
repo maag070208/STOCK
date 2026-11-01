@@ -1,9 +1,7 @@
 package com.axzydev.stock
 
-import android.graphics.Color
 import android.os.Bundle
 import androidx.activity.ComponentActivity
-import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Box
@@ -17,8 +15,8 @@ import androidx.compose.ui.tooling.preview.Preview
 @OptIn(ExperimentalComposeUiApi::class)
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
-        // The shell behind the status bar is dark in both modes, so the status bar icons are always light.
-        enableEdgeToEdge(statusBarStyle = SystemBarStyle.dark(Color.TRANSPARENT))
+        // The canvas is light in light mode and dark in dark mode, so the status bar icons follow the mode.
+        enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         com.axzydev.stock.AndroidContext.app = applicationContext
 

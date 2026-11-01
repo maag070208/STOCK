@@ -13,6 +13,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.unit.dp
 import com.axzydev.stock.AppInfo
 import com.axzydev.stock.data.health.HealthClient
 import com.axzydev.stock.data.health.HealthState
