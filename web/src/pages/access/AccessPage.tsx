@@ -41,7 +41,7 @@ export function AccessPage() {
 		<ITPage breadcrumbs={trail(t("common:nav.home"), navigate, { label: t("title") })} title={t("title")} description={t("description")} loading={!data && !error} error={error} onRetry={() => void load()} noPadding>
 			{data && (
 				<ITTabs
-					variant="line"
+					variant="pill"
 					items={[
 						{ id: "roles", label: t("tabs.roles"), content: <RolesPanel roles={data.roles} onChanged={changed} onError={failed} /> },
 						{ id: "matrix", label: t("tabs.matrix"), content: <MatrixPanel permissions={data.permissions} roles={data.roles} cells={data.cells} onSaved={() => changed(t("matrix.saved"))} /> },

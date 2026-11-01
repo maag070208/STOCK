@@ -29,9 +29,10 @@ import com.axzydev.stock.i18n.Text
 import com.axzydev.stock.i18n.text
 import com.axzydev.stock.ui.components.AppIcon
 import com.axzydev.stock.ui.components.AppText
+import com.axzydev.stock.ui.components.BentoPageHeader
+import com.axzydev.stock.ui.components.BentoScreen
+import com.axzydev.stock.ui.components.BentoTopBar
 import com.axzydev.stock.ui.components.Card
-import com.axzydev.stock.ui.components.HeroIconButton
-import com.axzydev.stock.ui.components.HeroScreen
 import com.axzydev.stock.ui.components.PrimaryButton
 import com.axzydev.stock.ui.components.ScannerPanel
 import com.axzydev.stock.ui.components.TextInput
@@ -53,16 +54,9 @@ fun LookupScreen(lookup: LookupViewModel, onBack: () -> Unit) {
 		keyboard?.hide()
 		lookup.submit()
 	}
-	HeroScreen(
-		hero = {
-			Row(verticalAlignment = Alignment.CenterVertically) {
-				HeroIconButton(AppIcon.BACK, text(Text.BACK), onBack, tag = "lookup-back")
-				Spacer(Modifier.width(DesignTokens.Spacing.md.dp))
-				AppText(text(Text.LOOKUP_TITLE), StockFlowType.headlineLg, StockFlow.colors.onPrimary, maxLines = 1)
-			}
-			AppText(text(Text.LOOKUP_HINT), StockFlowType.bodyLg, StockFlow.colors.onPrimary)
-		},
-	) {
+	BentoScreen {
+		BentoTopBar(title = "", onBack = onBack, backLabel = text(Text.BACK), backTag = "lookup-back")
+		BentoPageHeader(text(Text.LOOKUP_TITLE), text(Text.LOOKUP_HINT))
 		ScannerPanel(onScanned = lookup::scanned)
 		TextInput(
 			label = text(Text.LOOKUP_FIELD),

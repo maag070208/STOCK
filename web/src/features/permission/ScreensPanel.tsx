@@ -39,6 +39,7 @@ export function ScreensPanel(props: { roles: Role[]; cells: MatrixCell[] }) {
 			columns={columns}
 			data={rows}
 			size="sm"
+			virtualized={false}
 		/>
 	);
 }

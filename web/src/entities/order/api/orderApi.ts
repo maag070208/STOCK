@@ -7,6 +7,9 @@ import type { AvailabilityItem, Order, OrderAlert, OrderInput, OrderOperator, Re
 // office and the manager take on an order.
 export const orderApi = {
 	query: (params: TableParams) => tableRequest<Order>("/orders/query", params),
+	// How many orders are still open, for the dashboard. The table helper only takes one status, and this count needs
+	// two, so the body is written here (the API accepts a list of codes).
+	open: () => post<TablePage<Order>>("/orders/query", { page: 1, limit: 1, filters: { status: ["CREATED", "FULFILLING"] } }),
 	// The orders of a warehouse that still need something: the targets of a reassignment (section 8). The status filter
 	// takes one code or several, and the table helper only sends one, so the body is written here.
 	openOf: (warehouseId: string) =>

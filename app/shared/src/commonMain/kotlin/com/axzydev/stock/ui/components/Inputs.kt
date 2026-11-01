@@ -43,6 +43,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import com.axzydev.stock.i18n.Text
 import com.axzydev.stock.i18n.text
+import com.axzydev.stock.ui.theme.AppBento
 import com.axzydev.stock.ui.theme.AppLayout
 import com.axzydev.stock.ui.theme.DesignTokens
 import com.axzydev.stock.ui.theme.StockFlow
@@ -100,9 +101,9 @@ fun TextInput(
 			interactionSource = interaction,
 			modifier = Modifier
 				.fillMaxWidth()
-				.heightIn(min = AppLayout.pillHeight)
-				.background(colors.surface, AppLayout.pill)
-				.border(2.dp, border, AppLayout.pill)
+				.heightIn(min = AppBento.fieldHeight)
+				.background(colors.surfaceSoft, RoundedCornerShape(AppBento.fieldCorner))
+				.border(2.dp, border, RoundedCornerShape(AppBento.fieldCorner))
 				.onFocusChanged { onFocusChanged?.invoke(it.isFocused) }
 				.semantics {
 					contentDescription = label
@@ -111,7 +112,7 @@ fun TextInput(
 				.testTag(tag),
 			decorationBox = { field ->
 				Row(
-					Modifier.heightIn(min = AppLayout.pillHeight).padding(start = DesignTokens.Spacing.lg.dp + DesignTokens.Spacing.xs.dp),
+					Modifier.heightIn(min = AppBento.fieldHeight).padding(start = DesignTokens.Spacing.lg.dp + DesignTokens.Spacing.xs.dp),
 					verticalAlignment = Alignment.CenterVertically,
 				) {
 					if (icon != null) {
@@ -126,7 +127,7 @@ fun TextInput(
 						val action = text(if (visible) Text.HIDE_PASSWORD else Text.SHOW_PASSWORD)
 						Box(
 							Modifier
-								.heightIn(min = AppLayout.pillHeight)
+								.heightIn(min = AppBento.fieldHeight)
 								// The keyboard's Next key skips it and goes to the next field. It is still a button to tap and to screen readers.
 								.focusProperties { canFocus = false }
 								.clickable(role = Role.Button) { visible = !visible }
@@ -159,7 +160,7 @@ fun PrimaryButton(text: String, onClick: () -> Unit, tag: String, modifier: Modi
 	Row(
 		modifier = modifier
 			.fillMaxWidth()
-			.heightIn(min = AppLayout.pillHeight)
+			.heightIn(min = AppBento.buttonHeight)
 			.background(background, AppLayout.pill)
 			.clickable(interactionSource = interaction, indication = null, enabled = !busy, role = Role.Button, onClick = onClick)
 			.padding(horizontal = DesignTokens.Spacing.xl.dp)

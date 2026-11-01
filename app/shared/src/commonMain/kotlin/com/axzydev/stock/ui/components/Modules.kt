@@ -23,6 +23,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.axzydev.stock.i18n.Text
 import com.axzydev.stock.i18n.text
+import com.axzydev.stock.ui.theme.AppBento
 import com.axzydev.stock.ui.theme.DesignTokens
 import com.axzydev.stock.ui.theme.StockFlow
 import com.axzydev.stock.ui.theme.StockFlowType
@@ -31,9 +32,9 @@ import com.axzydev.stock.ui.theme.StockFlowType
 // the design's corners, and no shadow.
 
 // The height a module button keeps, so the buttons of the home line up whatever their text.
-private val MODULE_HEIGHT = 150.dp
+private val MODULE_HEIGHT = 128.dp
 
-private val panelShape = RoundedCornerShape(DesignTokens.Components.cardPanel.rounded.dp)
+private val panelShape = RoundedCornerShape(AppBento.tile)
 
 // A module on the home: its icon, its name and one line about what it holds. `comingSoon` marks a module the API
 // does not serve yet.
@@ -44,8 +45,7 @@ fun ModuleButton(icon: AppIcon, title: String, hint: String, onClick: () -> Unit
 		modifier
 			.fillMaxWidth()
 			.height(MODULE_HEIGHT)
-			.background(Color(DesignTokens.Components.cardPanel.backgroundColor), shape)
-			.border(1.dp, StockFlow.colors.outline, shape)
+			.background(StockFlow.colors.surfaceElevated, shape)
 			.clickable(role = Role.Button, onClick = onClick)
 			.padding(DesignTokens.Spacing.lg.dp)
 			.testTag(tag),
@@ -68,7 +68,7 @@ fun PageRow(icon: AppIcon, title: String, hint: String, onClick: () -> Unit, tag
 	Row(
 		Modifier
 			.fillMaxWidth()
-			.background(StockFlow.colors.surface, panelShape)
+			.background(StockFlow.colors.surfaceElevated, panelShape)
 			.then(if (enabled) Modifier.clickable(role = Role.Button, onClick = onClick) else Modifier)
 			.padding(horizontal = DesignTokens.Spacing.lg.dp, vertical = DesignTokens.Spacing.md.dp)
 			.testTag(tag),
@@ -95,8 +95,7 @@ fun DataRow(title: String, tag: String, subtitle: String? = null, trailing: Stri
 	Column(
 		Modifier
 			.fillMaxWidth()
-			.background(Color(DesignTokens.Components.cardPanel.backgroundColor), shape)
-			.border(1.dp, StockFlow.colors.outline, shape)
+			.background(StockFlow.colors.surfaceElevated, shape)
 			.padding(horizontal = DesignTokens.Spacing.lg.dp, vertical = DesignTokens.Spacing.md.dp)
 			.testTag(tag),
 		verticalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.xs.dp),
@@ -138,18 +137,11 @@ fun PageScaffold(
 	modifier: Modifier = Modifier,
 	content: @Composable ColumnScope.() -> Unit,
 ) {
-	HeroScreen(
-		hero = {
-			Row(verticalAlignment = Alignment.CenterVertically) {
-				HeroIconButton(AppIcon.BACK, backLabel, onBack, tag = backTag)
-				Spacer(Modifier.width(DesignTokens.Spacing.md.dp))
-				AppText(title, StockFlowType.headlineLg, StockFlow.colors.onPrimary, maxLines = 1)
-			}
-			if (subtitle != null) AppText(subtitle, StockFlowType.bodyLg, StockFlow.colors.onPrimary)
-		},
-		modifier = modifier,
-		content = content,
-	)
+	BentoScreen(modifier = modifier) {
+		BentoTopBar(title = "", onBack = onBack, backLabel = backLabel, backTag = backTag)
+		BentoPageHeader(title, subtitle)
+		content()
+	}
 }
 
 // The page of a module the API does not serve yet. It exists so the shape of the app is visible before the phase

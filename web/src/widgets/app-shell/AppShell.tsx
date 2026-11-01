@@ -26,7 +26,8 @@ const ICONS: Record<string, ReactNode> = {
 	audit: <FaHistory />,
 };
 
-// The private shell: dark glass sidebar and top bar around the light workspace. Its look is set in app/index.css.
+// The private shell: the bento layout of the kit, a white floating sidebar and top bar around the canvas. The look is
+// the provider's (`appearance="bento"` in main.tsx); the shell only says what is inside.
 // The menu is built from APP_SCREENS and the person's permissions; the API still checks every request.
 export function AppShell({ children }: { children: ReactNode }) {
 	const { t } = useTranslation();
@@ -61,6 +62,8 @@ export function AppShell({ children }: { children: ReactNode }) {
 			contentClassName="sf:max-w-(--sf-layout-container-max) sf:h-auto sf:min-h-full sf:pb-12"
 			sidebarFullHeight
 			topBar={{
+				variant: "bento",
+				logo: <img src="/brand/stockflow-glyph-dark.svg" alt="" className="sf:size-9" />,
 				logoText: t("app.name"),
 				children: <LanguageSwitch compact />,
 				userMenu: user
@@ -72,7 +75,9 @@ export function AppShell({ children }: { children: ReactNode }) {
 					: undefined,
 			}}
 			sidebar={{
+				variant: "bento",
 				navigationItems,
+				profile: user ? { name: user.name, detail: user.username } : undefined,
 				brand: { text: t("app.name"), logo: <img src="/brand/stockflow-glyph-dark.svg" alt="" className="sf:size-10" /> },
 				// The rail stays collapsed and unfolds while the pointer is on it (web.md section 8.2): the kit's own
 				// layout keeps that state, so the shell does not control it.

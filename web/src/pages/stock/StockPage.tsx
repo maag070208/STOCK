@@ -68,7 +68,7 @@ export function StockPage() {
 			actions={canOpen ? <ITButton variant="outlined" label={t("opening.button")} onClick={() => navigate("/stock/opening")} /> : undefined}
 		>
 			<ITTabs
-				variant="line"
+				variant="pill"
 				items={[
 					{
 						id: "byLocation",

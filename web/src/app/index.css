@@ -11,63 +11,74 @@
 @import "@axzydev/axzy_ui_system/layered.css";
 
 /*
- * The rules below sit outside the layers on purpose, so they apply on top of the kit.
- * Every value comes from design-tokens.css, generated from design/command-center-DESIGN.md.
+ * The workspace: the bento canvas of the design, with ink text and the system sans font. The appearance of the kit
+ * (`appearance="bento"`) draws the cards, the pill controls, the shell and the page headers; the app does not
+ * re-implement them. The rules below sit outside the layers on purpose, so they apply on top of the kit.
+ * Every value comes from design-tokens.css, generated from design/stockflow-DESIGN.md.
  */
 
-/* Workspace: warm off-white canvas, brown-gray text, the system sans font. */
+/* The canvas and the type. */
 body {
   background-color: var(--sf-color-background);
   color: var(--sf-color-on-background);
   font-family: var(--sf-font-sans);
 
-  /* The kit's text colors, so its components read in the same warm neutrals. */
+  /* The kit's text colors, so its components read in the same ink neutrals. */
   --color-heading-default: var(--sf-color-on-background);
   --color-text-default: var(--sf-color-on-surface);
   --color-text-muted: var(--sf-color-on-surface-muted);
+  /* The kit's layout canvas follows the design's canvas in both modes. */
   --it-layout-bg: var(--sf-color-background);
-
-  /*
-   * Shell: dark glass around the light workspace. These are the kit's public tokens for the sidebar and the top bar.
-   * They are set here because, in light mode, the kit's own palette turns a dark shell white.
-   */
-  --it-sidebar-bg: var(--sf-c-shell-sidebar-background-color);
-  --it-sidebar-border: var(--sf-shell-border);
-  --it-sidebar-brand-color: var(--sf-c-shell-sidebar-text-color);
-  --it-sidebar-label-color: var(--sf-c-nav-item-text-color);
-  --it-sidebar-icon-color: var(--sf-c-nav-item-text-color);
-  --it-sidebar-hover-bg: var(--sf-c-nav-item-active-background-color);
-  --it-sidebar-active-bg: var(--sf-c-nav-item-active-background-color);
-  --it-sidebar-active-color: var(--sf-c-nav-item-active-text-color);
-  --it-sidebar-active-icon: var(--sf-c-nav-item-active-text-color);
-  --it-topbar-bg: var(--sf-c-shell-header-background-color);
-  --it-topbar-border: var(--sf-shell-border);
-  --it-topbar-text: var(--sf-c-shell-header-text-color);
-  --it-topbar-icon: var(--sf-c-button-ghost-shell-text-color);
-  --it-topbar-icon-hover: var(--sf-c-shell-header-text-color);
-  /* The person's name and username in the top bar: white, and white at 70%, as the design writes text on the shell. */
-  --it-topbar-user-text: var(--sf-c-shell-header-text-color);
-  --it-topbar-user-subtitle: var(--sf-c-nav-item-text-color);
-  --it-topbar-user-hover: var(--sf-c-input-shell-background-color);
 }
 
-/* The glass: the kit only blurs its shell in the "soft" look, which also adds glows the design does not have. */
-.sf-shell aside,
-.sf-shell header {
-  -webkit-backdrop-filter: blur(var(--sf-elevation-shell-blur));
-  backdrop-filter: blur(var(--sf-elevation-shell-blur));
+/* A number read column after column, in a table or in a tile. */
+.sf-tabular {
+  font-variant-numeric: tabular-nums;
 }
 
-/* Navigation items: the design's corner and padding. The kit draws them as pills with its own spacing. */
-.sf-shell aside nav [role="button"] {
-  border-radius: var(--sf-c-nav-item-rounded);
-  padding: var(--sf-c-nav-item-padding);
+/* A card of a dashboard enters once, in place: the only animation the app adds to the kit's own. */
+@keyframes sf-rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
-/* The kit's flat shell is 248px wide, and 72px collapsed. The design asks for 256px and 64px. */
-.sf-shell .w-\[248px\] {
-  width: var(--sf-layout-shell-sidebar-expanded);
+.sf-rise {
+  animation: sf-rise 420ms cubic-bezier(0.2, 0.7, 0.3, 1) both;
 }
-.sf-shell .w-\[72px\] {
-  width: var(--sf-layout-shell-sidebar-collapsed);
+
+@media (prefers-reduced-motion: reduce) {
+  .sf-rise {
+    animation: none;
+  }
+}
+
+/*
+ * The page column. The kit's `ITPage` centers its content in 80rem, and with the bento density that is 1024px; the
+ * design's column is the shell's own (--sf-layout-container-max). The pages keep their own horizontal padding.
+ */
+.sf-shell main > div > .mx-auto.w-full.max-w-7xl {
+  max-width: none;
+}
+
+/* The rail's active item keeps the kit's shape; the focus ring is the design's accent, not the browser's blue. */
+.sf-shell aside nav :focus {
+  outline: none;
+}
+.sf-shell aside nav :focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
+}
+
+/*
+ * Text on the brand panel (the entry screen). The kit paints headings with an important color, so the accent surface
+ * states its own: white on the orange, never the workspace ink.
+ */
+.sf-on-primary {
+  color: var(--sf-color-on-primary) !important;
 }

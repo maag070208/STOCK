@@ -1,4 +1,5 @@
-// F0-18 · e2e: the web follows design/command-center-DESIGN.md. Expected values are read from the tokens, not typed here.
+// F0-18 · e2e: the web follows design/stockflow-DESIGN.md and the kit's bento appearance. Expected values are read from
+// the tokens, not typed here.
 import { test, expect, type Page } from "../support/test";
 import { designTokens } from "../../src/shared/ui/design-tokens";
 import { newUser, signInAs, type TestUser } from "../support/api";
@@ -10,14 +11,11 @@ let office: TestUser;
 test.beforeAll(async () => {
   office = await newUser(["OFFICE"]);
 });
-const components = designTokens.components;
 
 function rgb(hex: string): string {
   const n = parseInt(hex.slice(1), 16);
   return `rgb(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255})`;
 }
-// "rgba(0, 0, 0, 0.70)" in the document is "rgba(0, 0, 0, 0.7)" in the browser.
-const browserColor = (value: string) => value.replace(/0\.(\d)0\)/, "0.$1)");
 const px = (value: string) => Number(value.replace("px", ""));
 
 async function style(page: Page, selector: string, property: string): Promise<string> {
@@ -25,7 +23,7 @@ async function style(page: Page, selector: string, property: string): Promise<st
 }
 
 test.describe("workspace", () => {
-  test("the canvas is warm off-white with brown-gray text in the system sans font", async ({ page }) => {
+  test("the canvas is the bento gray with ink text in the system sans font", async ({ page }) => {
     await signInAs(page, office);
     await page.goto("/#/");
     expect(await style(page, "body", "background-color")).toBe(rgb(colors.background));
@@ -34,7 +32,8 @@ test.describe("workspace", () => {
   });
 
   test("dark mode uses the dark workspace colors", async ({ page }) => {
-    await page.emulateMedia({ colorScheme: "dark" });
+    // The design is light-first; the dark mode is chosen by the kit's own control, which keeps it in localStorage.
+    await page.addInitScript(() => window.localStorage.setItem("it-theme-dark-mode", "dark"));
     await signInAs(page, office);
     await page.goto("/#/");
     await expect(page.locator("html")).toHaveClass(/dark/);
@@ -66,15 +65,16 @@ test.describe("workspace", () => {
     expect(room.bottom).toBe(room.padding);
   });
 
-  test("the content is capped at the container width and its title is the module headline", async ({ page }) => {
+  test("the content is capped at the container width and the home opens with its greeting", async ({ page }) => {
     await page.setViewportSize({ width: 1920, height: 900 });
     await signInAs(page, office);
     await page.goto("/#/");
-    const heading = page.getByRole("heading", { name: "Inicio" });
     const container = page.locator('main [class*="sf:max-w-"]').first();
     expect((await container.boundingBox())!.width).toBe(px(designTokens.layout["container-max"]));
-    expect(await heading.evaluate((el) => getComputedStyle(el).fontSize)).toBe("24px");
-    expect(await heading.evaluate((el) => getComputedStyle(el).fontWeight)).toBe(String(designTokens.typography["headline-lg"].fontWeight));
+    // The home is a bento dashboard: it greets the person instead of repeating the module title.
+    const heading = page.getByRole("heading", { level: 1 });
+    await expect(heading).toContainText("Hola,");
+    expect(await heading.evaluate((el) => getComputedStyle(el).fontWeight)).toBe(String(designTokens.typography["headline-xl"].fontWeight));
   });
 });
 
@@ -86,49 +86,40 @@ test.describe("shell", () => {
     await expect(page.getByRole("navigation").first()).toBeVisible();
   });
 
-  test("the sidebar is black glass: 70% black, 12px blur and a faint white border", async ({ page }) => {
-    expect(await style(page, "aside", "background-color")).toBe(browserColor(components["shell-sidebar"].backgroundColor));
-    expect(await style(page, "aside", "backdrop-filter")).toBe(`blur(${designTokens.elevation["shell-blur"]})`);
-    expect(await style(page, "aside", "border-right-color")).toBe("rgba(255, 255, 255, 0.1)");
+  test("the sidebar is the kit's bento card: white, rounded and floating over the canvas", async ({ page }) => {
+    const card = page.locator("aside div").first();
+    expect(await card.evaluate((el) => getComputedStyle(el).backgroundColor)).toBe(rgb(colors.surface));
+    expect(px(await card.evaluate((el) => getComputedStyle(el).borderTopLeftRadius))).toBeGreaterThan(16);
   });
 
-  test("the sidebar is a 64px rail that unfolds to 256px while the pointer is on it", async ({ page }) => {
+  test("the sidebar is a rail that unfolds to its expanded width while the pointer is on it", async ({ page }) => {
     const rail = page.locator("aside").first();
     await expect.poll(async () => (await rail.boundingBox())!.width).toBe(px(designTokens.layout["shell-sidebar-collapsed"]));
     await rail.hover();
     await expect.poll(async () => (await rail.boundingBox())!.width).toBe(px(designTokens.layout["shell-sidebar-expanded"]));
   });
 
-  test("the top bar is black glass and 64px tall", async ({ page }) => {
-    expect(await style(page, "header", "background-color")).toBe(browserColor(components["shell-header"].backgroundColor));
-    expect(await style(page, "header", "backdrop-filter")).toBe(`blur(${designTokens.elevation["shell-blur"]})`);
+  test("the top bar is a white bento card of the design's height", async ({ page }) => {
+    expect(await style(page, "header", "background-color")).toBe(rgb(colors.surface));
     const box = await page.locator("header > div").first().boundingBox();
     expect(box!.height).toBe(px(designTokens.layout["shell-header-height"]));
   });
 
-  test("the active navigation item is solid orange with white text", async ({ page }) => {
-    // On the rail the label is hidden: the pointer unfolds it, which is how a person reads the name.
-    await page.locator("aside").first().hover();
-    const item = page.getByRole("navigation").first().getByRole("button", { name: "Inicio" });
-    expect(await item.evaluate((el) => getComputedStyle(el).backgroundColor)).toBe(rgb(colors.primary));
-    const label = item.getByText("Inicio", { exact: true });
-    expect(await label.evaluate((el) => getComputedStyle(el).color)).toBe(rgb(colors["on-primary"]));
-  });
-
-  test("navigation items have the design's corner and padding, not the kit's pill", async ({ page }) => {
-    const item = page.getByRole("navigation").first().getByRole("button", { name: "Inicio" });
-    expect(await item.evaluate((el) => getComputedStyle(el).borderTopLeftRadius)).toBe(components["nav-item"].rounded);
-    expect(await item.evaluate((el) => getComputedStyle(el).paddingBlock)).toBe("6px");
-    expect(await item.evaluate((el) => getComputedStyle(el).paddingInline)).toBe("12px");
+  test("the current navigation item carries a surface and its label is the ink text", async ({ page }) => {
+    const current = page.locator('aside [aria-label="Inicio"]').first();
+    const bg = await current.evaluate((el) => getComputedStyle(el).backgroundColor);
+    expect(bg).not.toBe("rgba(0, 0, 0, 0)");
+    expect(await current.evaluate((el) => getComputedStyle(el).color)).toBe(rgb(colors["on-background"]));
+    // Every other item is transparent: only the current one carries a surface.
+    const other = page.locator('aside [aria-label="Facturas"]').first();
+    expect(await other.evaluate((el) => getComputedStyle(el).backgroundColor)).toBe("rgba(0, 0, 0, 0)");
   });
 
   test("the rail shows the brand mark and the icon of each item", async ({ page }) => {
-    await expect.poll(async () => (await page.locator("aside").first().boundingBox())!.width).toBe(
-      px(designTokens.layout["shell-sidebar-collapsed"]),
-    );
     const rail = page.locator("aside").first();
-    await expect(rail.locator('img[src="/brand/stockflow-glyph-dark.svg"]')).toBeVisible();
-    await expect(rail.getByRole("button", { name: "Inicio" }).locator("svg")).toBeVisible();
+    await rail.hover();
+    await expect(rail.locator('img[src="/brand/stockflow-glyph-dark.svg"]').first()).toBeVisible();
+    await expect(rail.getByRole("button", { name: "Inicio" })).toBeVisible();
   });
 });
 

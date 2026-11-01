@@ -1,15 +1,23 @@
 # Design system
 
-**Status:** Adopted, 2026-10-13. The owner supplied the design document and asked for it on the web and on the app. The app uses nothing else: no Material components and no earlier look.
+**Status:** Adopted, 2026-10-13. **Web redesigned to bento, 2026-10-31.** The web runs the Axzy UI System's `appearance="bento"` over the tokens of `design/stockflow-DESIGN.md`; the app is still on the previous "Evreghen Command Center" look and moves in the second wave of the same redesign (see [plan-mejora-stockflow.md](../plan-mejora-stockflow.md)). The sections below about structure, tables, forms, states and accessibility still apply; the ones that describe the old surfaces, shell and colors are superseded by section 2.
 
 ## 1. Source
 
-The design is one file: [`design/command-center-DESIGN.md`](../../design/command-center-DESIGN.md). It is an exact copy of the owner's document, "Evreghen Command Center". That name is the name of the design language. The product is still called StockFlow.
+The design is one file: [`design/stockflow-DESIGN.md`](../../design/stockflow-DESIGN.md) ("StockFlow Bento"). The product is called StockFlow and the design language is the kit's bento.
 
 The file has two parts:
 
 - **Front matter:** the tokens. Colors, typography, corner radii, spacing, layout measures, motion, elevation, shadows and component specifications.
 - **Prose:** how to use them, and what to avoid.
+
+`node scripts/design-tokens.mjs` turns it into `web/src/shared/ui/design-tokens.ts`, `web/src/app/design-tokens.css` and the app's `DesignTokens.kt`. During the migration the web runs it with `--web`, so the app's tokens stay on the previous design until its wave.
+
+### 1.1 The bento appearance does the surfaces
+
+The kit's `appearance="bento"` draws the light canvas (`#F4F4F6`), the borderless white cards with 24px corners and a diffuse shadow, the pill controls, the floating white sidebar and top bar, the ink active item and the large page header. A screen **never** re-implements them: no `bg-white`, no `border`, no `shadow-*`, no custom card radius. The theme (`web/src/shared/ui/theme.ts`) only passes the palette (orange accent, ink neutrals) and the density (`0.8`); it must not pass `radius` or `shadow`, because those replace the bento defaults.
+
+Pastel color enters only through `ITCard tone` or the kit's bento tones (`ITBentoTile`): one tone per meaning, `plain` when the value is zero. The home is a dashboard built with `ITBentoGrid`/`ITBentoStatStrip`/`ITBentoTile`, not a menu of modules.
 
 Nothing in the web or the app chooses a color, a text size or a corner radius by hand. They read the tokens.
 

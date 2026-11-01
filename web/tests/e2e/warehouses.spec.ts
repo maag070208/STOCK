@@ -59,7 +59,7 @@ test("a person without locations view has no warehouses in the menu and cannot o
 	const office = await newUser(["OFFICE"]);
 	await signInAs(page, office);
 	await page.goto("/#/");
-	await expect(page.getByRole("heading", { name: "Inicio" })).toBeVisible();
+	await expect(page).toHaveURL(/#\/$/);
 	await expect(page.getByText("Almacenes", { exact: true })).toHaveCount(0);
 	await page.goto("/#/warehouses");
 	await expect(page.getByTestId("forbidden")).toBeVisible();

@@ -1,7 +1,7 @@
-import { ITButton, ITText } from "@axzydev/axzy_ui_system";
 import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate } from "react-router-dom";
 import type { ReportKind } from "@entities/report";
+import { PillTabs } from "@shared/ui/PillTabs";
 
 // The five reports, each with its own address so a link can point at one of them (reports.md section 3).
 const TABS: { id: ReportKind; path: string }[] = [
@@ -16,17 +16,13 @@ export function ReportTabs() {
 	const { t } = useTranslation("reports");
 	const navigate = useNavigate();
 	const { pathname } = useLocation();
+	const current = TABS.find((tab) => tab.path === pathname)?.id ?? "stock";
 	return (
-		<ITText as="nav" aria-label={t("tabs.label")} className="sf:mb-4 sf:flex sf:flex-wrap sf:gap-2">
-			{TABS.map((tab) => (
-				<ITButton
-					key={tab.id}
-					size="sm"
-					variant={pathname === tab.path ? undefined : "outlined"}
-					label={t(`tabs.${tab.id}`)}
-					onClick={() => navigate(tab.path)}
-				/>
-			))}
-		</ITText>
+		<PillTabs
+			label={t("tabs.label")}
+			current={current}
+			tabs={TABS.map((tab) => ({ id: tab.id, label: t(`tabs.${tab.id}`) }))}
+			onSelect={(id) => navigate(TABS.find((tab) => tab.id === id)?.path ?? "/reports/stock")}
+		/>
 	);
 }

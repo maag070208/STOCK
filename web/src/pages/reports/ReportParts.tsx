@@ -73,7 +73,7 @@ export const periodOf = (from: Date | null, to: Date | null): ColumnFilters => (
 // A group of totals: what the rows of the report add up to, by warehouse, by aisle and rack, by status or by type.
 export function ReportTotals({ label, entries, testId }: { label: string; entries: { key: string; label: string; value: string }[]; testId?: string }) {
 	return (
-		<ITText as="section" aria-label={label} data-testid={testId} className="sf:mb-4 sf:flex sf:flex-wrap sf:gap-x-6 sf:gap-y-2">
+		<ITText as="section" aria-label={label} data-testid={testId} className="sf:mt-4 sf:flex sf:flex-wrap sf:gap-x-6 sf:gap-y-2">
 			{entries.map((entry) => (
 				<ITText key={entry.key} className="sf:text-body-md sf:text-on-surface">
 					<ITText as="span" muted>

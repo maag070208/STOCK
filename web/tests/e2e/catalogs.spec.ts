@@ -11,7 +11,7 @@ test("the seed catalogs are there, read-only for an office user", async ({ page 
 	await pickSearchOption(page, "catalog", "INVOICE_STATUS", /INVOICE_STATUS/);
 	const items = page.getByRole("table");
 	await expect(items.getByText("Abierta")).toBeVisible();
-	await expect(items.getByText("Cerrada")).toBeVisible();
+	await expect(items.getByText("Completada")).toBeVisible();
 	await expect(page.getByRole("button", { name: "Nuevo valor" })).toHaveCount(0);
 	await expect(items.getByRole("button", { name: "Editar" })).toHaveCount(0);
 });

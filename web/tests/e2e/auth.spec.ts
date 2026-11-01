@@ -28,7 +28,7 @@ test("a new user signs in, changes the temporary password, and reaches the menu"
 	await page.getByRole("button", { name: "Guardar contraseña" }).click();
 
 	await expect(page).toHaveURL(/#\/$/);
-	await expect(page.getByText(`Hola, ${user.name}`)).toBeVisible();
+	await expect(page.getByText(`Hola, ${user.name.split(" ")[0]}`)).toBeVisible();
 	await expect(menu(page).getByRole("button", { name: "Inicio" })).toBeVisible();
 });
 
@@ -87,9 +87,9 @@ test("the session survives a reload, and signing out ends it", async ({ page }) 
 	await skipIntro(page);
 	await page.goto("/#/login");
 	await signInThroughTheForm(page, office.username, office.password);
-	await expect(page.getByText(`Hola, ${office.name}`)).toBeVisible();
+	await expect(page.getByText(`Hola, ${office.name.split(" ")[0]}`)).toBeVisible();
 	await page.reload();
-	await expect(page.getByText(`Hola, ${office.name}`)).toBeVisible();
+	await expect(page.getByText(`Hola, ${office.name.split(" ")[0]}`)).toBeVisible();
 
 	await page.getByRole("banner").getByRole("button", { name: new RegExp(office.name) }).click();
 	await page.getByText("Cerrar sesión").click();
@@ -105,10 +105,10 @@ test("the language chosen in the top bar is saved on the profile", async ({ page
 	// The screen changes at once; the profile is saved in the background, and the reload waits for it.
 	const saved = page.waitForResponse((response) => response.url().endsWith("/auth/me") && response.request().method() === "PATCH");
 	await page.getByRole("banner").getByRole("combobox", { name: "Idioma" }).selectOption("en");
-	await expect(page.getByText(`Hello, ${office.name}`)).toBeVisible();
+	await expect(page.getByText(`Hello, ${office.name.split(" ")[0]}`)).toBeVisible();
 	expect((await saved).status()).toBe(200);
 	// A new browser session reads the language from the profile.
 	await page.evaluate(() => window.localStorage.removeItem("stockflow.locale"));
 	await page.reload();
-	await expect(page.getByText(`Hello, ${office.name}`)).toBeVisible();
+	await expect(page.getByText(`Hello, ${office.name.split(" ")[0]}`)).toBeVisible();
 });

@@ -50,7 +50,7 @@ test("the office filters the current stock, exports it, and reads the kardex of 
 	// The kardex of the material: what the warehouse did with it, with the running balance the API sent.
 	await page.goto("/#/reports/kardex");
 	await expect(page.getByRole("heading", { name: "Kardex" })).toBeVisible();
-	await page.getByPlaceholder("Busca por código o nombre").fill(screws.code);
+	await page.getByPlaceholder("Escanea o busca por código, barras o nombre").fill(screws.code);
 	await page.getByText(`${screws.code} · ${screws.name}`).first().click();
 	const kardex = page.getByTestId("kardex-report");
 	await expect(kardex.locator('[data-running="40"]').first()).toBeVisible();
@@ -66,7 +66,7 @@ test("the movements report answers what came in for a material", async ({ page }
 
 	await page.goto("/#/reports/movements");
 	await expect(page.getByRole("heading", { name: "Movimientos" })).toBeVisible();
-	await page.getByPlaceholder("Busca por código o nombre").fill(product.code);
+	await page.getByPlaceholder("Escanea o busca por código, barras o nombre").fill(product.code);
 	await page.getByText(`${product.code} · ${product.name}`).first().click();
 	await expect(page.getByTestId("movements-report").getByRole("row").filter({ hasText: product.code })).toContainText("25");
 	await expect(page.getByTestId("movements-total")).toContainText("Entradas");

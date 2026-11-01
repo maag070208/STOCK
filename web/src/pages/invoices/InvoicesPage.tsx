@@ -5,13 +5,10 @@ import { useTranslation } from "react-i18next";
 import { FaSearch } from "react-icons/fa";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { catalogApi, type CatalogItem } from "@entities/catalog";
-import { invoiceApi, invoiceFilters, statusChip, type Invoice, type InvoiceStatus, type Ref, type StatusChip } from "@entities/invoice";
+import { invoiceApi, invoiceFilters, STATUS_COLOR, statusChip, type Invoice, type Ref, type StatusChip } from "@entities/invoice";
 import { useCan } from "@entities/user";
 import { NewInvoiceDialog } from "@features/invoice/NewInvoiceDialog";
 import { formatDate } from "@shared/lib/format";
-
-// The color of each status of an invoice: open is still being captured, closed is done.
-export const STATUS_COLOR: Record<InvoiceStatus, "gray" | "warning" | "info" | "success" | "danger"> = { OPEN: "gray", PENDING: "warning", IN_ASSIGNMENT: "info", CLOSED: "success", CANCELLED: "danger" };
 
 // The invoices the person can see: every one with ALL, those of their warehouses with AREA (the API decides). One search
 // box and three status chips drive the query (F8-05), and a new invoice is captured in a modal over the list (F8-06).

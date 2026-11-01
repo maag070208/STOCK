@@ -6,7 +6,7 @@ import { useTranslation } from "react-i18next";
 import { FaBalanceScale, FaTrash, FaUserEdit, FaUserPlus } from "react-icons/fa";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { toast } from "@app/store";
-import { captureSummary, invoiceApi, staffApi, type Assignment, type Invoice, type InvoiceLine, type StaffMember } from "@entities/invoice";
+import { captureSummary, invoiceApi, staffApi, STATUS_COLOR, type Assignment, type Invoice, type InvoiceLine, type StaffMember } from "@entities/invoice";
 import { useCan } from "@entities/user";
 import { AdjustDialog, AssignDialog } from "@features/invoice/InvoiceDialogs";
 import { BulkAssignDialog, CancelInvoiceDialog } from "@features/invoice/InvoiceWorkDialogs";
@@ -14,7 +14,6 @@ import { QuickCapture } from "@features/invoice/QuickCapture";
 import { ApiError } from "@shared/api/client";
 import { IconButton } from "@shared/ui/IconButton";
 import { formatDate, formatQuantity } from "@shared/lib/format";
-import { STATUS_COLOR } from "./InvoicesPage";
 import { PlainTable } from "@shared/ui/PlainTable";
 
 export function InvoicePage() {
@@ -181,7 +180,7 @@ export function InvoicePage() {
 							<ITText muted>{t("detail.progress", { counted: countedLines, placed: placedLines, lines: lines.length })}</ITText>
 						</ITFlex>
 
-						{rows.length === 0 ? <ITEmptyState title={open ? t("capture.empty") : t("detail.noLines")} /> : <PlainTable<Row> columns={columns} data={rows} size="sm" />}
+						{rows.length === 0 ? <ITEmptyState title={open ? t("capture.empty") : t("detail.noLines")} /> : <ITCard className="sf:p-0"><PlainTable<Row> columns={columns} data={rows} size="sm" /></ITCard>}
 
 						{refusal && (
 							<ITAlert variant="error" dismissible onDismiss={() => setRefusal(null)}>

@@ -1,6 +1,7 @@
 export { invoiceApi, receivingApi, staffApi, type InvoiceListQuery } from "./api/invoiceApi";
 export { addedQuantity, captureSummary, captureTarget, type CaptureTarget } from "./model/capture";
 export { invoiceFilters, OPEN_STATUSES, openStatuses, statusChip, type InvoiceFilters, type StatusChip } from "./model/filters";
+export { STATUS_COLOR } from "./model/status";
 export {
 	hasRememberedWorkspace,
 	NEW_INVOICE_FIELDS,

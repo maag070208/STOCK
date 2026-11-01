@@ -145,12 +145,12 @@
       "cancel": "Cancelar órdenes",
       "reassign": "Reasignar órdenes",
       "accept_difference": "Aceptar una diferencia"
-    }
-  ,
+    },
     "reports": {
       "view": "Ver reportes",
       "export": "Exportar reportes"
-    }},
+    }
+  },
   "validation": {
     "required": "Este campo es obligatorio."
   },
@@ -166,7 +166,46 @@
   },
   "home": {
     "greeting": "Hola, {{name}}",
-    "description": "Elige una opción del menú para empezar."
+    "description": "Elige una opción del menú para empezar.",
+    "subtitle": "Así va la operación hoy",
+    "live": "En vivo",
+    "strip": {
+      "receiving": "En recepción",
+      "placement": "Por ubicar",
+      "completed": "Completadas",
+      "cancelled": "Canceladas"
+    },
+    "tiles": {
+      "placement": "Por ubicar",
+      "placementCaption": "facturas listas para colocar",
+      "discrepancies": "Diferencias abiertas",
+      "discrepanciesCaption": "conteos por resolver",
+      "orders": "Órdenes abiertas",
+      "ordersCaption": "por surtir",
+      "materials": "Materiales activos",
+      "materialsCaption": "en el catálogo"
+    },
+    "sections": {
+      "latest": "Últimas facturas",
+      "quick": "Accesos rápidos"
+    },
+    "actions": {
+      "newInvoice": "Nueva factura",
+      "newOrder": "Nueva orden",
+      "invoices": "Ver facturas",
+      "reports": "Ver reportes",
+      "retry": "Reintentar"
+    },
+    "emptyLatest": "Todavía no hay facturas capturadas.",
+    "loadError": "No se pudo leer el resumen.",
+    "allInvoices": "Todas"
   },
-  "saved": "Cambios guardados."
+  "saved": "Cambios guardados.",
+  "entry": {
+    "tagline": "El almacén, en orden.",
+    "subtitle": "Facturas, conteo, ubicación y existencias en un solo flujo, desde la web y desde la app.",
+    "scan": "Escanea el material y la ubicación",
+    "count": "Cuenta y resuelve diferencias en el momento",
+    "place": "Ubica en segundos, con existencias al día"
+  }
 }

@@ -9,6 +9,9 @@ export function PlainTable<T extends Record<string, unknown>>(props: {
 	data: T[];
 	size?: "sm" | "md" | "lg";
 	onRowClick?: (row: T) => void;
+	// A table of a fixed, short list (the roles of the access console) does not need the virtualizer, and a screen
+	// reader and a test read all of its rows at once.
+	virtualized?: boolean;
 }) {
 	const rows = props.data.length;
 	return (
@@ -25,8 +28,8 @@ export function PlainTable<T extends Record<string, unknown>>(props: {
 			itemsPerPageOptions={[25, 50, 100]}
 			layout="fixed"
 			density="compact"
-			virtualized
-			virtualizedMaxHeight={400}
+			virtualized={props.virtualized ?? true}
+			virtualizedMaxHeight={props.virtualized === false ? undefined : 400}
 			rowHeight={50}
 			containerClassName="sf:overflow-x-auto"
 		/>

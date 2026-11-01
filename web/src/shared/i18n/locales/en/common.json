@@ -145,12 +145,12 @@
       "cancel": "Cancel orders",
       "reassign": "Reassign orders",
       "accept_difference": "Accept a difference"
-    }
-  ,
+    },
     "reports": {
       "view": "Read reports",
       "export": "Export reports"
-    }},
+    }
+  },
   "validation": {
     "required": "This field is required."
   },
@@ -166,7 +166,46 @@
   },
   "home": {
     "greeting": "Hello, {{name}}",
-    "description": "Choose an option from the menu to start."
+    "description": "Choose an option from the menu to start.",
+    "subtitle": "How the operation is doing today",
+    "live": "Live",
+    "strip": {
+      "receiving": "Receiving",
+      "placement": "Ready to place",
+      "completed": "Completed",
+      "cancelled": "Cancelled"
+    },
+    "tiles": {
+      "placement": "Ready to place",
+      "placementCaption": "invoices ready for the shelf",
+      "discrepancies": "Open discrepancies",
+      "discrepanciesCaption": "counts to resolve",
+      "orders": "Open orders",
+      "ordersCaption": "to fulfill",
+      "materials": "Active materials",
+      "materialsCaption": "in the catalog"
+    },
+    "sections": {
+      "latest": "Latest invoices",
+      "quick": "Quick actions"
+    },
+    "actions": {
+      "newInvoice": "New invoice",
+      "newOrder": "New order",
+      "invoices": "View invoices",
+      "reports": "View reports",
+      "retry": "Retry"
+    },
+    "emptyLatest": "No invoices captured yet.",
+    "loadError": "The summary could not be read.",
+    "allInvoices": "All"
   },
-  "saved": "Changes saved."
+  "saved": "Changes saved.",
+  "entry": {
+    "tagline": "The warehouse, in order.",
+    "subtitle": "Invoices, counts, placement and stock in one flow, on the web and in the app.",
+    "scan": "Scan the material and the location",
+    "count": "Count and resolve differences on the spot",
+    "place": "Place in seconds, with stock up to date"
+  }
 }

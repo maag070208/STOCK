@@ -17,16 +17,15 @@ import com.axzydev.stock.ui.theme.StockFlow
 
 private val spec = DesignTokens.Components.cardPanel
 
-// The quiet card of the design: a thin border, 12dp corners and 24dp inside.
-// It has no shadow: the card is transparent, and a Compose shadow would show through it.
+// A card of the bento design: a white surface with the design's 24dp corners and its inside spacing, no border. The
+// canvas separates it, not a line.
 @Composable
 fun Card(modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit) {
 	val shape = RoundedCornerShape(spec.rounded.dp)
 	Column(
 		modifier = modifier
 			.fillMaxWidth()
-			.background(Color(spec.backgroundColor), shape)
-			.border(1.dp, StockFlow.colors.outline, shape)
+			.background(StockFlow.colors.surfaceElevated, shape)
 			.padding(vertical = spec.paddingVertical.dp, horizontal = spec.paddingHorizontal.dp),
 		verticalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.md.dp),
 		content = content,

@@ -84,9 +84,19 @@ export async function ordersFixture(): Promise<OrdersFixture> {
 		if (assigned.status !== 200) throw new Error(`assignment failed: ${JSON.stringify(assigned.json)}`);
 		const assignmentId = assigned.json.assignments[0].id as string;
 		const operatorToken = tokens.get(operator.username)!;
-		const counted = await call("POST", `/receipts/assignments/${assignmentId}/count`, { token: operatorToken, body: { countedQuantity: String(quantity) }, channel: "app" });
+		const counted = await call("POST", `/receipts/assignments/${assignmentId}/count`, {
+			token: operatorToken,
+			body: { countedQuantity: String(quantity) },
+			channel: "app",
+			headers: { "Idempotency-Key": uniqueName("count-") },
+		});
 		if (counted.status !== 200) throw new Error(`count failed: ${JSON.stringify(counted.json)}`);
-		const placed = await call("POST", `/receipts/assignments/${assignmentId}/placements`, { token: operatorToken, body: { placements: [{ locationId: locations[locationIndex].id, quantity: String(quantity) }] }, channel: "app" });
+		const placed = await call("POST", `/receipts/assignments/${assignmentId}/placements`, {
+			token: operatorToken,
+			body: { placements: [{ locationId: locations[locationIndex].id, quantity: String(quantity) }] },
+			channel: "app",
+			headers: { "Idempotency-Key": uniqueName("place-") },
+		});
 		if (placed.status !== 200) throw new Error(`placement failed: ${JSON.stringify(placed.json)}`);
 	};
 

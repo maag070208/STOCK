@@ -24,13 +24,8 @@ test("an administrator changes a matrix cell, and the change is saved", async ({
 		await expect(page.getByText("Matriz guardada.")).toBeVisible();
 		const matrix = await call("GET", "/roles/matrix", { token });
 		expect(matrix.json).toContainEqual({ roleKey: role, permissionKey: "audit.view", scope: "ALL" });
-		// "What each role sees" follows the matrix.
+		// "What each role sees" follows the matrix. The table is short and complete: every screen is in the page.
 		await page.getByText("Qué ve cada rol", { exact: true }).click();
-		// The table is virtualized: it is scrolled to its end, where the last screen lives.
-		const scroller = page.locator("div.overflow-y-auto").last();
-		await scroller.evaluate((element) => {
-			element.scrollTop = element.scrollHeight;
-		});
 		await expect(page.locator(`[data-screen="audit|${role}"]`)).toHaveText("✓");
 		await expect(page.locator(`[data-screen="users|${role}"]`)).toHaveText("—");
 	} finally {
@@ -91,9 +86,6 @@ test("what each role sees comes from the screens and the matrix", async ({ page 
 	await signInAs(page, e2eAdmin());
 	await page.goto("/#/roles");
 	await page.getByText("Qué ve cada rol", { exact: true }).click();
-	await page.locator("div.overflow-y-auto").last().evaluate((element) => {
-		element.scrollTop = element.scrollHeight;
-	});
 	await expect(page.locator('[data-screen="audit|ADMIN"]')).toHaveText("✓");
 	await expect(page.locator('[data-screen="catalogs|OFFICE"]')).toHaveText("✓");
 	await expect(page.locator('[data-screen="users|OFFICE"]')).toHaveText("—");

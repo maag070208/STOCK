@@ -1,4 +1,4 @@
-import { type Column, type ColumnFilters, ITDataTable, ITGrid, ITPage, ITText } from "@axzydev/axzy_ui_system";
+import { type Column, type ColumnFilters, ITCard, ITDataTable, ITGrid, ITPage, ITText } from "@axzydev/axzy_ui_system";
 import { trail } from "@shared/lib/breadcrumbs";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -58,7 +58,8 @@ export function OrdersReportPage() {
 	return (
 		<ITPage breadcrumbs={trail(t("common:nav.home"), navigate, { label: t("common:nav.reports"), onClick: () => navigate("/reports") }, { label: t("orders.title") })} title={t("orders.title")} description={t("orders.description")} noPadding actions={<ExportButtons kind="orders" filters={filters} />}>
 			<ReportTabs />
-			<ITGrid container spacing={3} className="sf:mb-4 sf:items-end">
+			<ITCard className="sf:mb-4">
+				<ITGrid container spacing={3} className="sf:items-end">
 				<ITGrid item xs={12} md={4}>
 					<WarehouseFilter options={warehouses} value={warehouseId} onChange={setWarehouseId} />
 				</ITGrid>
@@ -83,6 +84,7 @@ export function OrdersReportPage() {
 					]}
 				/>
 			)}
+			</ITCard>
 			<ITText as="section" data-testid="orders-report">
 				<ITDataTable<OrderReportRow>
 					defaultItemsPerPage={25}

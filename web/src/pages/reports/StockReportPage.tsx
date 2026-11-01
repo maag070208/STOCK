@@ -1,4 +1,4 @@
-import { type Column, type ColumnFilters, ITDataTable, ITFlex, ITPage, ITText } from "@axzydev/axzy_ui_system";
+import { type Column, type ColumnFilters, ITCard, ITDataTable, ITFlex, ITPage, ITText } from "@axzydev/axzy_ui_system";
 import { trail } from "@shared/lib/breadcrumbs";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -45,7 +45,8 @@ export function StockReportPage() {
 	return (
 		<ITPage breadcrumbs={trail(t("common:nav.home"), navigate, { label: t("common:nav.reports"), onClick: () => navigate("/reports") }, { label: t("stock.title") })} title={t("stock.title")} description={t("stock.description")} noPadding actions={<ExportButtons kind="stock" filters={filters} />}>
 			<ReportTabs />
-			<ITFlex wrap="wrap" align="end" gap={3} className="sf:mb-4">
+			<ITCard className="sf:mb-4">
+				<ITFlex wrap="wrap" align="end" gap={3}>
 				<WarehouseFilter options={warehouses} value={warehouseId} onChange={setWarehouseId} />
 				<BelowMinimumFilter value={belowMinimum} onChange={setBelowMinimum} />
 			</ITFlex>
@@ -60,6 +61,7 @@ export function StockReportPage() {
 					]}
 				/>
 			)}
+			</ITCard>
 			<ITText as="section" data-testid="stock-report">
 				<ITDataTable<StockReportRow>
 					defaultItemsPerPage={25}

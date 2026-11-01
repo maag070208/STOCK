@@ -1,4 +1,4 @@
-// F0-10 · e2e: the shell shows the navigation and the flat appearance on desktop, and a phone opens the menu from the top bar.
+// F0-10 · e2e: the shell shows the navigation in the bento appearance on desktop, and a phone opens the menu from the top bar.
 import { test, expect } from "../support/test";
 import { newUser, signInAs, type TestUser } from "../support/api";
 
@@ -8,13 +8,13 @@ test.beforeAll(async () => {
   office = await newUser(["OFFICE"]);
 });
 
-test("the shell shows the navigation and the flat appearance on desktop", async ({ page }) => {
+test("the shell shows the navigation in the bento appearance on desktop", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
   await signInAs(page, office);
   await page.goto("/#/");
-  await expect(page.locator("html")).toHaveAttribute("data-it-appearance", "flat");
+  await expect(page.locator("html")).toHaveAttribute("data-it-appearance", "bento");
   await expect(page.getByRole("navigation").first()).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Inicio" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("Hola,");
 });
 
 test("on a phone the top bar is shown and the menu opens the navigation", async ({ page }) => {
@@ -31,7 +31,7 @@ for (const [name, width, height] of [["desktop", 1280, 800], ["phone", 375, 812]
     await page.setViewportSize({ width, height });
     await signInAs(page, office);
   await page.goto("/#/");
-    await expect(page.getByRole("heading", { name: "Inicio" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("Hola,");
     await expect(page.getByRole("banner")).toBeVisible();
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     expect(overflow).toBeLessThanOrEqual(0);
