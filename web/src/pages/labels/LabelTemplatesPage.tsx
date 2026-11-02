@@ -7,6 +7,7 @@ import { labelTemplateApi, type LabelTemplate } from "@entities/label";
 import { useCan } from "@entities/user";
 import { formatDateTime } from "@shared/lib/format";
 import { PlainTable } from "@shared/ui/PlainTable";
+import { BentoStats } from "@shared/ui/BentoStats";
 
 // The label templates: one per label type, each with its active version (labels.md section 2). The screen is built with
 // the components of the UI kit only (web.md section 8).
@@ -44,6 +45,14 @@ export function LabelTemplatesPage() {
 			loading={templates === null}
 			actions={canManage ? <ITButton label={t("templates.new")} onClick={() => navigate("/labels/new")} /> : undefined}
 		>
+			<BentoStats
+				label={t("common:stats.label")}
+				items={[
+					{ id: "all", label: t("common:stats.templates"), value: templates?.length ?? null, tone: "ink" },
+					{ id: "active", label: t("common:stats.activeF"), value: templates?.filter((template) => template.active).length ?? null, tone: "orange" },
+					{ id: "inactive", label: t("common:stats.inactiveF"), value: templates?.filter((template) => !template.active).length ?? null, tone: "sand" },
+				]}
+			/>
 			<PlainTable<LabelTemplate>columns={columns} data={templates ?? []} size="sm" onRowClick={(template) => navigate(`/labels/${template.id}`)} />
 		</ITPage>
 	);

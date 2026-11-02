@@ -12,6 +12,7 @@ import type { TableParams } from "@shared/api/table";
 import { ApiError } from "@shared/api/client";
 import { toast } from "@app/store";
 import { cardBreakpoint, tableHeight } from "@shared/ui/tableLayout";
+import { BentoStats, useActiveStats } from "@shared/ui/BentoStats";
 
 type Confirm = { kind: "deactivate" | "reactivate"; product: Product };
 
@@ -30,6 +31,8 @@ export function ProductsPage() {
 	useEffect(() => {
 		void catalogApi.items("UNIT_OF_MEASURE").then(setUnits).catch(() => setUnits([]));
 	}, []);
+
+	const { stats, filters } = useActiveStats(productApi.query, reload);
 
 	const columns: Column<Product>[] = [
 		{ key: "code", label: t("columns.code"), type: "string", filter: "search", sortable: true },
@@ -94,6 +97,7 @@ export function ProductsPage() {
 				) : undefined
 			}
 		>
+			<BentoStats items={stats} label={t("common:stats.label")} />
 			<ITDataTable<Product>
 				defaultItemsPerPage={25}
 				itemsPerPageOptions={[25, 50, 100]}
@@ -106,7 +110,7 @@ export function ProductsPage() {
 				autoCardBreakpoint={cardBreakpoint()}
  columns={columns}
  fetchData={(params) => productApi.query(params as TableParams)}
- reloadTrigger={reload}
+ externalFilters={filters} reloadTrigger={reload}
  onRowClick={(product) => navigate(`/products/${product.id}`)}
 			/>
 			<ProductDialog

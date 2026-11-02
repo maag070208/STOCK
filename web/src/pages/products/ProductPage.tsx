@@ -7,9 +7,10 @@ import { productApi, type Product } from "@entities/product";
 import { useCan } from "@entities/user";
 import { PrintDialog, type PrintTarget } from "@features/label/PrintDialog";
 import { ProductDialog } from "@features/product/ProductDialog";
-import { formatDateTime } from "@shared/lib/format";
+import { formatDateTime, formatQuantity } from "@shared/lib/format";
 import { toast } from "@app/store";
 import { FactStrip } from "@shared/ui/FactStrip";
+import { stockApi, type ProductTotal } from "@entities/stock";
 
 // One material: its fields, editing for who can manage, and its label for who prints. The way back is the breadcrumbs,
 // and the detail is the kit's grid and cards (web.md section 8).
@@ -25,13 +26,18 @@ export function ProductPage() {
 	const [editing, setEditing] = useState(false);
 	const [printing, setPrinting] = useState<PrintTarget | null>(null);
 
+	const canStock = useCan("stock.view");
+	const [stock, setStock] = useState<ProductTotal[] | null>(null);
 	const load = useCallback(async () => {
 		try {
-			setProduct(await productApi.get(id));
+			const found = await productApi.get(id);
+			setProduct(found);
+			// The total of the material in the warehouses the reader reaches. Without the permission the fact is not there.
+			if (canStock) void stockApi.products({ page: 1, limit: 200, filters: { product: found.code } }).then((page) => setStock(page.data.filter((row) => row.productId === found.id))).catch(() => setStock(null));
 		} catch {
 			setMissing(true);
 		}
-	}, [id]);
+	}, [id, canStock]);
 
 	useEffect(() => {
 		void load();
@@ -48,8 +54,10 @@ export function ProductPage() {
 		);
 	}
 
+	const stockOf = stock ? formatQuantity(stock.reduce((sum, row) => sum + Number(row.quantity), 0), product?.unit.decimalPlaces, i18n.language) : null;
 	const fields: { label: string; value: string }[] = product
 		? [
+				...(stockOf !== null ? [{ label: t("common:stats.stock"), value: `${stockOf} ${product.unit.label ?? product.unit.code}` }] : []),
 				{ label: t("columns.code"), value: product.code },
 				{ label: t("columns.name"), value: product.name },
 				{ label: t("columns.barcode"), value: product.barcode },
@@ -68,7 +76,8 @@ export function ProductPage() {
 			loading={!product}
 			actions={
 				product ? (
-					<ITFlex gap={2}>
+					<ITFlex align="center" gap={2}>
+						<ITBadget color={product.active ? "success" : "gray"} label={t(product.active ? "common:status.active" : "common:status.inactive")} />
 						{canPrint && product.active && (
 							<ITButton variant="outlined" label={t("labels:print.button")} onClick={() => setPrinting({ kind: "PRODUCT", productId: product.id, title: `${product.code} · ${product.name}` })} />
 						)}
@@ -77,15 +86,7 @@ export function ProductPage() {
 				) : undefined
 			}
 		>
-			<FactStrip facts={fields.map((field) => ({ label: field.label, value: field.value }))} />
-			{product && (
-				<ITFlex align="center" gap={2}>
-					<ITText muted className="sf:text-label-md">
-						{t("columns.status")}
-					</ITText>
-					<ITBadget color={product.active ? "success" : "gray"} label={t(product.active ? "common:status.active" : "common:status.inactive")} />
-				</ITFlex>
-			)}
+			<FactStrip hero={stockOf !== null} perRow={3} facts={fields.map((field) => ({ label: field.label, value: field.value }))} />
 			{product && (
 				<ProductDialog
 					isOpen={editing}

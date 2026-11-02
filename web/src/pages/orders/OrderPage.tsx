@@ -158,6 +158,7 @@ export function OrderPage() {
 					)}
 
 					<FactStrip
+						hero
 						perRow={3}
 						facts={[
 							{ label: t("detail.customer"), value: `${order.customer.code ?? ""} · ${order.customer.name ?? ""}` },

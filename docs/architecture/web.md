@@ -334,5 +334,4 @@ These appear in CYC but are not needed by Stock until the flows say so:
 
 - `@react-pdf/renderer` and `file-saver`: needed only for printed documents such as labels or invoices.
 - `qrcode`: possibly needed for labels. Decide with the flows.
-- Lottie: adopted for the intro and the loader only, from the brand pack. See [brand.md](brand.md).
 - Electron packaging: not in the repository.

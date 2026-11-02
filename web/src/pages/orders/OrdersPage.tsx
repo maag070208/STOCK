@@ -1,6 +1,6 @@
-import { type Column, ITBadget, ITButton, ITDataTable, ITPage, ITStack, ITText } from "@axzydev/axzy_ui_system";
+import { type Column, type ColumnFilters, ITBadget, ITButton, ITCard, ITDataTable, ITPage, ITStack } from "@axzydev/axzy_ui_system";
 import { trail } from "@shared/lib/breadcrumbs";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { catalogApi, type CatalogItem } from "@entities/catalog";
@@ -10,6 +10,7 @@ import type { TableParams } from "@shared/api/table";
 import { dyn } from "@shared/i18n";
 import { formatDate } from "@shared/lib/format";
 import { cardBreakpoint, tableHeight } from "@shared/ui/tableLayout";
+import { BentoStats, useCounts, type BentoStat } from "@shared/ui/BentoStats";
 
 // The color of each status of an order (order-fulfillment.md section 6): created is waiting, validated is final.
 export const STATUS_COLOR: Record<OrderStatus, "gray" | "warning" | "info" | "success" | "danger"> = {
@@ -37,6 +38,23 @@ export function OrdersPage() {
 			.catch(() => setAlerts([]));
 	}, []);
 
+	const [status, setStatus] = useState("");
+	const filters = useMemo(() => (status ? { status } : {}) as ColumnFilters, [status]);
+	const countOf = (code: string) => () => orderApi.query({ page: 1, limit: 1, filters: code ? { status: code } : {} });
+	const counts = useCounts({ all: countOf(""), CREATED: countOf("CREATED"), FULFILLING: countOf("FULFILLING"), FULFILLED: countOf("FULFILLED"), VALIDATED: countOf("VALIDATED") });
+	// The numbers are the filters of the list: each tile shows only its orders.
+	const tile = (code: "all" | OrderStatus, label: string, tone: BentoStat["tone"]): BentoStat => {
+		const value = code === "all" ? "" : code;
+		return { id: code, label, value: counts[code as keyof typeof counts], tone, active: status === value, onClick: () => setStatus(value) };
+	};
+	const stats = [
+		tile("all", t("common:stats.allOrders"), "ink"),
+		tile("CREATED", t("status.CREATED"), "orange"),
+		tile("FULFILLING", t("status.FULFILLING"), "amber"),
+		tile("FULFILLED", t("status.FULFILLED"), "sand"),
+		tile("VALIDATED", t("status.VALIDATED"), "plain"),
+	];
+
 	const columns: Column<Order>[] = [
 		{ key: "number", label: t("columns.number"), type: "string", filter: "search", sortable: true },
 		{ key: "customer", label: t("columns.customer"), type: "string", render: (order) => order.customer.name ?? "" },
@@ -55,11 +73,10 @@ export function OrdersPage() {
 
 	return (
 		<ITPage breadcrumbs={trail(t("common:nav.home"), navigate, { label: t("title") })} title={t("title")} description={t("description")} noPadding actions={canCreate ? <ITButton label={t("new")} onClick={() => navigate("/orders/new")} /> : undefined}>
+			<BentoStats items={stats} label={t("common:stats.label")} />
 			{alerts.length > 0 && (
-				<ITStack spacing={1} className="sf:mb-4">
-					<ITText as="h2" className="sf:text-title-md">
-						{t("alerts.title")}
-					</ITText>
+				<ITCard tone="warning" title={t("alerts.title")} className="sf:mb-4">
+					<ITStack spacing={1}>
 					{alerts.map((alert) => (
 						<ITButton
 							key={alert.id}
@@ -69,7 +86,8 @@ export function OrdersPage() {
 							className="sf:justify-start sf:text-left"
 						/>
 					))}
-				</ITStack>
+					</ITStack>
+				</ITCard>
 			)}
 			<ITDataTable<Order>
 				defaultItemsPerPage={25}
@@ -80,7 +98,7 @@ export function OrdersPage() {
 				virtualizedMaxHeight={tableHeight()}
 				rowHeight={50}
 				showViewToggle={false}
-				autoCardBreakpoint={cardBreakpoint()} columns={columns} fetchData={(params) => orderApi.query(params as TableParams)} onRowClick={(order) => navigate(`/orders/${order.id}`)}
+				autoCardBreakpoint={cardBreakpoint()} columns={columns} externalFilters={filters} fetchData={(params) => orderApi.query(params as TableParams)} onRowClick={(order) => navigate(`/orders/${order.id}`)}
 			/>
 		</ITPage>
 	);

@@ -1,4 +1,4 @@
-import { ITAlert, ITButton, ITCheckbox, ITDatePicker, ITFlex, ITSearchSelect, ITText, type ColumnFilters } from "@axzydev/axzy_ui_system";
+import { ITAlert, ITBentoGrid, ITBentoTile, ITButton, ITCheckbox, ITDatePicker, ITFlex, ITSearchSelect, ITText, type ColumnFilters } from "@axzydev/axzy_ui_system";
 import { useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { PartnerPicker, type PartnerKind } from "@entities/partner";
@@ -6,6 +6,7 @@ import { reportApi, type ReportFormat, type ReportKind, type ReportRef, type Rep
 import { useCan } from "@entities/user";
 import { isoDate } from "@shared/lib/format";
 import { saveFile } from "@shared/lib/saveFile";
+import { BENTO_TONE } from "@shared/ui/theme";
 
 // The warehouses a report answered, so the filter offers nothing outside the reader's scope (reports.md rule 3). A
 // required one has no "every warehouse" option: the kardex is of one material in one warehouse.
@@ -73,15 +74,20 @@ export const periodOf = (from: Date | null, to: Date | null): ColumnFilters => (
 // A group of totals: what the rows of the report add up to, by warehouse, by aisle and rack, by status or by type.
 export function ReportTotals({ label, entries, testId }: { label: string; entries: { key: string; label: string; value: string }[]; testId?: string }) {
 	return (
-		<ITText as="section" aria-label={label} data-testid={testId} className="sf:mt-4 sf:flex sf:flex-wrap sf:gap-x-6 sf:gap-y-2">
-			{entries.map((entry) => (
-				<ITText key={entry.key} className="sf:text-body-md sf:text-on-surface">
-					<ITText as="span" muted>
-						{entry.label}:{" "}
-					</ITText>
-					{entry.value}
-				</ITText>
-			))}
+		<ITText as="section" aria-label={label} data-testid={testId} className="sf:mt-4">
+			<ITBentoGrid className="sf:auto-rows-auto">
+				{entries.map((entry, index) => (
+					<ITBentoTile
+						key={entry.key}
+						label={entry.label}
+						cols={3}
+						tone={index === 0 ? BENTO_TONE.ink : "plain"}
+						value={entry.value}
+						className="sf-rise"
+						style={{ animationDelay: `${index * 40}ms` }}
+					/>
+				))}
+			</ITBentoGrid>
 		</ITText>
 	);
 }

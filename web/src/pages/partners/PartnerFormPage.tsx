@@ -1,4 +1,4 @@
-import { ITAlert, ITButton, ITFlex, ITGrid, ITInput, ITPage, ITSearchSelect, ITStack, ITText } from "@axzydev/axzy_ui_system";
+import { ITAlert, ITButton, ITCard, ITFlex, ITGrid, ITInput, ITPage, ITSearchSelect, ITStack } from "@axzydev/axzy_ui_system";
 import { trail } from "@shared/lib/breadcrumbs";
 import { useEffect, useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
@@ -105,11 +105,8 @@ export function PartnerFormPage({ kind }: { kind: PartnerKind }) {
 	return (
 		<ITPage title={title} breadcrumbs={trail(t("common:nav.home"), navigate, { label: t(`${kind}.title`), onClick: () => navigate(`/${kind}`) }, { label: title })} noPadding>
 			<form onSubmit={(e) => void save(e)} noValidate aria-label={title}>
-				<ITStack spacing={6} className="sf:max-w-3xl">
-					<ITStack spacing={3}>
-						<ITText as="h2" className="sf:text-title-md">
-							{t("form.general")}
-						</ITText>
+				<ITStack spacing={6}>
+					<ITCard title={t("form.general")}>
 						<ITGrid container spacing={3}>
 							<ITGrid item xs={12} md={6}>
 								<ITInput
@@ -142,12 +139,9 @@ export function PartnerFormPage({ kind }: { kind: PartnerKind }) {
 							</ITGrid>
 						</ITGrid>
 						{catalogs.terms.length === 0 && <ITAlert variant="warning">{t("form.noPaymentTerms")}</ITAlert>}
-					</ITStack>
+					</ITCard>
 
-					<ITStack spacing={3}>
-						<ITText as="h2" className="sf:text-title-md">
-							{t("form.address")}
-						</ITText>
+					<ITCard title={t("form.address")}>
 						<ITGrid container spacing={3}>
 							<ITGrid item xs={12} md={6}>
 								{input("street")}
@@ -174,7 +168,7 @@ export function PartnerFormPage({ kind }: { kind: PartnerKind }) {
 								{select("country", t("form.country"), catalogs.countries, addressError("country"))}
 							</ITGrid>
 						</ITGrid>
-					</ITStack>
+					</ITCard>
 
 					{submit.error && <ITAlert variant="error">{submit.error}</ITAlert>}
 					<ITFlex justify="end" gap={2}>

@@ -32,7 +32,7 @@ These are the colors **of the artwork**: icons, launcher and animations. The col
 | `web/dark/` | `design/brand/web-dark/` | Kept as the dark set |
 | `web/site.webmanifest` | `web/public/site.webmanifest` | PWA name, colors and icons |
 | `web/head-snippet.html` | Merged into `web/index.html` | Favicon links and `theme-color` for light and dark |
-| `stockflow-intro-*.json`, `stockflow-loader-*.json` | `web/public/animations/` and `app/shared/src/commonMain/composeResources/files/animations/` | Lottie animations, section 4 |
+| `stockflow-intro-*.json`, `stockflow-loader-*.json` | `app/shared/src/commonMain/composeResources/files/animations/` | Lottie animations, section 4 |
 
 The pack's `LEEME.txt` describes the same layout and is kept with the pack, not copied.
 
@@ -47,12 +47,12 @@ The pack's `LEEME.txt` describes the same layout and is kept with the pack, not 
 
 | File | Length | Use |
 |---|---|---|
-| `stockflow-intro-{light,dark}.json` | 130 frames, 30 fps (about 4.3 s) | First load of the web and the app, before sign-in |
+| `stockflow-intro-{light,dark}.json` | 130 frames, 30 fps (about 4.3 s) | First load of the app, before sign-in |
 | `stockflow-loader-{light,dark}.json` | 120 frames, 30 fps (4 s) | Loading states on lists and forms |
 
 - The variant follows the theme.
 - Reduced motion: when the user asks for reduced motion, the animation shows its first frame, without moving.
-- **Web:** `lottie-react`, the library CYC already uses ([web.md](web.md) section 11). The version is checked in F0.
+- **Web:** none. The web opens straight on its entry screen (decided 2026-11-01).
 - **App:** `compottie` 2.3.3. Animations load from the shared resources folder and play through `rememberLottiePainter`.
 
 ## 5. Decisions

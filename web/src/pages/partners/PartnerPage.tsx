@@ -1,4 +1,4 @@
-import { type Column, ITBadget, ITButton, ITConfirmDialog, ITDropdownMenu, ITFlex, ITPage, ITStack, ITText } from "@axzydev/axzy_ui_system";
+import { type Column, ITBadget, ITButton, ITCard, ITConfirmDialog, ITDropdownMenu, ITFlex, ITPage, ITStack, ITText } from "@axzydev/axzy_ui_system";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { FaEllipsisV } from "react-icons/fa";
@@ -112,36 +112,30 @@ export function PartnerPage({ kind }: { kind: PartnerKind }) {
 			breadcrumbs={breadcrumbs}
 			noPadding
 			loading={!partner}
-			actions={canManage ? <ITButton label={t("actions.edit")} onClick={() => navigate(`/${kind}/${id}/edit`)} /> : undefined}
+			actions={
+				<ITFlex align="center" gap={2}>
+					{partner && <ITBadget color={partner.active ? "success" : "gray"} label={t(partner.active ? "common:status.active" : "common:status.inactive")} />}
+					{canManage && <ITButton label={t("actions.edit")} onClick={() => navigate(`/${kind}/${id}/edit`)} />}
+				</ITFlex>
+			}
 		>
 			<ITStack spacing={8}>
 				{partner && address && (
 					<ITStack spacing={4}>
 						<FactStrip
-							perRow={2}
+							perRow={3}
+							hero
 							facts={[
 								{ label: t("columns.taxId"), value: partner.taxId },
 								{ label: t("detail.paymentTerms"), value: partner.paymentTerms?.label ?? partner.paymentTerms?.code ?? "" },
 								{ label: t("detail.createdAt"), value: formatDateTime(partner.createdAt, i18n.language) },
-								{ label: t("detail.address"), value: addressText },
+								{ label: t("detail.address"), value: addressText, wide: true },
 							]}
 						/>
-						<ITFlex align="center" gap={2}>
-							<ITText muted className="sf:text-label-md">
-								{t("columns.status")}
-							</ITText>
-							<ITBadget color={partner.active ? "success" : "gray"} label={t(partner.active ? "common:status.active" : "common:status.inactive")} />
-						</ITFlex>
 					</ITStack>
 				)}
 
-				<ITStack spacing={3} className="sf:max-w-3xl">
-					<ITFlex align="center" justify="between">
-						<ITText as="h2" className="sf:text-title-md">
-							{t("contacts.title")}
-						</ITText>
-						{canManage && partner && <ITButton size="sm" label={t("contacts.new")} onClick={() => setEditing({ contact: null })} />}
-					</ITFlex>
+				<ITCard title={t("contacts.title")} headerActions={canManage && partner ? <ITButton size="sm" label={t("contacts.new")} onClick={() => setEditing({ contact: null })} /> : undefined}>
 					{partner?.contacts?.length === 0 && <ITText muted>{t("contacts.none")}</ITText>}
 					{!!partner?.contacts?.length && (
 						<PlainTable<ContactRow>
@@ -150,7 +144,7 @@ export function PartnerPage({ kind }: { kind: PartnerKind }) {
 							size="sm"
 						/>
 					)}
-				</ITStack>
+				</ITCard>
 			</ITStack>
 
 			<ContactDialog

@@ -1,4 +1,4 @@
-import { ITBadget, ITButton, ITCheckbox, ITFlex, ITGrid, ITInput, ITPage, ITSearchSelect, ITStack, ITText, type Column } from "@axzydev/axzy_ui_system";
+import { ITBadget, ITButton, ITCard, ITCheckbox, ITFlex, ITGrid, ITInput, ITPage, ITSearchSelect, ITStack, ITText, type Column } from "@axzydev/axzy_ui_system";
 import { trail } from "@shared/lib/breadcrumbs";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -12,6 +12,7 @@ import { FormDialog } from "@shared/ui/FormDialog";
 import { useSubmit } from "@shared/ui/useSubmit";
 import { toast } from "@app/store";
 import { PlainTable } from "@shared/ui/PlainTable";
+import { BentoStats } from "@shared/ui/BentoStats";
 
 // One row of the table: the catalog item, which the kit tells apart by its code.
 type CatalogRow = Record<string, unknown> & { id: string; item: CatalogItem };
@@ -101,6 +102,14 @@ export function CatalogsPage() {
 			}
 		>
 			<ITStack spacing={4}>
+				<BentoStats
+					label={t("common:stats.label")}
+					items={[
+						{ id: "catalogs", label: t("common:stats.catalogs"), value: catalogs.length, tone: "ink" },
+						{ id: "values", label: t("common:stats.values"), value: items.length, caption: selected, tone: "orange" },
+					]}
+				/>
+				<ITCard>
 				<ITGrid container spacing={4}>
 					<ITGrid item xs={12} sm={6} md={4}>
 						<ITSearchSelect
@@ -115,6 +124,7 @@ export function CatalogsPage() {
 						<ITCheckbox name="showInactive" label={t("showInactive")} checked={showInactive} onChange={setShowInactive} />
 					</ITGrid>
 				</ITGrid>
+				</ITCard>
 				<PlainTable<CatalogRow>
 					columns={columns}
 					data={rows}

@@ -9,6 +9,7 @@ import { PoliciesPanel } from "@features/permission/PoliciesPanel";
 import { RolesPanel } from "@features/permission/RolesPanel";
 import { ScreensPanel } from "@features/permission/ScreensPanel";
 import { toast } from "@app/store";
+import { BentoStats } from "@shared/ui/BentoStats";
 
 // The access console (roles.manage only): roles, the matrix, policies, and what each role sees.
 export function AccessPage() {
@@ -39,6 +40,16 @@ export function AccessPage() {
 
 	return (
 		<ITPage breadcrumbs={trail(t("common:nav.home"), navigate, { label: t("title") })} title={t("title")} description={t("description")} loading={!data && !error} error={error} onRetry={() => void load()} noPadding>
+			{data && (
+				<BentoStats
+					label={t("common:stats.label")}
+					items={[
+						{ id: "roles", label: t("common:stats.roles"), value: data.roles.length, tone: "ink" },
+						{ id: "permissions", label: t("common:stats.permissions"), value: data.permissions.length, tone: "orange" },
+						{ id: "policies", label: t("common:stats.policies"), value: data.policies.length, tone: "sand" },
+					]}
+				/>
+			)}
 			{data && (
 				<ITTabs
 					variant="pill"

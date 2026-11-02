@@ -302,7 +302,7 @@ The app must feel fast and calm: air on dashboards, density in tables, and never
 
 - **KPI tile:** label, icon, one big tabular value that climbs when it arrives, a caption, one optional visual (`ITBentoGauge`, `ITBentoSpark`, `ITBentoWaves`, `ITBentoSegments`). The visual always stands for a real share of a real total; an empty queue is low water, never an invented level.
 - **Panel card:** white card with an icon + title + description header, actions on the right, and an "open" round ink button when it leads somewhere.
-- **Stat strip:** `ITBentoStatStrip` for a row of clickable counts that filter the list below.
+- **Stat tiles:** `BentoStats` for a row of real counts over a list; a tile that filters the list below shows a ring while it is in use. The first tile is ink.
 - **Table:** the kit's `ITDataTable` stays dense (compact). No bento tiles inside a table.
 - **States:** every data screen has loading (skeleton), empty (illustration + action) and error (message + retry). They are part of the screen, not an afterthought.
 

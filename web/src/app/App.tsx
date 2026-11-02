@@ -32,7 +32,6 @@ import { UsersPage } from "@pages/users/UsersPage";
 import { WarehousePage } from "@pages/warehouses/WarehousePage";
 import { WarehousesPage } from "@pages/warehouses/WarehousesPage";
 import { AppShell } from "@widgets/app-shell/AppShell";
-import { BrandIntro } from "@widgets/brand-intro/BrandIntro";
 import { RequirePermission, SessionGate } from "./guards/Guards";
 import { Toasts } from "./toast/Toasts";
 
@@ -42,7 +41,6 @@ const guarded = (id: string, element: React.ReactNode) => <RequirePermission any
 export function App() {
 	return (
 		<HashRouter>
-			<BrandIntro />
 			<Toasts />
 			<SessionGate>
 				<Routes>

@@ -15,6 +15,7 @@ import { SecretValue } from "@shared/ui/SecretValue";
 import { toast } from "@app/store";
 import { ApiError } from "@shared/api/client";
 import { cardBreakpoint, tableHeight } from "@shared/ui/tableLayout";
+import { BentoStats, useActiveStats } from "@shared/ui/BentoStats";
 
 type Confirm = { kind: "resetPassword" | "deactivate" | "reactivate"; user: User };
 
@@ -42,6 +43,8 @@ export function UsersPage() {
 
 	const status = (user: User) =>
 		!user.active ? <ITBadget color="gray" label={t("common:status.inactive")} /> : user.locked ? <ITBadget color="danger" label={t("common:status.locked")} /> : <ITBadget color="success" label={t("common:status.active")} />;
+
+	const { stats, filters } = useActiveStats(userApi.query, reload);
 
 	const columns: Column<User>[] = [
 		{ key: "username", label: t("columns.username"), type: "string", filter: "search", sortable: true },
@@ -112,6 +115,7 @@ export function UsersPage() {
 			noPadding
 			actions={can.create ? <ITButton label={t("new")} onClick={() => setCreating(true)} /> : undefined}
 		>
+			<BentoStats items={stats} label={t("common:stats.label")} />
 			<ITDataTable<User>
 				defaultItemsPerPage={25}
 				itemsPerPageOptions={[25, 50, 100]}
@@ -121,7 +125,7 @@ export function UsersPage() {
 				virtualizedMaxHeight={tableHeight()}
 				rowHeight={50}
 				showViewToggle={false}
-				autoCardBreakpoint={cardBreakpoint()} columns={columns} fetchData={(params) => userApi.query(params as TableParams)} reloadTrigger={reload}
+				autoCardBreakpoint={cardBreakpoint()} columns={columns} fetchData={(params) => userApi.query(params as TableParams)} externalFilters={filters} reloadTrigger={reload}
 			/>
 
 			<CreateUserDialog

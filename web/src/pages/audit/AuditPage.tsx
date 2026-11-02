@@ -7,6 +7,8 @@ import type { TableParams } from "@shared/api/table";
 import { dyn } from "@shared/i18n";
 import { formatDateTime } from "@shared/lib/format";
 import { cardBreakpoint, tableHeight } from "@shared/ui/tableLayout";
+import { useEffect, useState } from "react";
+import { BentoStats, type BentoStat } from "@shared/ui/BentoStats";
 
 const TARGETS = ["user", "role", "policy", "catalog", "catalog_item", "access"];
 
@@ -22,6 +24,18 @@ export function AuditPage() {
 		const after = describe(record.after);
 		return before && after ? `${before} → ${after}` : after || before;
 	};
+
+	const [latest, setLatest] = useState<{ total: number; record: AuditRecord | null } | null>(null);
+	useEffect(() => {
+		void auditApi
+			.query({ page: 1, limit: 1, filters: {}, sort: { key: "occurredAt", direction: "desc" } })
+			.then((page) => setLatest({ total: page.total, record: page.data[0] ?? null }))
+			.catch(() => setLatest(null));
+	}, []);
+	const stats: BentoStat[] = [
+		{ id: "total", label: t("common:stats.entries"), value: latest?.total ?? null, tone: "ink" },
+		{ id: "last", label: t("common:stats.last"), text: latest?.record ? formatDateTime(latest.record.occurredAt, i18n.language) : "—", caption: latest?.record?.actor ?? undefined, tone: "orange" },
+	];
 
 	const columns: Column<AuditRecord>[] = [
 		{ key: "occurredAt", label: t("columns.occurredAt"), type: "date", filter: "date-range", sortable: true, render: (r) => formatDateTime(r.occurredAt, i18n.language) },
@@ -50,6 +64,7 @@ export function AuditPage() {
 
 	return (
 		<ITPage breadcrumbs={trail(t("common:nav.home"), navigate, { label: t("title") })} title={t("title")} description={t("description")} noPadding>
+			<BentoStats items={stats} label={t("common:stats.label")} />
 			<ITDataTable<AuditRecord>
 				defaultItemsPerPage={25}
 				itemsPerPageOptions={[25, 50, 100]}
