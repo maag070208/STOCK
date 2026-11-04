@@ -16,6 +16,9 @@ export function FormDialog(props: {
 	onClose: () => void;
 	onSubmit: () => void;
 	submitting?: boolean;
+	// What keeps the dialog from saving while the person types: the missing field, the quantity over the line. With a
+	// reason the submit stays closed and says why, instead of answering the click with nothing.
+	blocked?: string | null;
 	error?: string | null;
 	submitLabel?: string;
 	// A second action before the submit, for a dialog whose main button is not the only way out (F8-06).
@@ -64,10 +67,11 @@ export function FormDialog(props: {
 			<form ref={form} role="dialog" aria-modal="true" aria-label={props.title} onSubmit={submit} noValidate className="sf:flex sf:min-w-80 sf:flex-col sf:gap-4">
 				{props.children}
 				{props.error && <ITAlert variant="error">{props.error}</ITAlert>}
+				{props.blocked && !props.error && <ITAlert variant="warning">{props.blocked}</ITAlert>}
 				<ITFlex justify="end" gap={2}>
 					<ITButton variant="outlined" label={t("actions.cancel")} onClick={props.onClose} />
 					{props.secondaryAction}
-					<ITButton type="submit" label={props.submitLabel ?? t("actions.save")} disabled={props.submitting} />
+					<ITButton type="submit" label={props.submitLabel ?? t("actions.save")} disabled={props.submitting || !!props.blocked} />
 				</ITFlex>
 			</form>
 		</ITDialog>

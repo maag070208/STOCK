@@ -1,7 +1,8 @@
-import { ITAlert, ITButton, ITFlex, ITGrid, ITInput, ITSearchSelect, ITStack, ITText } from "@axzydev/axzy_ui_system";
+import { ITAlert, ITButton, ITFlex, ITGrid, ITSearchSelect, ITStack, ITText } from "@axzydev/axzy_ui_system";
 import { useTranslation } from "react-i18next";
 import { sharesError, sharesLeft, sharesTotal, type ShareInput, type StaffMember } from "@entities/invoice";
 import { formatQuantity } from "@shared/lib/format";
+import { QuantityInput } from "@shared/ui/QuantityInput";
 
 // The shares of one line: which operators of the warehouse's template receive it, and how much each one. It shows the
 // total against the line and the first problem, so the form can stay closed until the split adds up. A section with the
@@ -39,7 +40,7 @@ export function SharesEditor(props: {
 							/>
 						</ITGrid>
 						<ITGrid item xs={8} sm={3}>
-							<ITInput name={`share-${index}`} type="number" label={t("form.share")} value={share.quantity} onChange={(e) => set(index, { quantity: e.target.value })} />
+							<QuantityInput name={`share-${index}`} label={t("form.share")} value={share.quantity} onChange={(quantity) => set(index, { quantity })} decimalPlaces={props.decimals} min={0} />
 						</ITGrid>
 						<ITGrid item xs={4} sm={3} className="sf:self-end">
 							<ITButton variant="text" label={t("form.remove")} onClick={() => props.onChange(props.shares.filter((_, i) => i !== index))} />

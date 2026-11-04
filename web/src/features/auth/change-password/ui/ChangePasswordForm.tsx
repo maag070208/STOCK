@@ -20,7 +20,7 @@ export function ChangePasswordForm({ forced, onDone }: { forced: boolean; onDone
 				<ITInput name="newPassword" type="password" label={t("changePassword.new")} value={form.values.next} onChange={(e) => form.set("next")(e.target.value)} error={form.fieldErrors.next} touched={!!form.fieldErrors.next} />
 				<ITInput name="confirmPassword" type="password" label={t("changePassword.confirm")} value={form.values.confirm} onChange={(e) => form.set("confirm")(e.target.value)} error={form.fieldErrors.confirm} touched={!!form.fieldErrors.confirm} />
 				{form.error && <ITAlert variant="error">{form.error}</ITAlert>}
-				<ITButton type="submit" className="sf:w-full" label={t("changePassword.submit")} disabled={form.submitting} />
+				<ITButton type="submit" className="sf:w-full" label={t("changePassword.submit")} disabled={form.submitting || form.hardBlocked} />
 			</ITStack>
 		</form>
 	);

@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { FaTrash } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
-import { availableOf, lineError, orderApi, type AvailabilityItem, type OrderInput, type Ref } from "@entities/order";
+import { availableOf, lineError, repeatedProducts, orderApi, type AvailabilityItem, type OrderInput, type Ref } from "@entities/order";
 import { PartnerPicker, partnerApi, type Partner } from "@entities/partner";
 import { WarehousePicker } from "@entities/warehouse";
 import { ProductPicker, type Product } from "@entities/product";
@@ -12,6 +12,7 @@ import { dyn } from "@shared/i18n";
 import { businessToday, formatQuantity, isoDate } from "@shared/lib/format";
 import { newId } from "@shared/lib/newId";
 import { IconButton } from "@shared/ui/IconButton";
+import { QuantityInput } from "@shared/ui/QuantityInput";
 import { useSubmit } from "@shared/ui/useSubmit";
 
 interface LineState {
@@ -64,7 +65,10 @@ export function OrderFormPage() {
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [customerId]);
 
-	// The materials of the lines of this warehouse, in one query: their availability, as the API answers it.
+	// The materials of the lines of this warehouse, in one query: their availability, as the API answers it. `refresh`
+	// asks it again after a refused creation: someone else may have taken stock while the form was open, and the numbers
+	// it shows must be the ones the API just judged against.
+	const [refresh, setRefresh] = useState(0);
 	const productIds = useMemo(() => lines.map((line) => line.product?.id).filter((id): id is string => !!id), [lines]);
 	const wanted = productIds.join(",");
 	useEffect(() => {
@@ -80,7 +84,7 @@ export function OrderFormPage() {
 		return () => {
 			live = false;
 		};
-	}, [warehouseId, wanted]);
+	}, [warehouseId, wanted, refresh]);
 
 	const setLine = (lineKey: string, change: Partial<LineState>) => setLines((current) => current.map((line) => (line.key === lineKey ? { ...line, ...change } : line)));
 	// Enter on a quantity moves to the next material, opening a line when it was the last.
@@ -90,10 +94,21 @@ export function OrderFormPage() {
 		window.setTimeout(() => form.current?.querySelector<HTMLInputElement>(`[name="product-${index + 1}"]`)?.focus());
 	};
 	const available = (line: LineState) => availableOf(availability, line.product?.id);
-	const errorOf = (line: LineState) => (line.product ? lineError(line.quantity, available(line)) : "FIELD_REQUIRED");
+	const repeated = repeatedProducts(lines.map((line) => line.product?.id));
+	// A line answers for itself while it is written, without waiting for the first attempt to save: the mistake is said
+	// as it is made. The header fields wait for `tried`, so an empty form does not shout.
+	const errorOf = (line: LineState): ReturnType<typeof lineError> | "FIELD_REQUIRED" => {
+		if (!line.product) return "FIELD_REQUIRED";
+		if (repeated.has(line.product.id)) return "DUPLICATE_PRODUCT";
+		return lineError(line.quantity, available(line), line.product.unit.decimalPlaces ?? 0);
+	};
 	// The line that was never touched is the next one waiting, not a mistake.
 	const filled = lines.filter((line) => line.product || line.quantity);
-	const blocked = filled.length === 0 || filled.some((line) => errorOf(line) !== null);
+	const firstLineError = filled.map((line) => errorOf(line)).find((error) => error !== null) ?? null;
+	// The lines answer live, so their problems close the button from the moment they exist; the header fields still
+	// need the first attempt to say what is missing, and `save` checks everything once more.
+	const lineBlocked = filled.length === 0 || firstLineError !== null;
+	const blocked = lineBlocked || !number.trim() || !warehouseId || !customerId;
 	const required = t("common:validation.required");
 
 	// The availability of a line as it is written: the number, or a dash while the API has not answered.
@@ -117,6 +132,7 @@ export function OrderFormPage() {
 		};
 		const saved = await submit.run(() => orderApi.create(input, key.current));
 		if (saved) navigate(`/orders/${saved.id}`, { replace: true });
+		else setRefresh((tick) => tick + 1);
 	}
 
 	return (
@@ -207,7 +223,9 @@ export function OrderFormPage() {
 						{lines.length === 0 && <ITText muted>{t("form.noLines")}</ITText>}
 						{lines.map((line, index) => {
 							const error = errorOf(line);
-							const touched = tried && (line.product || line.quantity || filled.length === 0);
+							// A line with something in it answers while it is written; an empty one waits.
+							const dirty = !!(line.product || line.quantity);
+							const touched = (tried && (line.product || line.quantity || filled.length === 0)) || dirty;
 							return (
 								<ITGrid key={line.key} container spacing={3} className="sf:items-start">
 									<ITGrid item xs={12} md={6}>
@@ -219,17 +237,19 @@ export function OrderFormPage() {
 												setLine(line.key, { product });
 												if (product) window.setTimeout(() => form.current?.querySelector<HTMLInputElement>(`[name="quantity-${index}"]`)?.focus());
 											}}
+											exclude={productIds.filter((id) => id !== line.product?.id)}
 											error={submit.fieldErrors[`lines.${index}.productId`] ?? (touched && !line.product ? required : undefined)}
 											required
 										/>
 									</ITGrid>
 									<ITGrid item xs={8} md={2}>
-										<ITInput
+										<QuantityInput
 											name={`quantity-${index}`}
-											type="number"
 											label={line.product ? `${t("form.quantity")} (${line.product.unit.label ?? line.product.unit.code})` : t("form.quantity")}
 											value={line.quantity}
-											onChange={(e) => setLine(line.key, { quantity: e.target.value })}
+											onChange={(quantity) => setLine(line.key, { quantity })}
+											decimalPlaces={line.product?.unit.decimalPlaces ?? 0}
+											max={available(line)}
 											error={submit.fieldErrors[`lines.${index}.quantity`] ?? (touched && error ? t(dyn(`lineErrors.${error}`)) : undefined)}
 											touched={!!touched || !!submit.fieldErrors[`lines.${index}.quantity`]}
 											required
@@ -249,9 +269,12 @@ export function OrderFormPage() {
 				</ITCard>
 
 				{submit.error && <ITAlert variant="error">{submit.error}</ITAlert>}
+				{lineBlocked && (
+					<ITAlert variant="warning">{filled.length === 0 ? t("form.noLines") : firstLineError ? t(dyn(`lineErrors.${firstLineError}`)) : t("form.noLines")}</ITAlert>
+				)}
 				<ITFlex justify="end" gap={2}>
 					<ITButton variant="outlined" label={t("common:actions.cancel")} onClick={() => navigate("/orders")} />
-					<ITButton type="submit" label={submit.submitting ? t("form.saving") : t("form.save")} disabled={submit.submitting} />
+					<ITButton type="submit" label={submit.submitting ? t("form.saving") : t("form.save")} disabled={submit.submitting || lineBlocked} />
 				</ITFlex>
 			</form>
 		</ITPage>

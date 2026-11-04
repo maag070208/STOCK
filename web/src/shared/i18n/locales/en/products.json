@@ -18,7 +18,9 @@
     "name": "Name",
     "unit": "Unit",
     "barcode": "Barcode",
-    "barcodeHint": "Left empty, the material's code is used."
+    "barcodeHint": "Left empty, the material's code is used.",
+    "barcodeInvalid": "6 to 20 characters (uppercase, digits, hyphens); 12 or 13 digits must have a valid check digit.",
+    "codeInvalid": "2 to 20 characters: uppercase, digits and hyphens."
   },
   "detail": {
     "legacyId": "Id in the previous file",

@@ -43,8 +43,9 @@
 	},
 	"lineErrors": {
 		"FIELD_REQUIRED": "Escribe la cantidad.",
-		"QUANTITY_INVALID": "La cantidad debe ser mayor que cero.",
-		"STOCK_INSUFFICIENT": "No hay esa cantidad disponible en el almacén."
+		"QUANTITY_INVALID": "La cantidad debe ser mayor que cero, con los decimales que permite su unidad.",
+		"STOCK_INSUFFICIENT": "No hay esa cantidad disponible en el almacén.",
+		"DUPLICATE_PRODUCT": "Este material ya está en otra línea de la orden."
 	},
 	"detail": {
 		"back": "Volver a órdenes",

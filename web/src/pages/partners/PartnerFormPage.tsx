@@ -4,7 +4,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import { catalogApi, type CatalogItem } from "@entities/catalog";
-import { partnerApi, type AddressInput, type Partner, type PartnerKind } from "@entities/partner";
+import { partnerApi, postalCodeInvalid, taxIdInvalid, type AddressInput, type Partner, type PartnerKind } from "@entities/partner";
 import { useSubmit } from "@shared/ui/useSubmit";
 
 interface Values extends AddressInput {
@@ -60,14 +60,30 @@ export function PartnerFormPage({ kind }: { kind: PartnerKind }) {
 	// The states of the chosen country, by the attribute each state carries.
 	const states = catalogs.states.filter((state) => state.attributes.country === values.country);
 	const required = t("common:validation.required");
+	// The formats answer while the field has something to judge; the required check still waits for the first attempt.
 	const error = (field: keyof Values, apiField: string = field) =>
-		submit.fieldErrors[apiField] ?? (tried && REQUIRED.includes(field) && !values[field].trim() ? required : undefined) ?? (tried && field === "code" && !id && !values.code.trim() ? required : undefined);
+		submit.fieldErrors[apiField] ??
+		(tried && REQUIRED.includes(field) && !values[field].trim() ? required : undefined) ??
+		(tried && field === "code" && !id && !values.code.trim() ? required : undefined) ??
+		(field === "taxId" && values.taxId.trim() && taxIdInvalid(values.taxId.trim()) ? t("form.taxIdInvalid") : undefined) ??
+		(field === "postalCode" && values.postalCode.trim() && postalCodeInvalid(values.postalCode.trim()) ? t("form.postalCodeInvalid") : undefined);
 	const addressError = (field: keyof AddressInput) => error(field, `address.${field}`);
+
+	// The first thing still missing or malformed: it closes the save button and says why, instead of a click that
+	// answers nothing.
+	const firstProblem = () => {
+		const empty = REQUIRED.find((field) => !values[field].trim()) ?? (!id && !values.code.trim() ? "code" : undefined);
+		if (empty) return `${t(`form.${empty}`)}: ${required}`;
+		if (values.taxId.trim() && taxIdInvalid(values.taxId.trim())) return t("form.taxIdInvalid");
+		if (values.postalCode.trim() && postalCodeInvalid(values.postalCode.trim())) return t("form.postalCodeInvalid");
+		return null;
+	};
+	const blockedReason = firstProblem();
 
 	async function save(event: FormEvent) {
 		event.preventDefault();
 		setTried(true);
-		if (REQUIRED.some((field) => !values[field].trim()) || (!id && !values.code.trim())) return;
+		if (blockedReason) return;
 		const { code, name, taxId, paymentTerms, ...address } = values;
 		const input = { name, taxId, paymentTerms, address };
 		const saved = await submit.run(() => (id ? api.update(id, input) : api.create({ code, ...input })));
@@ -88,7 +104,7 @@ export function PartnerFormPage({ kind }: { kind: PartnerKind }) {
 			required
 		/>
 	);
-	const input = (field: keyof AddressInput, extra: { hint?: string; required?: boolean } = {}) => (
+	const input = (field: keyof AddressInput, extra: { hint?: string; required?: boolean; maxLength?: number } = {}) => (
 		<ITInput
 			name={field}
 			label={t(`form.${field}`)}
@@ -97,6 +113,7 @@ export function PartnerFormPage({ kind }: { kind: PartnerKind }) {
 			error={addressError(field) ?? extra.hint}
 			touched={!!addressError(field)}
 			required={extra.required ?? true}
+			maxLength={extra.maxLength}
 		/>
 	);
 
@@ -159,7 +176,7 @@ export function PartnerFormPage({ kind }: { kind: PartnerKind }) {
 								{input("city")}
 							</ITGrid>
 							<ITGrid item xs={12} md={3}>
-								{input("postalCode")}
+								{input("postalCode", { maxLength: 5 })}
 							</ITGrid>
 							<ITGrid item xs={12} md={6}>
 								{select("state", t("form.state"), states, addressError("state"))}
@@ -171,9 +188,10 @@ export function PartnerFormPage({ kind }: { kind: PartnerKind }) {
 					</ITCard>
 
 					{submit.error && <ITAlert variant="error">{submit.error}</ITAlert>}
+					{blockedReason && <ITAlert variant="warning">{blockedReason}</ITAlert>}
 					<ITFlex justify="end" gap={2}>
 						<ITButton variant="outlined" label={t("form.cancel")} onClick={() => navigate(id ? `/${kind}/${id}` : `/${kind}`)} />
-						<ITButton type="submit" label={t("form.save")} disabled={submit.submitting} />
+						<ITButton type="submit" label={t("form.save")} disabled={submit.submitting || !!blockedReason} />
 					</ITFlex>
 				</ITStack>
 			</form>

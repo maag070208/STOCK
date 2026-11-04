@@ -25,6 +25,8 @@
     "name": "Nombre o razón social",
     "taxId": "RFC",
     "taxIdHint": "12 caracteres para empresas, 13 para personas.",
+    "taxIdInvalid": "RFC inválido: letras, la fecha y tres caracteres más.",
+    "postalCodeInvalid": "El código postal son 5 dígitos.",
     "paymentTerms": "Condiciones de pago",
     "noPaymentTerms": "Aún no hay condiciones de pago. Un administrador las agrega en Catálogos.",
     "address": "Dirección",

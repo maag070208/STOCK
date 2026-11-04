@@ -16,18 +16,24 @@ export function useChangePasswordForm(onDone: () => void) {
 	const [serverErrors, setServerErrors] = useState<Record<string, string>>({});
 
 	const required = (value: string) => (tried && !value ? t("common:validation.required") : undefined);
+	// The length rule of the API (5 to 72) answers while the new password is written, and the two copies must match as
+	// soon as both have something to compare.
+	const lengthError = (value: string) => (value && (value.length < 5 || value.length > 72) ? t("auth:changePassword.tooShort") : undefined);
 	const fieldErrors = {
 		current: required(values.current) ?? serverErrors.currentPassword,
-		next: required(values.next) ?? serverErrors.newPassword,
-		confirm: required(values.confirm) ?? (tried && values.confirm && values.confirm !== values.next ? t("auth:changePassword.mismatch") : undefined),
+		next: required(values.next) ?? lengthError(values.next) ?? serverErrors.newPassword,
+		confirm: required(values.confirm) ?? (values.confirm && values.confirm !== values.next ? t("auth:changePassword.mismatch") : undefined),
 	};
+	const blocked = !values.current || !values.next || !!lengthError(values.next) || values.next !== values.confirm;
+	// Only a mistake that is already on screen closes the button; an empty field still needs the click that says so.
+	const hardBlocked = !!lengthError(values.next) || (!!values.confirm && values.next !== values.confirm);
 
 	const set = (field: keyof typeof values) => (value: string) => setValues((current) => ({ ...current, [field]: value }));
 
 	async function submit(event?: FormEvent) {
 		event?.preventDefault();
 		setTried(true);
-		if (!values.current || !values.next || values.next !== values.confirm || submitting) return;
+		if (blocked || submitting) return;
 		setSubmitting(true);
 		setError(null);
 		setServerErrors({});
@@ -44,5 +50,5 @@ export function useChangePasswordForm(onDone: () => void) {
 		}
 	}
 
-	return { values, set, fieldErrors, error, submitting, submit };
+	return { values, set, fieldErrors, error, submitting, hardBlocked, submit };
 }

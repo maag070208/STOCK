@@ -48,18 +48,19 @@ data class CatalogItemView(
 class CatalogService(
 	private val catalogs: CatalogRepository,
 	private val items: CatalogItemRepository,
+	private val cache: CatalogCache,
 	private val audit: AuditService,
 	private val json: JsonMapper,
 	private val clock: Clock,
 ) {
 	@Transactional(readOnly = true)
-	fun list(): List<CatalogView> = catalogs.findAll().sortedBy { it.code }.map(::view)
+	fun list(): List<CatalogView> = cache.snapshot.catalogs.values.sortedBy { it.code }.map { CatalogView(it.code, it.isSystem, it.active, cache.snapshot.items(it.code).size.toLong()) }
 
 	// Active items in their order. With `all`, the inactive ones too: history still shows them.
 	@Transactional(readOnly = true)
 	fun items(catalogCode: String, all: Boolean, language: String): List<CatalogItemView> {
-		val catalog = find(catalogCode)
-		return items.findByCatalogId(catalog.id!!)
+		val catalog = cache.snapshot.catalogs[catalogCode] ?: throw ApiException(ErrorCode.NOT_FOUND)
+		return cache.snapshot.items(catalog.code)
 			.filter { all || it.active }
 			.sortedWith(compareBy({ it.sortOrder }, { it.code }))
 			.map { view(it, language) }
@@ -74,7 +75,8 @@ class CatalogService(
 		val now = clock.instant()
 		val catalog = catalogs.save(Catalog(code, isSystem = false, createdBy = actor.id, createdAt = now, updatedAt = now))
 		audit.record(actor.actor, "CATALOG_CREATED", "catalog", code)
-		return view(catalog)
+		cache.reloadAfterCommit()
+		return CatalogView(catalog.code, catalog.isSystem, catalog.active, 0)
 	}
 
 	@Transactional
@@ -100,6 +102,7 @@ class CatalogService(
 		labels.forEach { (locale, body) -> item.labels[locale] = CatalogLabel(body.label!!.trim(), body.description?.trim()?.ifEmpty { null }) }
 		val saved = items.save(item)
 		audit.record(actor.actor, "CATALOG_ITEM_CREATED", "catalog_item", "$catalogCode:$code", after = snapshot(saved))
+		cache.reloadAfterCommit()
 		return view(saved, language)
 	}
 
@@ -123,39 +126,30 @@ class CatalogService(
 		item.active = active
 		item.updatedAt = clock.instant()
 		audit.record(actor.actor, "CATALOG_ITEM_UPDATED", "catalog_item", "$catalogCode:$itemCode", before, snapshot(item))
+		cache.reloadAfterCommit()
 		return view(item, language)
 	}
 
 	// For other modules: the active item of a catalog with this code, for a new record. Null when it does not exist or is inactive.
 	@Transactional(readOnly = true)
-	fun activeItemId(catalogCode: String, itemCode: String): UUID? {
-		val catalog = catalogs.findByCode(catalogCode) ?: return null
-		return items.findByCatalogIdAndCode(catalog.id!!, itemCode.trim().uppercase())?.takeIf { it.active }?.id
-	}
+	fun activeItemId(catalogCode: String, itemCode: String): UUID? =
+		cache.snapshot.item(catalogCode, itemCode.trim().uppercase())?.takeIf { it.active }?.id
 
 	// For other modules: the active item with this code, with its attributes, for a new record. Null when it does not exist or is inactive.
 	@Transactional(readOnly = true)
-	fun activeItem(catalogCode: String, itemCode: String): Pair<UUID, Map<String, Any?>>? {
-		val catalog = catalogs.findByCode(catalogCode) ?: return null
-		val item = items.findByCatalogIdAndCode(catalog.id!!, itemCode.trim().uppercase())?.takeIf { it.active } ?: return null
-		return item.id!! to attributes(item)
-	}
+	fun activeItem(catalogCode: String, itemCode: String): Pair<UUID, Map<String, Any?>>? =
+		cache.snapshot.item(catalogCode, itemCode.trim().uppercase())?.takeIf { it.active }?.let { it.id to it.attributes }
 
 	// For other modules: the item with this code, active or not, for filters over existing records.
 	@Transactional(readOnly = true)
-	fun itemId(catalogCode: String, itemCode: String): UUID? {
-		val catalog = catalogs.findByCode(catalogCode) ?: return null
-		return items.findByCatalogIdAndCode(catalog.id!!, itemCode.trim().uppercase())?.id
-	}
+	fun itemId(catalogCode: String, itemCode: String): UUID? = cache.snapshot.item(catalogCode, itemCode.trim().uppercase())?.id
 
 	// For other modules: the items a list of records points to, labeled in the request's language. Inactive items too: history shows them.
 	@Transactional(readOnly = true)
 	fun itemViews(ids: Collection<UUID>, language: String): Map<UUID, CatalogItemView> =
-		items.findAllById(ids.toSet()).associate { it.id!! to view(it, language) }
+		ids.toSet().mapNotNull { cache.snapshot.item(it) }.associate { it.id to view(it, language) }
 
 	private fun find(code: String): Catalog = catalogs.findByCode(code) ?: throw ApiException(ErrorCode.NOT_FOUND)
-
-	private fun view(catalog: Catalog) = CatalogView(catalog.code, catalog.isSystem, catalog.active, items.countByCatalogId(catalog.id!!))
 
 	@Suppress("UNCHECKED_CAST")
 	private fun attributes(item: CatalogItem): Map<String, Any?> = json.readValue(item.attributes, Map::class.java) as Map<String, Any?>
@@ -170,6 +164,21 @@ class CatalogService(
 			sortOrder = item.sortOrder,
 			active = item.active,
 			attributes = attributes(item),
+			labels = item.labels.toSortedMap().mapValues { LabelBody(it.value.label, it.value.description) },
+		)
+	}
+
+	// The same view from the cache's immutable copy, for the read paths.
+	private fun view(item: CachedItem, language: String): CatalogItemView {
+		// Spanish is the default language: it stands in when the requested one has no label.
+		val shown = item.labels[language] ?: item.labels["es"]
+		return CatalogItemView(
+			code = item.code,
+			label = shown?.label,
+			description = shown?.description,
+			sortOrder = item.sortOrder,
+			active = item.active,
+			attributes = item.attributes,
 			labels = item.labels.toSortedMap().mapValues { LabelBody(it.value.label, it.value.description) },
 		)
 	}

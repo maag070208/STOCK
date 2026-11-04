@@ -1,9 +1,10 @@
-import { ITAlert, ITButton, ITGrid, ITInput, ITStack } from "@axzydev/axzy_ui_system";
+import { ITAlert, ITButton, ITGrid, ITStack } from "@axzydev/axzy_ui_system";
 import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { addedQuantity, captureTarget, invoiceApi, type InvoiceLine } from "@entities/invoice";
 import { ProductPicker, type Product } from "@entities/product";
 import { ApiError } from "@shared/api/client";
+import { QuantityInput } from "@shared/ui/QuantityInput";
 
 // The quick capture bar of the detail (F8-07): material and quantity, and Enter adds. A repeated material adds to the
 // line that exists, and a missing field takes the focus instead of an error: the flow never stops the keyboard. The bar
@@ -90,7 +91,7 @@ export function QuickCapture(props: {
 						<ProductPicker key={product?.id ?? "empty"} name="capture-product" label={t("form.product")} value={product?.id ?? ""} onChange={setProduct} />
 					</ITGrid>
 					<ITGrid item xs={12} md={3}>
-						<ITInput name="capture-quantity" type="number" label={t("form.quantity")} value={value} onChange={(event) => setValue(String(event.target.value))} />
+						<QuantityInput name="capture-quantity" label={t("form.quantity")} value={value} onChange={setValue} decimalPlaces={product?.unit.decimalPlaces ?? 0} min={0} />
 					</ITGrid>
 					<ITGrid item xs={12} md={2} className="sf:self-end">
 						<ITButton type="submit" label={t("capture.add")} disabled={busy} />

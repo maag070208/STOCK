@@ -25,6 +25,8 @@
     "name": "Name or company name",
     "taxId": "RFC",
     "taxIdHint": "12 characters for companies, 13 for people.",
+    "taxIdInvalid": "Invalid RFC: letters, the date, and three more characters.",
+    "postalCodeInvalid": "The postal code is 5 digits.",
     "paymentTerms": "Payment terms",
     "noPaymentTerms": "There are no payment terms yet. An administrator adds them in Catalogs.",
     "address": "Address",

@@ -128,12 +128,7 @@ class StockService(
 				command.locationId, command.productId, command.quantity, actor.id, now, command.reason, command.sourceType, command.sourceId,
 			)
 		}
-		for ((key, quantity) in balances) {
-			jdbc.update(
-				"update stock_balances set quantity = ?, updated_at = ? where location_id = ? and product_id = ?",
-				quantity, Timestamp.from(now), key.first, key.second,
-			)
-		}
+		if (balances.isNotEmpty()) updateBalances(balances, now)
 		movements.saveAllAndFlush(written)
 		return views(written, "es", targets.mapValues { it.value.code }, items.mapValues { it.value.code })
 	}
@@ -148,21 +143,35 @@ class StockService(
 		return views(listOf(movement), language, location, product).single()
 	}
 
-	// Creates the balance rows that do not exist yet, then locks every row in a fixed order and reads it.
+	// Creates the balance rows that do not exist yet (one insert for all), then locks every row in a fixed order and
+	// reads it (one ordered statement: the sort completes before the locks are taken, so two calls always take them in
+	// the same order and never wait on each other in a circle).
 	private fun lock(keys: Set<Pair<UUID, UUID>>, targets: Map<UUID, com.axzydev.stock.api.modules.warehouses.StockTarget>, now: Instant): MutableMap<Pair<UUID, UUID>, BigDecimal> {
 		val ordered = keys.sortedWith(compareBy({ it.first.toString() }, { it.second.toString() }))
-		val balances = linkedMapOf<Pair<UUID, UUID>, BigDecimal>()
-		for ((location, product) in ordered) {
-			jdbc.update(
-				"insert into stock_balances (location_id, product_id, warehouse_id, quantity, updated_at) values (?, ?, ?, 0, ?) on conflict do nothing",
-				location, product, targets.getValue(location).warehouseId, Timestamp.from(now),
+		if (ordered.isEmpty()) return mutableMapOf()
+		val placeholders = ordered.joinToString(", ") { "(?, ?, ?, 0, ?)" }
+		jdbc.update(
+			"insert into stock_balances (location_id, product_id, warehouse_id, quantity, updated_at) values $placeholders on conflict do nothing",
+			*ordered.flatMap { (location, product) -> listOf<Any>(location, product, targets.getValue(location).warehouseId, Timestamp.from(now)) }.toTypedArray(),
+		)
+		val pairs = ordered.joinToString(", ") { "(?, ?)" }
+		return linkedMapOf<Pair<UUID, UUID>, BigDecimal>().apply {
+			jdbc.query(
+				"select location_id, product_id, quantity from stock_balances where (location_id, product_id) in ($pairs) order by location_id, product_id for update",
+				{ rs, _ -> put(rs.getObject("location_id", UUID::class.java) to rs.getObject("product_id", UUID::class.java), rs.getBigDecimal("quantity")) },
+				*ordered.flatMap { (location, product) -> listOf(location, product) }.toTypedArray(),
 			)
-			balances[location to product] = jdbc.queryForObject(
-				"select quantity from stock_balances where location_id = ? and product_id = ? for update",
-				BigDecimal::class.java, location, product,
-			)!!
 		}
-		return balances
+	}
+
+	// Writes every balance the call touched, in one update against the values already computed in memory. Each row was
+	// locked by `lock` in this transaction, so the write cannot race another call.
+	private fun updateBalances(balances: Map<Pair<UUID, UUID>, BigDecimal>, now: Instant) {
+		val values = balances.entries.joinToString(", ") { "(?, ?, ?)" }
+		jdbc.update(
+			"update stock_balances b set quantity = v.quantity, updated_at = ? from (values $values) as v(location_id, product_id, quantity) where b.location_id = v.location_id and b.product_id = v.product_id",
+			Timestamp.from(now), *balances.entries.flatMap { (key, quantity) -> listOf<Any>(key.first, key.second, quantity) }.toTypedArray(),
+		)
 	}
 
 	private fun views(list: List<StockMovement>, language: String, locationCodes: Map<UUID, String>, productCodes: Map<UUID, String>): List<MovementView> {

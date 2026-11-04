@@ -76,4 +76,8 @@ interface CatalogItemRepository : JpaRepository<CatalogItem, UUID> {
 	fun findByCatalogIdAndCode(catalogId: UUID, code: String): CatalogItem?
 
 	fun countByCatalogId(catalogId: UUID): Long
+
+	// For the cache: every item with its labels in one query, not one per item.
+	@org.springframework.data.jpa.repository.Query("select i from CatalogItem i left join fetch i.labels")
+	fun findAllWithLabels(): List<CatalogItem>
 }

@@ -18,7 +18,9 @@
     "name": "Nombre",
     "unit": "Unidad",
     "barcode": "Código de barras",
-    "barcodeHint": "Si lo dejas vacío, se usa el código del material."
+    "barcodeHint": "Si lo dejas vacío, se usa el código del material.",
+    "barcodeInvalid": "6 a 20 caracteres (mayúsculas, números, guiones); si son 12 o 13 dígitos, el dígito verificador debe cuadrar.",
+    "codeInvalid": "2 a 20 caracteres: mayúsculas, números y guiones."
   },
   "detail": {
     "legacyId": "Id del archivo anterior",

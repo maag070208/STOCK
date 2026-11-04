@@ -1,10 +1,11 @@
-import { ITBadget, ITButton, ITChip, ITFlex, ITInput, ITSearchSelect, ITStack, ITText, ITTextarea } from "@axzydev/axzy_ui_system";
+import { ITBadget, ITButton, ITChip, ITFlex, ITSearchSelect, ITStack, ITText, ITTextarea } from "@axzydev/axzy_ui_system";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { orderApi, type Order, type OrderLine, type OrderOperator } from "@entities/order";
 import { locationApi, type Location } from "@entities/warehouse";
 import { formatQuantity } from "@shared/lib/format";
 import { FormDialog } from "@shared/ui/FormDialog";
+import { QuantityInput } from "@shared/ui/QuantityInput";
 import { useSubmit } from "@shared/ui/useSubmit";
 
 // The actions an order takes (order-fulfillment.md sections 6, 7a and 8). Each dialog sends one of them, needs what it
@@ -35,6 +36,8 @@ export function AssignOrderDialog(props: { order: Order | null; isOpen: boolean;
 		if (saved) props.onSaved();
 	}
 
+	const required = t("common:validation.required");
+
 	return (
 		<FormDialog
 			isOpen={props.isOpen}
@@ -42,6 +45,7 @@ export function AssignOrderDialog(props: { order: Order | null; isOpen: boolean;
 			onClose={props.onClose}
 			onSubmit={() => void save()}
 			submitting={submit.submitting}
+			blocked={operatorId ? null : `${t("assignDialog.operator")}: ${required}`}
 			error={submit.error}
 		>
 			<ITStack className="sf:min-w-[24rem]">
@@ -90,9 +94,18 @@ export function ReassignOperatorDialog(props: { order: Order | null; isOpen: boo
 		if (saved) props.onSaved();
 	}
 
+	const required = t("common:validation.required");
+
 	return (
-		<FormDialog isOpen={props.isOpen} title={t("reassignDialog.title")} onClose={props.onClose} onSubmit={() => void save()} submitting={submit.submitting} error={submit.error}>
-			<ITText>{props.order?.operator ? t("reassign.current", { name: props.order.operator.name }) : t("reassignDialog.body")}</ITText>
+		<FormDialog
+			isOpen={props.isOpen}
+			title={t("reassignDialog.title")}
+			onClose={props.onClose}
+			onSubmit={() => void save()}
+			submitting={submit.submitting}
+			blocked={!operatorId ? `${t("reassignDialog.operator")}: ${required}` : !note.trim() ? `${t("reassignDialog.note")}: ${required}` : null}
+			error={submit.error}
+		>			<ITText>{props.order?.operator ? t("reassign.current", { name: props.order.operator.name }) : t("reassignDialog.body")}</ITText>
 			<ITStack spacing={3} className="sf:min-w-[26rem]">
 				<ITSearchSelect
 					name="operatorId"
@@ -317,18 +330,32 @@ export function TransferPicksDialog(props: { order: Order | null; line: OrderLin
 	const quantityNumber = Number(quantity);
 	const overPicked = line ? quantityNumber > Number(line.pickedQuantity) : false;
 	const overTarget = target !== null && quantityNumber > target.needs;
-	const blocked = !line || !target || quantityNumber <= 0 || overPicked || overTarget;
-	const quantityError = tried && line ? (overTarget ? t("transferDialog.aboveTarget") : overPicked || quantityNumber <= 0 ? t("transferDialog.abovePicked") : undefined) : undefined;
+	const quantityBad = !quantity.trim() || quantityNumber <= 0 || overPicked || overTarget;
+	const quantityError =
+		line && quantity.trim() ? (overTarget ? t("transferDialog.aboveTarget") : overPicked || quantityNumber <= 0 ? t("transferDialog.abovePicked") : undefined) : undefined;
+	const required = t("common:validation.required");
+	// The reason the dialog stays closed, said where the click would be: the first thing still missing or over.
+	const blockedReason = !line
+		? `${t("transferDialog.line")}: ${required}`
+		: !target
+			? `${t("reassign.target")}: ${required}`
+			: !quantity.trim()
+				? `${t("transferDialog.quantity")}: ${required}`
+				: quantityBad
+					? quantityError ?? null
+					: !note.trim()
+						? `${t("transferDialog.note")}: ${required}`
+						: null;
 
 	async function save() {
 		setTried(true);
-		if (!props.order || !line || !target || blocked || !note.trim()) return;
+		if (!props.order || !line || !target || blockedReason || !note.trim()) return;
 		const saved = await submit.run(() => orderApi.transfer(props.order!.id, { lineId: line.id, targetOrderId: target.order.id, quantity: quantityNumber, note: note.trim() }));
 		if (saved) props.onSaved();
 	}
 
 	return (
-		<FormDialog isOpen={props.isOpen} title={t("transferDialog.title")} onClose={props.onClose} onSubmit={() => void save()} submitting={submit.submitting} error={submit.error} submitLabel={t("transferDialog.confirm")}>
+		<FormDialog isOpen={props.isOpen} title={t("transferDialog.title")} onClose={props.onClose} onSubmit={() => void save()} submitting={submit.submitting} blocked={blockedReason} error={submit.error} submitLabel={t("transferDialog.confirm")}>
 			<ITStack spacing={3} className="sf:min-w-[32rem]">
 				<PickedLine lines={lines} line={line} label={t("transferDialog.line")} tried={tried} onChoose={setLineId} />
 				{line && (
@@ -348,12 +375,14 @@ export function TransferPicksDialog(props: { order: Order | null; line: OrderLin
 				)}
 				{target && (
 					<>
-						<ITInput
+						<QuantityInput
 							name="quantity"
-							type="number"
 							label={t("transferDialog.quantity")}
 							value={quantity}
-							onChange={(e) => setQuantity(e.target.value)}
+							onChange={setQuantity}
+							decimalPlaces={line?.unit?.decimalPlaces ?? 0}
+							min={1}
+							max={line ? Math.min(target.needs, Number(line.pickedQuantity)) : null}
 							error={submit.fieldErrors.quantity ?? quantityError ?? t("reassign.max", { quantity: shown(Math.min(target.needs, Number(line?.pickedQuantity ?? 0))) })}
 							touched={!!quantityError || !!submit.fieldErrors.quantity}
 							required
@@ -417,17 +446,31 @@ export function ReturnPicksDialog(props: { order: Order | null; line: OrderLine 
 	}, [props.isOpen, props.order, props.line]);
 
 	const quantityNumber = Number(quantity);
-	const blocked = !line || quantityNumber <= 0 || quantityNumber > Number(line.pickedQuantity);
+	const overPicked = line ? quantityNumber > Number(line.pickedQuantity) : false;
+	const quantityError = line && quantity.trim() ? (quantityNumber <= 0 || overPicked ? t("transferDialog.abovePicked") : undefined) : undefined;
+	const required = t("common:validation.required");
+	// The first thing still missing or over, said where the click would be.
+	const blockedReason = !line
+		? `${t("returnDialog.line")}: ${required}`
+		: !locationId
+			? `${t("returnDialog.location")}: ${required}`
+			: !quantity.trim()
+				? `${t("returnDialog.quantity")}: ${required}`
+				: quantityNumber <= 0 || overPicked
+					? (quantityError ?? null)
+					: !note.trim()
+						? `${t("returnDialog.note")}: ${required}`
+						: null;
 
 	async function save() {
 		setTried(true);
-		if (!props.order || !line || !locationId || blocked || !note.trim()) return;
+		if (!props.order || !line || !locationId || blockedReason) return;
 		const saved = await submit.run(() => orderApi.returnStock(props.order!.id, { lineId: line.id, locationId, quantity: quantityNumber, note: note.trim() }));
 		if (saved) props.onSaved();
 	}
 
 	return (
-		<FormDialog isOpen={props.isOpen} title={t("returnDialog.title")} onClose={props.onClose} onSubmit={() => void save()} submitting={submit.submitting} error={submit.error} submitLabel={t("returnDialog.confirm")}>
+		<FormDialog isOpen={props.isOpen} title={t("returnDialog.title")} onClose={props.onClose} onSubmit={() => void save()} submitting={submit.submitting} blocked={blockedReason} error={submit.error} submitLabel={t("returnDialog.confirm")}>
 			<ITStack spacing={3} className="sf:min-w-[32rem]">
 				<PickedLine
 					lines={lines}
@@ -451,14 +494,16 @@ export function ReturnPicksDialog(props: { order: Order | null; line: OrderLine 
 					touched={tried || !!submit.fieldErrors.locationId}
 					required
 				/>
-				<ITInput
+				<QuantityInput
 					name="quantity"
-					type="number"
 					label={t("returnDialog.quantity")}
 					value={quantity}
-					onChange={(e) => setQuantity(e.target.value)}
-					error={submit.fieldErrors.quantity ?? (tried && line && quantityNumber > Number(line.pickedQuantity) ? t("transferDialog.abovePicked") : undefined)}
-					touched={tried || !!submit.fieldErrors.quantity}
+					onChange={setQuantity}
+					decimalPlaces={line?.unit?.decimalPlaces ?? 0}
+					min={1}
+					max={line ? Number(line.pickedQuantity) : null}
+					error={submit.fieldErrors.quantity ?? quantityError}
+					touched={!!quantityError || !!submit.fieldErrors.quantity}
 					required
 				/>
 				<ITTextarea

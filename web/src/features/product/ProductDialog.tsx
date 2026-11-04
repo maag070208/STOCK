@@ -2,7 +2,7 @@ import { ITGrid, ITInput, ITSearchSelect } from "@axzydev/axzy_ui_system";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { CatalogItem } from "@entities/catalog";
-import { productApi, type Product } from "@entities/product";
+import { barcodeInvalid, codeInvalid, productApi, type Product } from "@entities/product";
 import { FormDialog } from "@shared/ui/FormDialog";
 import { useSubmit } from "@shared/ui/useSubmit";
 
@@ -39,19 +39,40 @@ export function ProductDialog(props: { product: Product | null; units: CatalogIt
 	}, [props.isOpen, props.product]);
 
 	const required = t("common:validation.required");
-	const missing = (field: keyof Values) => tried && !values[field].trim() && (field !== "code" || !props.product) ? required : undefined;
-	const error = (field: keyof Values) => submit.fieldErrors[field] ?? missing(field);
+	// A field answers while it is written once it has something to judge; the required check still waits for the first
+	// attempt, so an open dialog does not shout.
+	const dirty = (field: keyof Values) => tried || !!values[field].trim();
+	const missing = (field: keyof Values) => (tried && !values[field].trim() && (field !== "code" || !props.product) ? required : undefined);
+	const formatError = (field: keyof Values) => {
+		if (!dirty(field)) return undefined;
+		if (field === "code" && values.code.trim() && !props.product && codeInvalid(values.code.trim())) return t("form.codeInvalid");
+		if (field === "barcode" && values.barcode.trim() && barcodeInvalid(values.barcode.trim())) return t("form.barcodeInvalid");
+		return undefined;
+	};
+	const error = (field: keyof Values) => submit.fieldErrors[field] ?? missing(field) ?? formatError(field);
+
+	const codeProblem = !props.product && values.code.trim() && codeInvalid(values.code.trim()) ? t("form.codeInvalid") : null;
+	const barcodeProblem = values.barcode.trim() && barcodeInvalid(values.barcode.trim()) ? t("form.barcodeInvalid") : null;
+	const blockedReason = codeProblem ?? barcodeProblem ?? ((["code", "name", "unit"] as const).find((field) => !values[field].trim() && (field !== "code" || !props.product)) ? required : null);
 
 	async function save() {
 		setTried(true);
-		if ((!props.product && !values.code.trim()) || !values.name.trim() || !values.unit) return;
+		if (blockedReason) return;
 		const changes = { name: values.name, unit: values.unit, barcode: values.barcode };
 		const saved = await submit.run(() => (props.product ? productApi.update(props.product.id, changes) : productApi.create({ code: values.code, ...changes })));
 		if (saved) props.onSaved(saved);
 	}
 
 	return (
-		<FormDialog isOpen={props.isOpen} title={props.product ? t("edit") : t("new")} onClose={props.onClose} onSubmit={() => void save()} submitting={submit.submitting} error={submit.error}>
+		<FormDialog
+			isOpen={props.isOpen}
+			title={props.product ? t("edit") : t("new")}
+			onClose={props.onClose}
+			onSubmit={() => void save()}
+			submitting={submit.submitting}
+			blocked={blockedReason}
+			error={submit.error}
+		>
 			<ITGrid container spacing={3} className="sf:min-w-[28rem]">
 				<ITGrid item xs={12} sm={6}>
 					<ITInput

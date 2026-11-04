@@ -43,8 +43,9 @@
 	},
 	"lineErrors": {
 		"FIELD_REQUIRED": "Write the quantity.",
-		"QUANTITY_INVALID": "The quantity must be greater than zero.",
-		"STOCK_INSUFFICIENT": "The warehouse does not have that much available."
+		"QUANTITY_INVALID": "The quantity must be greater than zero, with the decimals its unit allows.",
+		"STOCK_INSUFFICIENT": "The warehouse does not have that much available.",
+		"DUPLICATE_PRODUCT": "This material is already on another line of the order."
 	},
 	"detail": {
 		"back": "Back to orders",

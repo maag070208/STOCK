@@ -187,7 +187,11 @@ class OrderService(
 		user.requireRead(VIEW, warehouseId)
 		if (!warehouses.codes(listOf(warehouseId)).containsKey(warehouseId)) throw ApiException(ErrorCode.NOT_FOUND)
 		val ids = request.productIds.orEmpty().distinct()
-		return AvailabilityResponse(ids.map { AvailabilityView(it, balance(it, warehouseId).subtract(reserved(it, warehouseId))) })
+		if (ids.isEmpty()) return AvailabilityResponse(emptyList())
+		// One aggregate per side, whatever the number of materials: balance and reservation, grouped by product.
+		val balances = balances(ids, warehouseId)
+		val reserved = reservedQuantities(ids, warehouseId)
+		return AvailabilityResponse(ids.map { AvailabilityView(it, balances.getOrDefault(it, BigDecimal.ZERO).subtract(reserved.getOrDefault(it, BigDecimal.ZERO))) })
 	}
 
 	// The order goes to one active operator of its warehouse (order-fulfillment.md section 7a). Assigning changes no stock.
@@ -515,22 +519,33 @@ class OrderService(
 	}
 
 	private fun balance(productId: UUID, warehouseId: UUID): BigDecimal =
-		jdbc.queryForObject(
-			"select coalesce(sum(quantity), 0) from stock_balances where product_id = ? and warehouse_id = ?",
-			BigDecimal::class.java, productId, warehouseId,
-		)!!
+		balances(listOf(productId), warehouseId).getOrDefault(productId, BigDecimal.ZERO)
+
+	// The balance of each material in the warehouse, in one aggregate.
+	private fun balances(productIds: List<UUID>, warehouseId: UUID): Map<UUID, BigDecimal> =
+		jdbc.query(
+			"select product_id, coalesce(sum(quantity), 0) as quantity from stock_balances where warehouse_id = ? and product_id = any(?) group by product_id",
+			{ rs, _ -> rs.getObject("product_id", UUID::class.java) to rs.getBigDecimal("quantity") },
+			warehouseId, productIds.toTypedArray(),
+		).toMap()
 
 	// What open orders of the warehouse still reserve of a material: the unpicked part of every line of an order that
 	// is not yet validated or cancelled.
 	private fun reserved(productId: UUID, warehouseId: UUID): BigDecimal =
-		jdbc.queryForObject(
+		reservedQuantities(listOf(productId), warehouseId).getOrDefault(productId, BigDecimal.ZERO)
+
+	// The reservation of each material, in one aggregate.
+	private fun reservedQuantities(productIds: List<UUID>, warehouseId: UUID): Map<UUID, BigDecimal> =
+		jdbc.query(
 			"""
-			select coalesce(sum(l.quantity - l.picked_quantity), 0)
+			select l.product_id, coalesce(sum(l.quantity - l.picked_quantity), 0) as reserved
 			from order_lines l join orders o on o.id = l.order_id
-			where l.product_id = ? and o.warehouse_id = ? and o.status_id not in (?, ?)
+			where o.warehouse_id = ? and l.product_id = any(?) and o.status_id not in (?, ?)
+			group by l.product_id
 			""".trimIndent(),
-			BigDecimal::class.java, productId, warehouseId, statusId(Status.VALIDATED), statusId(Status.CANCELLED),
-		)!!
+			{ rs, _ -> rs.getObject("product_id", UUID::class.java) to rs.getBigDecimal("reserved") },
+			warehouseId, productIds.toTypedArray(), statusId(Status.VALIDATED), statusId(Status.CANCELLED),
+		).toMap()
 
 	private fun today(): LocalDate = LocalDate.ofInstant(clock.instant(), ZoneId.of(BUSINESS_ZONE))
 

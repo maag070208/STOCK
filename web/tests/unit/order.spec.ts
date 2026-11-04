@@ -2,7 +2,7 @@
 // before the order is sent, and the detail offers each action only when the permission and the status allow it
 // (order-fulfillment.md sections 4, 6, 7a and 8).
 import { test, expect } from "@playwright/test";
-import { availableOf, lineError } from "../../src/entities/order/model/lines";
+import { availableOf, lineError, repeatedProducts } from "../../src/entities/order/model/lines";
 import { orderActions, type OrderPermissions } from "../../src/entities/order/model/actions";
 import type { OrderStatus } from "../../src/entities/order/model/types";
 
@@ -39,9 +39,19 @@ test("a line shows the availability of the order's warehouse, and above it is bl
 	expect(lineError("   ", 140)).toBe("FIELD_REQUIRED");
 	expect(lineError("0", 140)).toBe("QUANTITY_INVALID");
 	expect(lineError("-5", 140)).toBe("QUANTITY_INVALID");
-	expect(lineError("10.5", 140)).toBeNull();
+	// A whole piece takes no decimals; a unit with decimals takes them.
+	expect(lineError("10.5", 140)).toBe("QUANTITY_INVALID");
+	expect(lineError("10.5", 140, 1)).toBeNull();
+	expect(lineError("10.55", 140, 1)).toBe("QUANTITY_INVALID");
 	// Without an answer yet, only the quantity itself is checked: the API decides about the stock.
 	expect(lineError("10", availableOf(items, "bolts"))).toBeNull();
+});
+
+test("a material chosen on two lines is marked the moment it repeats, so the form catches what the API would refuse", () => {
+	expect([...repeatedProducts(["screws", "nails", "screws"])]).toEqual(["screws"]);
+	expect([...repeatedProducts(["screws", "nails"])]).toEqual([]);
+	// Empty lines and lines without a material yet say nothing.
+	expect([...repeatedProducts(["screws", null, undefined, ""])]).toEqual([]);
 });
 
 test("an open order is assigned, cancelled or reassigned, and a validated one only offers its receipt", () => {

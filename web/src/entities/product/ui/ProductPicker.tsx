@@ -1,15 +1,17 @@
 import { ITSearchSelect } from "@axzydev/axzy_ui_system";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { productApi } from "../api/productApi";
 import type { Product } from "../model/types";
 
-// A scanner and a manual search share the API lookup: barcode, then code, then name.
-export function ProductPicker(props: { name: string; label: string; value: string; onChange: (product: Product | null) => void; error?: string; required?: boolean }) {
+// A scanner and a manual search share the API lookup: barcode, then code, then name. `exclude` keeps materials another
+// line of the same form already took, so an order never offers the same material twice.
+export function ProductPicker(props: { name: string; label: string; value: string; onChange: (product: Product | null) => void; error?: string; required?: boolean; exclude?: string[] }) {
 	const { t } = useTranslation(["invoices", "common"]);
 	const [options, setOptions] = useState<Product[]>([]);
 	const [loading, setLoading] = useState(false);
 	const latest = useRef(0);
+	const excluded = useMemo(() => new Set(props.exclude ?? []), [props.exclude]);
 
 	async function search(query: string) {
 		const request = ++latest.current;
@@ -19,7 +21,7 @@ export function ProductPicker(props: { name: string; label: string; value: strin
 			const found = clean
 				? await productApi.lookup(clean).catch(() => ({ match: "NAME" as const, products: [] }))
 				: await productApi.query({ page: 1, limit: 20, filters: { active: "true" } }).then((page) => ({ match: "NAME" as const, products: page.data }));
-			if (request === latest.current) setOptions(found.products);
+			if (request === latest.current) setOptions(found.products.filter((product) => !excluded.has(product.id) || product.id === props.value));
 		} finally {
 			if (request === latest.current) setLoading(false);
 		}
@@ -27,7 +29,8 @@ export function ProductPicker(props: { name: string; label: string; value: strin
 
 	useEffect(() => {
 		void search("");
-	}, []);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [excluded]);
 
 	return (
 		<ITSearchSelect
