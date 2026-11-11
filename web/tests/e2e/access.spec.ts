@@ -49,7 +49,7 @@ test("an administrator creates a policy with a condition, and deletes it", async
 	page.on("close", () => void adminToken().then((token) => call("DELETE", `/policies/${key}`, { token })));
 	await signInAs(page, e2eAdmin());
 	await page.goto("/#/roles");
-	await page.getByText("Políticas", { exact: true }).click();
+	await page.getByRole("button", { name: "Políticas" }).click();
 	await page.getByRole("button", { name: "Nueva política" }).click();
 	const dialog = page.getByRole("dialog");
 	await dialog.getByLabel(/^Clave/).fill(key);

@@ -1,6 +1,6 @@
 // F1-18 · e2e: sign-in, the forced password change, the menu by permissions, the 403 page and sign-out.
 import { test, expect, type Page } from "../support/test";
-import { newUser, signInAs, skipIntro } from "../support/api";
+import { newUser, signInAs } from "../support/api";
 
 const menu = (page: Page) => page.locator("aside nav").first();
 
@@ -12,7 +12,6 @@ async function signInThroughTheForm(page: Page, username: string, password: stri
 
 test("a new user signs in, changes the temporary password, and reaches the menu", async ({ page }) => {
 	const user = await newUser(["OFFICE"], { pendingChange: true });
-	await skipIntro(page);
 	await page.goto("/#/login");
 	await signInThroughTheForm(page, user.username, user.password);
 
@@ -66,7 +65,6 @@ test("a screen without the permission shows the 403 page", async ({ page }) => {
 
 test("a wrong password, and a user without web access, see the API's message", async ({ page }) => {
 	const appUser = await newUser(["APP_USER"], { channel: "app" });
-	await skipIntro(page);
 	await page.goto("/#/login");
 	await signInThroughTheForm(page, appUser.username, "Clave-incorrecta-1");
 	await expect(page.getByText("El usuario o la contraseña no son correctos.")).toBeVisible();
@@ -76,7 +74,6 @@ test("a wrong password, and a user without web access, see the API's message", a
 });
 
 test("empty fields are required before anything is sent", async ({ page }) => {
-	await skipIntro(page);
 	await page.goto("/#/login");
 	await page.getByRole("button", { name: "Entrar" }).click();
 	await expect(page.getByText("Este campo es obligatorio.")).toHaveCount(2);
@@ -84,7 +81,6 @@ test("empty fields are required before anything is sent", async ({ page }) => {
 
 test("the session survives a reload, and signing out ends it", async ({ page }) => {
 	const office = await newUser(["OFFICE"]);
-	await skipIntro(page);
 	await page.goto("/#/login");
 	await signInThroughTheForm(page, office.username, office.password);
 	await expect(page.getByText(`Hola, ${office.name.split(" ")[0]}`)).toBeVisible();

@@ -1,4 +1,4 @@
-import { type Column, ITAlert, ITBadget, ITButton, ITFlex, ITGrid, ITPage, ITStack, ITStatCard, ITText } from "@axzydev/axzy_ui_system";
+import { type Column, ITAlert, ITBadget, ITButton, ITCard, ITFlex, ITPage, ITStack, ITText } from "@axzydev/axzy_ui_system";
 import { trail } from "@shared/lib/breadcrumbs";
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -7,6 +7,7 @@ import { canConfirm, importSummary, productApi, type ImportReport } from "@entit
 import { formatNumber } from "@shared/lib/format";
 import { useSubmit } from "@shared/ui/useSubmit";
 import { PlainTable } from "@shared/ui/PlainTable";
+import { BentoStats } from "@shared/ui/BentoStats";
 
 // One rejected row of the file, which the kit tells apart by its row and field.
 type RejectedRow = Record<string, unknown> & { id: string; row: number; field: string; message: string };
@@ -54,7 +55,8 @@ export function ProductImportPage() {
 			breadcrumbs={trail(t("common:nav.home"), navigate, { label: t("title"), onClick: () => navigate("/products") }, { label: t("importPage.title") })}
 			noPadding
 		>
-			<ITStack spacing={6} className="sf:max-w-4xl">
+			<ITStack spacing={6}>
+				<ITCard>
 				<ITStack spacing={2}>
 					<ITText as="label" htmlFor="import-file" className="sf:text-label-md">
 						{t("importPage.file")}
@@ -82,6 +84,7 @@ export function ProductImportPage() {
 						<ITButton label={review.submitting ? t("importPage.reviewing") : t("importPage.review")} onClick={() => void runReview()} disabled={!file || review.submitting} />
 					</ITFlex>
 				</ITStack>
+				</ITCard>
 				{review.error && <ITAlert variant="error">{review.error}</ITAlert>}
 
 				{report && summary && (
@@ -89,20 +92,15 @@ export function ProductImportPage() {
 						<ITText as="h2" className="sf:text-title-md">
 							{t("importPage.report")}
 						</ITText>
-						<ITGrid container spacing={3}>
-							<ITGrid item xs={12} sm={6} md={3}>
-								<ITStatCard label={t("importPage.accepted")} value={number(summary.accepted)} />
-							</ITGrid>
-							<ITGrid item xs={12} sm={6} md={3}>
-								<ITStatCard label={t("importPage.newProducts")} value={number(summary.newProducts)} />
-							</ITGrid>
-							<ITGrid item xs={12} sm={6} md={3}>
-								<ITStatCard label={t("importPage.existingProducts")} value={number(summary.existingProducts)} />
-							</ITGrid>
-							<ITGrid item xs={12} sm={6} md={3}>
-								<ITStatCard label={t("importPage.rejected")} value={number(summary.rejected)} />
-							</ITGrid>
-						</ITGrid>
+						<BentoStats
+							label={t("importPage.report")}
+							items={[
+								{ id: "accepted", label: t("importPage.accepted"), text: number(summary.accepted), tone: "ink" },
+								{ id: "newProducts", label: t("importPage.newProducts"), text: number(summary.newProducts), tone: "orange" },
+								{ id: "existingProducts", label: t("importPage.existingProducts"), text: number(summary.existingProducts), tone: "sand" },
+								{ id: "rejected", label: t("importPage.rejected"), text: number(summary.rejected), tone: summary.rejected ? "amber" : "plain" },
+							]}
+						/>
 						<ITFlex align="center" gap={3}>
 							<ITText className="sf:text-label-md">{t("importPage.control.label")}</ITText>
 							<ITBadget

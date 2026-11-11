@@ -1,7 +1,4 @@
 {
-  "brand": {
-    "loading": "Loading StockFlow"
-  },
   "app": {
     "name": "StockFlow"
   },
@@ -232,5 +229,35 @@
     "invoices": "Invoices",
     "orders": "Orders",
     "materials": "Materials"
+  },
+  "stats": {
+    "all": "All",
+    "active": "Active",
+    "inactive": "Inactive",
+    "label": "Summary",
+    "rows": "With stock",
+    "products": "Materials with stock",
+    "warehouses": "Warehouses",
+    "entries": "Records",
+    "last": "Last movement",
+    "open": "Open",
+    "short": "Short",
+    "over": "Over",
+    "templates": "Templates",
+    "activeF": "Active",
+    "inactiveF": "Inactive",
+    "printers": "Printers",
+    "catalogs": "Catalogs",
+    "values": "Values",
+    "roles": "Roles",
+    "permissions": "Permissions",
+    "policies": "Policies",
+    "custom": "Custom",
+    "minimum": "Minimum",
+    "stock": "Stock",
+    "aisles": "Aisles",
+    "racks": "Racks",
+    "locations": "Locations",
+    "allOrders": "All"
   }
 }

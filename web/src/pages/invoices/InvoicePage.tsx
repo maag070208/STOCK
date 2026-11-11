@@ -173,6 +173,7 @@ export function InvoicePage() {
 			{invoice && (
 				<ITStack spacing={6}>
 					<FactStrip
+						hero
 						facts={[
 							{ label: t("detail.supplier"), value: `${invoice.supplier.code ?? ""} · ${invoice.supplier.name ?? ""}` },
 							{ label: t("detail.date"), value: formatDate(invoice.invoiceDate, i18n.language) },

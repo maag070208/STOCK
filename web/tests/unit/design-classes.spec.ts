@@ -10,6 +10,7 @@ const hooks = new Set([
   "sf-shell",
   "sf-on-primary",
   "sf-rise",
+  "sf-stats",
   "sf-art-scene",
   "sf-art-carton-a",
   "sf-art-carton-b",

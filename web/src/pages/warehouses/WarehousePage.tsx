@@ -1,4 +1,4 @@
-import { type Column, type ColumnFilters, ITBadget, ITButton, ITConfirmDialog, ITDataTable, ITDropdownMenu, type ITDropdownMenuItem, ITFlex, ITPage, ITStack, ITText } from "@axzydev/axzy_ui_system";
+import { type Column, type ColumnFilters, ITBadget, ITButton, ITCard, ITConfirmDialog, ITDataTable, ITDropdownMenu, type ITDropdownMenuItem, ITFlex, ITPage, ITStack, ITText } from "@axzydev/axzy_ui_system";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { FaEllipsisV } from "react-icons/fa";
@@ -12,6 +12,7 @@ import type { TableParams } from "@shared/api/table";
 import { ApiError } from "@shared/api/client";
 import { toast } from "@app/store";
 import { cardBreakpoint, tableHeight } from "@shared/ui/tableLayout";
+import { BentoStats } from "@shared/ui/BentoStats";
 
 type Group = { aisle: string; rack: string };
 type Confirm = { kind: "deactivateLocation" | "reactivateLocation"; location: Location };
@@ -138,10 +139,16 @@ export function WarehousePage() {
 			actions={canManage && warehouse?.active ? <ITButton label={t("rack.new")} onClick={() => setCreating(true)} /> : undefined}
 		>
 			<ITStack spacing={6}>
-				<ITStack spacing={3}>
-					<ITText as="h2" className="sf:text-title-md">
-						{t("detail.groups")}
-					</ITText>
+				<BentoStats
+					label={t("common:stats.label")}
+					items={[
+						{ id: "locations", label: t("common:stats.locations"), value: groups.flatMap((aisle) => aisle.racks).reduce((sum, rack) => sum + rack.locations, 0), tone: "ink" },
+						{ id: "aisles", label: t("common:stats.aisles"), value: groups.length, tone: "orange" },
+						{ id: "racks", label: t("common:stats.racks"), value: groups.flatMap((aisle) => aisle.racks).length, tone: "sand" },
+					]}
+				/>
+				<ITCard title={t("detail.groups")}>
+					<ITStack spacing={3}>
 					{groups.length === 0 && <ITText muted>{t("detail.noGroups")}</ITText>}
 					{groups.map((aisle) => (
 						<ITFlex key={aisle.aisle} wrap="wrap" align="center" gap={2}>
@@ -163,8 +170,12 @@ export function WarehousePage() {
 						</ITFlex>
 					))}
 				</ITStack>
-
-				{(canStaff || canAssign) && <StaffTemplate warehouseId={id} canManage={canStaff} onSaved={() => toast(t("common:saved"))} />}
+				</ITCard>
+				{(canStaff || canAssign) && (
+					<ITCard>
+						<StaffTemplate warehouseId={id} canManage={canStaff} onSaved={() => toast(t("common:saved"))} />
+					</ITCard>
+				)}
 
 				<ITStack spacing={3}>
 					<ITFlex align="center" gap={3}>

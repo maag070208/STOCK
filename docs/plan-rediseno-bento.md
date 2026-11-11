@@ -79,6 +79,13 @@ The rule of the whole app: **the camera comes first; whoever cannot scan writes 
 - My receipts shows each invoice's progress and the state of each material, and a touch goes to what it needs next.
 - The home opens with one big "Escanear un código". Internal codes (`CREATED`, `TEMPORARY`) are gone from the screens.
 
+### 3d. Every web screen: the same mosaic (2026-11-01)
+
+- **Lists** open with `BentoStats`: real counts, the first tile in ink, and a tile with `onClick` is the filter of the table below. `useActiveStats` gives catalogs that are deactivated their all/active/inactive tiles. The invoice status chips became these tiles.
+- **Records** show their facts as tiles (`FactStrip`), the first in ink when it matters most; a material leads with its stock. The status sits next to the actions in the header.
+- **Reports** show their totals as tiles (`ReportTotals`); **forms and imports** are grouped in cards; `ITStatCard` is gone from the screens.
+- The web no longer plays a Lottie: it opens on the entry screen.
+
 ## 4. Rules that broke things (and how they are handled)
 
 - Passing `shadow` to `ITThemeProvider` disables `--it-bento-card-shadow`: never pass it.

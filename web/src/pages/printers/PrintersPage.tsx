@@ -11,6 +11,7 @@ import { warehouseApi } from "@entities/warehouse";
 import { PrinterDialog, type WarehouseOption } from "@features/label/PrinterDialog";
 import { toast } from "@app/store";
 import { PlainTable } from "@shared/ui/PlainTable";
+import { BentoStats } from "@shared/ui/BentoStats";
 
 // The printers of each warehouse, with their addresses: only administrators see them (labels.md section 5). The screen
 // is built with the components of the UI kit only (web.md section 8).
@@ -63,6 +64,14 @@ export function PrintersPage() {
 			loading={printers === null}
 			actions={canManage ? <ITButton label={t("printers.new")} onClick={() => setEditing({ printer: null })} /> : undefined}
 		>
+			<BentoStats
+				label={t("common:stats.label")}
+				items={[
+					{ id: "all", label: t("common:stats.printers"), value: printers?.length ?? null, tone: "ink" },
+					{ id: "active", label: t("common:stats.activeF"), value: printers?.filter((printer) => printer.active).length ?? null, tone: "orange" },
+					{ id: "warehouses", label: t("common:stats.warehouses"), value: printers ? new Set(printers.map((printer) => printer.warehouseCode)).size : null, tone: "sand" },
+				]}
+			/>
 			<PlainTable<Printer>columns={columns} data={printers ?? []} size="sm" />
 			<PrinterDialog
 				printer={editing?.printer ?? null}

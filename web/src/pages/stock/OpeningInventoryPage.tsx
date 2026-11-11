@@ -1,4 +1,4 @@
-import { ITAlert, ITBadget, ITButton, ITFlex, ITGrid, ITPage, ITStack, ITStatCard, ITText } from "@axzydev/axzy_ui_system";
+import { ITAlert, ITBadget, ITButton, ITCard, ITFlex, ITGrid, ITPage, ITStack, ITText } from "@axzydev/axzy_ui_system";
 import { trail } from "@shared/lib/breadcrumbs";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -7,6 +7,7 @@ import { stockApi, type OpeningReport } from "@entities/stock";
 import { warehouseApi, WarehousePicker } from "@entities/warehouse";
 import { formatNumber } from "@shared/lib/format";
 import { useSubmit } from "@shared/ui/useSubmit";
+import { BentoStats } from "@shared/ui/BentoStats";
 
 const none = (value: unknown) => value === null || value === undefined;
 
@@ -61,7 +62,9 @@ export function OpeningInventoryPage() {
 			breadcrumbs={trail(t("common:nav.home"), navigate, { label: t("common:nav.stock"), onClick: () => navigate("/stock") }, { label: t("opening.title") })}
 			noPadding
 		>
-			<ITStack spacing={6} className="sf:max-w-4xl">
+			<ITStack spacing={6}>
+				<ITCard>
+				<ITStack spacing={4}>
 				<ITGrid container spacing={3}>
 					<ITGrid item xs={12} sm={6}>
 						<WarehousePicker
@@ -104,6 +107,8 @@ export function OpeningInventoryPage() {
 				<ITStack>
 					<ITButton label={review.submitting ? t("opening.reviewing") : t("opening.review")} onClick={() => void runReview()} disabled={!file || !warehouseId || review.submitting} />
 				</ITStack>
+				</ITStack>
+				</ITCard>
 				{review.error && <ITAlert variant="error">{review.error}</ITAlert>}
 
 				{report && (
@@ -111,17 +116,14 @@ export function OpeningInventoryPage() {
 						<ITText as="h2" className="sf:text-title-md">
 							{t("opening.report")}
 						</ITText>
-						<ITGrid container spacing={3}>
-							<ITGrid item xs={12} md={4}>
-									<ITStatCard label={t("opening.products")} value={number(report.products)} />
-							</ITGrid>
-							<ITGrid item xs={12} md={4}>
-									<ITStatCard label={t("opening.withStock")} value={number(report.withStock)} />
-							</ITGrid>
-							<ITGrid item xs={12} md={4}>
-									<ITStatCard label={t("opening.total")} value={number(report.total)} />
-							</ITGrid>
-						</ITGrid>
+						<BentoStats
+							label={t("opening.report")}
+							items={[
+								{ id: "products", label: t("opening.products"), text: number(report.products), tone: "ink" },
+								{ id: "withStock", label: t("opening.withStock"), text: number(report.withStock), tone: "orange" },
+								{ id: "total", label: t("opening.total"), text: number(report.total), tone: "sand" },
+							]}
+						/>
 						<ITFlex align="center" gap={3}>
 							<ITText as="span" className="sf:text-label-md">
 								{t("opening.control.label")}

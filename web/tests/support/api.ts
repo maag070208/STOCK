@@ -146,10 +146,5 @@ export async function signInAs(page: Page, user: { username: string; password: s
 	const session = { token: login.json.token, refreshToken: login.json.refreshToken, user: login.json.user };
 	await page.addInitScript((value) => {
 		window.localStorage.setItem("stockflow.auth", value);
-		window.sessionStorage.setItem("stockflow.intro-seen", "1");
 	}, JSON.stringify(session));
-}
-
-export async function skipIntro(page: Page) {
-	await page.addInitScript(() => window.sessionStorage.setItem("stockflow.intro-seen", "1"));
 }

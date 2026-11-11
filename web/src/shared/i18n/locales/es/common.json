@@ -1,7 +1,4 @@
 {
-  "brand": {
-    "loading": "Cargando StockFlow"
-  },
   "app": {
     "name": "StockFlow"
   },
@@ -232,5 +229,35 @@
     "invoices": "Facturas",
     "orders": "Órdenes",
     "materials": "Materiales"
+  },
+  "stats": {
+    "all": "Todos",
+    "active": "Activos",
+    "inactive": "Inactivos",
+    "label": "Resumen",
+    "rows": "Con existencia",
+    "products": "Materiales con existencia",
+    "warehouses": "Almacenes",
+    "entries": "Registros",
+    "last": "Último movimiento",
+    "open": "Abiertas",
+    "short": "Faltantes",
+    "over": "Sobrantes",
+    "templates": "Plantillas",
+    "activeF": "Activas",
+    "inactiveF": "Inactivas",
+    "printers": "Impresoras",
+    "catalogs": "Catálogos",
+    "values": "Valores",
+    "roles": "Roles",
+    "permissions": "Permisos",
+    "policies": "Políticas",
+    "custom": "Personalizados",
+    "minimum": "Mínimo",
+    "stock": "Existencia",
+    "aisles": "Pasillos",
+    "racks": "Racks",
+    "locations": "Ubicaciones",
+    "allOrders": "Todas"
   }
 }

@@ -171,6 +171,21 @@ body {
   }
 }
 
+/* The kit gives each tile a whole row on a phone, and a row of numbers would fill the screen before the list: the first
+   keeps its row and the rest go in pairs. The kit's rule is important, and among important rules the earlier layer wins,
+   so this one lives in `base`, before the kit's layer. */
+@layer base {
+  @media (max-width: 560px) {
+    .sf-stats .it-bento-tile {
+      grid-column: span 3 !important;
+      min-height: 92px !important;
+    }
+    .sf-stats .it-bento-tile:first-child {
+      grid-column: span 6 !important;
+    }
+  }
+}
+
 /* A row that opens something says so under the pointer. */
 .sf-shell tbody tr {
   transition: background-color 150ms ease;

@@ -1,4 +1,4 @@
-import { type Column, ITBadget, ITButton, ITChip, ITDataTable, type ITDataTableFetchParams, ITEmptyState, ITFlex, ITInput, ITPage, ITStack, ITText } from "@axzydev/axzy_ui_system";
+import { type Column, ITBadget, ITButton, ITDataTable, type ITDataTableFetchParams, ITEmptyState, ITInput, ITPage, ITStack } from "@axzydev/axzy_ui_system";
 import { trail } from "@shared/lib/breadcrumbs";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -10,6 +10,7 @@ import { useCan } from "@entities/user";
 import { NewInvoiceDialog } from "@features/invoice/NewInvoiceDialog";
 import { formatDate } from "@shared/lib/format";
 import { cardBreakpoint, tableHeight } from "@shared/ui/tableLayout";
+import { BentoStats, useCounts, type BentoStat } from "@shared/ui/BentoStats";
 
 // The invoices the person can see: every one with ALL, those of their warehouses with AREA (the API decides). One search
 // box and three status chips drive the query (F8-05), and a new invoice is captured in a modal over the list (F8-06).
@@ -58,6 +59,9 @@ export function InvoicesPage() {
 		return () => window.removeEventListener("keydown", onKey);
 	}, [canCreate]);
 
+	const countOf = (option: StatusChip) => () => invoiceApi.list({ page: 1, limit: 1, filters: invoiceFilters({ search: "", chip: option }) });
+	const counts = useCounts({ all: countOf("all"), open: countOf("open"), placement: countOf("placement"), closed: countOf("closed"), cancelled: countOf("cancelled") });
+
 	const fetchData = useCallback(
 		async (query: ITDataTableFetchParams) => {
 			const page = await invoiceApi.list({
@@ -97,12 +101,14 @@ export function InvoicesPage() {
 		},
 	];
 
-	const chips: { id: StatusChip; label: string }[] = [
-		{ id: "all", label: t("list.chipAll") },
-		{ id: "open", label: t("list.chipOpen") },
-		{ id: "placement", label: t("list.chipPlacement") },
-		{ id: "closed", label: t("list.chipClosed") },
-		{ id: "cancelled", label: t("list.chipCancelled") },
+	// The numbers are the filters of the list: each tile shows only its invoices.
+	const tile = (id: StatusChip, label: string, tone: BentoStat["tone"]): BentoStat => ({ id, label, value: counts[id], tone, active: chip === id, onClick: () => choose(id) });
+	const stats = [
+		tile("all", t("list.chipAll"), "ink"),
+		tile("open", t("list.chipOpen"), "orange"),
+		tile("placement", t("list.chipPlacement"), "amber"),
+		tile("closed", t("list.chipClosed"), "sand"),
+		tile("cancelled", t("list.chipCancelled"), "plain"),
 	];
 
 	return (
@@ -114,16 +120,10 @@ export function InvoicesPage() {
 			actions={canCreate ? <ITButton label={t("new")} onClick={() => setCreating(true)} /> : undefined}
 		>
 			<ITStack spacing={4}>
-				<ITFlex wrap="wrap" align="end" justify="between" gap={3}>
-					<ITStack className="sf:w-96 sf:max-w-full">
-						<ITInput name="search" label={t("list.search")} value={search} onChange={(event) => setSearch(String(event.target.value))} iconLeft={<FaSearch aria-hidden />} />
-					</ITStack>
-					<ITText as="div" role="group" aria-label={t("list.statusFilter")} className="sf:flex sf:items-center sf:gap-2">
-						{chips.map((option) => (
-							<ITChip key={option.id} label={option.label} selected={chip === option.id} onClick={() => choose(option.id)} />
-						))}
-					</ITText>
-				</ITFlex>
+				<BentoStats items={stats} label={t("list.statusFilter")} />
+				<ITStack className="sf:w-96 sf:max-w-full">
+					<ITInput name="search" label={t("list.search")} value={search} onChange={(event) => setSearch(String(event.target.value))} iconLeft={<FaSearch aria-hidden />} />
+				</ITStack>
 
 				{/* The empty state is shown instead of the table, and the table stays mounted: it is what asks for the next
 				    page when the filters change, so clearing them brings the rows back. */}

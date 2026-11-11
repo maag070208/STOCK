@@ -10,6 +10,7 @@ import type { TableParams } from "@shared/api/table";
 import { ApiError } from "@shared/api/client";
 import { toast } from "@app/store";
 import { cardBreakpoint, tableHeight } from "@shared/ui/tableLayout";
+import { BentoStats, useActiveStats } from "@shared/ui/BentoStats";
 
 type Confirm = { kind: "deactivate" | "reactivate"; partner: Partner };
 
@@ -21,6 +22,8 @@ export function PartnersPage({ kind }: { kind: PartnerKind }) {
 	const api = partnerApi(kind);
 	const [reload, setReload] = useState(0);
 	const [confirm, setConfirm] = useState<Confirm | null>(null);
+
+	const { stats, filters } = useActiveStats(api.query, reload);
 
 	const columns: Column<Partner>[] = [
 		{ key: "code", label: t("columns.code"), type: "string", filter: "search", sortable: true },
@@ -65,6 +68,7 @@ export function PartnersPage({ kind }: { kind: PartnerKind }) {
 
 	return (
 		<ITPage breadcrumbs={trail(t("common:nav.home"), navigate, { label: t(`${kind}.title`) })} title={t(`${kind}.title`)} description={t(`${kind}.description`)} noPadding actions={canManage ? <ITButton label={t(`${kind}.new`)} onClick={() => navigate(`/${kind}/new`)} /> : undefined}>
+			<BentoStats items={stats} label={t("common:stats.label")} />
 			<ITDataTable<Partner>
 				defaultItemsPerPage={25}
 				itemsPerPageOptions={[25, 50, 100]}
@@ -77,7 +81,7 @@ export function PartnersPage({ kind }: { kind: PartnerKind }) {
 				autoCardBreakpoint={cardBreakpoint()}
  columns={columns}
  fetchData={(params) => api.query(params as TableParams)}
- reloadTrigger={reload}
+ externalFilters={filters} reloadTrigger={reload}
  onRowClick={(partner) => navigate(`/${kind}/${partner.id}`)}
 			/>
 			<ITConfirmDialog

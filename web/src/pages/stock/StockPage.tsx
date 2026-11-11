@@ -9,6 +9,7 @@ import { warehouseApi } from "@entities/warehouse";
 import type { TableParams } from "@shared/api/table";
 import { formatQuantity } from "@shared/lib/format";
 import { cardBreakpoint, tableHeight } from "@shared/ui/tableLayout";
+import { BentoStats, useCounts, type BentoStat } from "@shared/ui/BentoStats";
 
 // Stock, read-only (F4-19): by location (each balance, with the groups by aisle and rack as filters) and by material
 // in each warehouse. The API keeps it inside the reader's warehouses.
@@ -24,6 +25,13 @@ export function StockPage() {
 			.then((page) => setWarehouses(page.data.map((w) => ({ id: w.id, name: w.code }))))
 			.catch(() => setWarehouses([]));
 	}, []);
+
+	const counts = useCounts({ rows: () => stockApi.balances({ page: 1, limit: 1, filters: {} }), products: () => stockApi.products({ page: 1, limit: 1, filters: {} }) });
+	const stats: BentoStat[] = [
+		{ id: "products", label: t("common:stats.products"), value: counts.products, tone: "ink" },
+		{ id: "rows", label: t("common:stats.rows"), value: counts.rows, tone: "orange" },
+		{ id: "warehouses", label: t("common:stats.warehouses"), value: warehouses.length, tone: "sand" },
+	];
 
 	const quantity = (row: Balance | ProductTotal) => (
 		<ITText as="span" className="sf:block sf:text-right sf:tabular-nums">
@@ -68,6 +76,7 @@ export function StockPage() {
 			noPadding
 			actions={canOpen ? <ITButton variant="outlined" label={t("opening.button")} onClick={() => navigate("/stock/opening")} /> : undefined}
 		>
+			<BentoStats items={stats} label={t("common:stats.label")} />
 			<ITTabs
 				variant="pill"
 				items={[

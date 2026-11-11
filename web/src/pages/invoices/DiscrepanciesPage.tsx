@@ -1,6 +1,6 @@
 import { type Column, ITDataTable, ITPage, ITText } from "@axzydev/axzy_ui_system";
 import { trail } from "@shared/lib/breadcrumbs";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { IconButton } from "@shared/ui/IconButton";
 import { FaBalanceScale } from "react-icons/fa";
@@ -11,6 +11,7 @@ import type { TableParams } from "@shared/api/table";
 import { formatQuantity } from "@shared/lib/format";
 import { toast } from "@app/store";
 import { cardBreakpoint, tableHeight } from "@shared/ui/tableLayout";
+import { BentoStats, type BentoStat } from "@shared/ui/BentoStats";
 
 // The open discrepancies the person can resolve (F4-21): OFFICE and ADMIN in any warehouse, a manager in theirs.
 // Each one is adjusted to what was counted, with a note.
@@ -21,6 +22,20 @@ export function DiscrepanciesPage() {
 	const [adjusting, setAdjusting] = useState<Discrepancy | null>(null);
 	const number = (value: number) => formatQuantity(value, 3, i18n.language).replace(/[.,]?0+$/, "");
 	const signed = (value: number) => `${value > 0 ? "+" : ""}${number(value)}`;
+
+	// The open ones are few by nature: the first page of the API holds them, and tells the shortages from the surpluses.
+	const [open, setOpen] = useState<Discrepancy[] | null>(null);
+	useEffect(() => {
+		void receivingApi
+			.discrepancies({ page: 1, limit: 200, filters: {} })
+			.then((page) => setOpen(page.data))
+			.catch(() => setOpen(null));
+	}, [reload]);
+	const stats: BentoStat[] = [
+		{ id: "open", label: t("common:stats.open"), value: open?.length ?? null, tone: open?.length ? "amber" : "plain" },
+		{ id: "short", label: t("common:stats.short"), value: open?.filter((row) => row.difference < 0).length ?? null },
+		{ id: "over", label: t("common:stats.over"), value: open?.filter((row) => row.difference > 0).length ?? null },
+	];
 
 	const columns: Column<Discrepancy>[] = [
 		{ key: "invoice", label: t("discrepancies.columns.invoice"), type: "string", render: (row) => row.invoice.code ?? "" },
@@ -41,6 +56,7 @@ export function DiscrepanciesPage() {
 
 	return (
 		<ITPage title={t("discrepancies.title")} description={t("discrepancies.description")} breadcrumbs={trail(t("common:nav.home"), navigate, { label: t("discrepancies.title") })} noPadding>
+			<BentoStats items={stats} label={t("common:stats.label")} />
 			<ITDataTable<Discrepancy>
 				defaultItemsPerPage={25}
 				itemsPerPageOptions={[25, 50, 100]}

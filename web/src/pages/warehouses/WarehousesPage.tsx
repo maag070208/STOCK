@@ -11,6 +11,7 @@ import type { TableParams } from "@shared/api/table";
 import { ApiError } from "@shared/api/client";
 import { toast } from "@app/store";
 import { cardBreakpoint, tableHeight } from "@shared/ui/tableLayout";
+import { BentoStats, useActiveStats } from "@shared/ui/BentoStats";
 
 type Confirm = { kind: "deactivate" | "reactivate"; warehouse: Warehouse };
 
@@ -23,6 +24,8 @@ export function WarehousesPage() {
 	const [editing, setEditing] = useState<{ warehouse: Warehouse | null } | null>(null);
 	const [confirm, setConfirm] = useState<Confirm | null>(null);
 	const refresh = () => setReload((value) => value + 1);
+
+	const { stats, filters } = useActiveStats(warehouseApi.query, reload);
 
 	const columns: Column<Warehouse>[] = [
 		{ key: "code", label: t("columns.code"), type: "string", filter: "search", sortable: true },
@@ -66,6 +69,7 @@ export function WarehousesPage() {
 
 	return (
 		<ITPage breadcrumbs={trail(t("common:nav.home"), navigate, { label: t("title") })} title={t("title")} description={t("description")} noPadding actions={canManage ? <ITButton label={t("new")} onClick={() => setEditing({ warehouse: null })} /> : undefined}>
+			<BentoStats items={stats} label={t("common:stats.label")} />
 			<ITDataTable<Warehouse>
 				defaultItemsPerPage={25}
 				itemsPerPageOptions={[25, 50, 100]}
@@ -78,7 +82,7 @@ export function WarehousesPage() {
 				autoCardBreakpoint={cardBreakpoint()}
  columns={columns}
  fetchData={(params) => warehouseApi.query(params as TableParams)}
- reloadTrigger={reload}
+ externalFilters={filters} reloadTrigger={reload}
  onRowClick={(warehouse) => navigate(`/warehouses/${warehouse.id}`)}
 			/>
 			<WarehouseDialog
