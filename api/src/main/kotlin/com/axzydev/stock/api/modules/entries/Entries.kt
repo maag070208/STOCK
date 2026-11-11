@@ -116,6 +116,8 @@ interface InvoiceLineRepository : JpaRepository<InvoiceLine, UUID> {
 	fun countByInvoiceId(invoiceId: UUID): Long
 
 	fun findByInvoiceId(invoiceId: UUID): List<InvoiceLine>
+
+	fun findByInvoiceIdIn(invoiceIds: Collection<UUID>): List<InvoiceLine>
 }
 
 interface ReceiptAssignmentRepository : JpaRepository<ReceiptAssignment, UUID> {

@@ -73,10 +73,10 @@ class ReceivingService(
 	fun mine(user: CurrentUser, language: String, productId: UUID? = null): List<MyReceiptView> {
 		val mine = assignments.findActiveWork(user.id, listOf(Status.PENDING.name, Status.IN_ASSIGNMENT.name), productId).groupBy { it.lineId }
 		val byInvoice = lines.findAllById(mine.keys).groupBy { it.invoiceId }
-		return invoices.findAllById(byInvoice.keys)
-			.sortedBy { it.createdAt }
-			.map { invoice ->
-				val full = views.full(invoice, language)
+		val invoiceList = invoices.findAllById(byInvoice.keys).sortedBy { it.createdAt }
+		val fulls = views.full(invoiceList, language).associateBy { it.id }
+		return invoiceList.map { invoice ->
+			val full = fulls.getValue(invoice.id!!)
 				val own = full.lines.orEmpty()
 					.filter { productId == null || it.product.id == productId }
 					.map { line -> line.copy(assignments = line.assignments.filter { it.operator.id == user.id }) }
@@ -192,7 +192,7 @@ class ReceivingService(
 		val invoiceById = invoices.findAllById(lineById.values.map { it.invoiceId }).associateBy { it.id!! }
 		val headers = views.headers(invoiceById.values.toList(), language).associateBy { it.id }
 		val found = products.stockProducts(lineById.values.map { it.productId })
-		val shares = open.associateWith { views.assignment(it) }
+		val operatorByAssignment = views.assignments(open).values.flatten().associateBy { it.id }
 		val rows = open.map { assignment ->
 			val line = lineById.getValue(assignment.lineId)
 			val header = headers.getValue(line.invoiceId)
@@ -201,7 +201,7 @@ class ReceivingService(
 				invoice = Ref(header.id, header.number, header.supplier.name),
 				warehouse = header.warehouse,
 				product = found[line.productId].let { Ref(line.productId, it?.code, it?.name) },
-				operator = shares.getValue(assignment).operator,
+				operator = operatorByAssignment.getValue(assignment.id!!).operator,
 				expectedQuantity = assignment.expectedQuantity,
 				countedQuantity = assignment.countedQuantity!!,
 				difference = InvoiceRules.difference(assignment.expectedQuantity, assignment.countedQuantity!!),

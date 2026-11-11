@@ -94,6 +94,14 @@ class InvoiceViews(
 	fun full(invoice: Invoice, language: String): InvoiceView =
 		headers(listOf(invoice), language).single().copy(lines = lines(lines.findByInvoiceId(invoice.id!!), language))
 
+	// The batch twin of full: one headers pass and one lines pass for a whole page, not one per invoice.
+	fun full(invoices: List<Invoice>, language: String): List<InvoiceView> {
+		val byInvoiceId = lines.findByInvoiceIdIn(invoices.map { it.id!! }).groupBy { it.invoiceId }
+		return headers(invoices, language).map { header ->
+			header.copy(lines = byInvoiceId[header.id]?.let { lines(it, language) } ?: emptyList())
+		}
+	}
+
 	fun line(line: InvoiceLine, language: String): LineView = lines(listOf(line), language).single()
 
 	fun assignment(assignment: ReceiptAssignment): AssignmentView = assignments(listOf(assignment)).values.single().single()
@@ -117,7 +125,7 @@ class InvoiceViews(
 	}
 
 	// The assignments by line, each with its operator and its placements.
-	private fun assignments(list: List<ReceiptAssignment>): Map<UUID, List<AssignmentView>> {
+	fun assignments(list: List<ReceiptAssignment>): Map<UUID, List<AssignmentView>> {
 		val operators = people.people(list.map { it.operatorId })
 		val placed = placements.findByAssignmentIdIn(list.map { it.id!! }).groupBy { it.assignmentId }
 		val locationCodes = locations.stockTargets(placed.values.flatten().map { it.locationId }).mapValues { it.value.code }
